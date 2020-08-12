@@ -14,6 +14,7 @@ use schema::website::dsl::*;
 use db::Website;
 
 fn main() {
+    // TODO https://lucene.apache.org/solr instead of mysql
     let settings = settings::Settings::new(false);
     println!("{:?}", settings);
     println!("{:?}", settings.unwrap().get_serv());
