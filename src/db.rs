@@ -1,32 +1,12 @@
 // TODO tables https://docs.rs/diesel/1.4.5/diesel/macro.table.html
 // https://github.com/diesel-rs/diesel/blob/master/examples/mysql/getting_started_step_1/src/schema.rs
 use diesel::prelude::*;
-#[cfg(test)]
 use diesel::mysql::MysqlConnection;
 
-mod schema {
-    diesel::table! {
-        website (id) {
-            id -> Integer,
-            title -> Text,
-            metadata -> Text,
-            url -> Varchar,
-            rank -> Integer,
-            type_of_website -> Varchar,             // TODO table for website types?
-        }
-    }
-    diesel::table! {
-        keywords (website_id, keyword) {
-            website_id -> Integer,
-            keyword -> Varchar,
-            rank_per_kw -> Varchar,
-        }
-    }
-}
+use crate::schema::website;
 
-// use schema::website;
-
-#[derive(Queryable)]
+#[derive(Queryable, Insertable)]
+#[table_name = "website"]
 pub struct Website {
     pub id: i32,
     pub title: String,
@@ -44,8 +24,8 @@ pub struct Keywords {
 }
 
 pub struct Database {
-    server: String,
-    port: u16
+    // server: String,
+    // port: u16
 }
 
 impl Database {

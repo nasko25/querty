@@ -3,8 +3,15 @@ extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 
+use diesel::{ insert_into, sql_query };
+use crate::diesel::RunQueryDsl;
+
 mod settings;
 mod db;
+mod schema;
+
+use schema::website::dsl::*;
+use db::Website;
 
 fn main() {
     let settings = settings::Settings::new(false);
@@ -12,5 +19,20 @@ fn main() {
     println!("{:?}", settings.unwrap().get_serv());
 
     // TODO get url from config
-    db::Database::establish_connection(&"mysql://asdf:asdf@localhost:3306/querty");
+    let conn = db::Database::establish_connection(&"mysql://asdf:asdf@localhost:3306/querty");
+
+    // TODO foreign keys
+    let creat_website = sql_query("CREATE TABLE IF NOT EXISTS website (
+        id INT PRIMARY KEY,
+        title TEXT,
+        metadata TEXT,
+        url VARCHAR(100),
+        rank INT,
+        type_of_website VARCHAR(50)
+    )").execute(&conn);
+
+    println!("table website created:{:?}", creat_website);
+
+    let w = Website { id: 1, title: "".to_string(), metadata: "".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
+    println!("values inserted:{:?}", insert_into(website).values(w).execute(&conn));
 }
