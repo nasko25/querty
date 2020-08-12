@@ -1,3 +1,6 @@
 [database]
 server = "localhost"
 port = 1234
+db_name = "querty"
+user = "asdf"
+pass = "asdf"
