@@ -22,7 +22,7 @@ impl Settings {
 
         config.try_into()
     }
-    pub fn get_serv(&self) -> &str {
+    pub fn get_serv(&self) -> &String {
         &self.database.server
     }
 }
