@@ -23,14 +23,7 @@ fn main() {
     let conn = db::Database::establish_connection(&"mysql://asdf:asdf@localhost:3306/querty");
 
     // TODO foreign keys
-    let creat_website = sql_query("CREATE TABLE IF NOT EXISTS website (
-        id INT PRIMARY KEY,
-        title TEXT,
-        metadata TEXT,
-        url VARCHAR(100),
-        rank INT,
-        type_of_website VARCHAR(50)
-    )").execute(&conn);
+    let creat_website = db::Database::create_tables(&conn);
 
     println!("table website created:{:?}", creat_website);
 
