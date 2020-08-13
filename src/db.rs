@@ -5,8 +5,10 @@ use diesel::mysql::MysqlConnection;
 use diesel::{ insert_into, sql_query };
 
 use crate::schema::website;
+use crate::schema::website::dsl::*;
 
-#[derive(Queryable, Insertable)]
+
+#[derive(Queryable, Insertable, Debug)]
 #[table_name = "website"]
 pub struct Website {
     pub id: i32,
@@ -48,6 +50,13 @@ impl Database {
             Err(err) => return Err(err),
         };
         Ok(return_code)
+    }
+
+    pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        match insert_into(website).values(w).execute(conn) {
+            Ok(r_code) => return Ok(r_code),
+            Err(err) => return Err(err),
+        }
     }
     // pub fn conn() {
     //     // TODO

@@ -3,14 +3,10 @@ extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 
-use diesel::{ insert_into, sql_query };
-use crate::diesel::RunQueryDsl;
-
 mod settings;
-mod db;
 mod schema;
+mod db;
 
-use schema::website::dsl::*;
 use db::Website;
 
 fn main() {
@@ -24,9 +20,9 @@ fn main() {
 
     // TODO foreign keys
     let creat_website = db::Database::create_tables(&conn);
+    println!("table website created: {:?}", creat_website);
 
-    println!("table website created:{:?}", creat_website);
-
-    let w = Website { id: 1, title: "".to_string(), metadata: "".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
-    println!("values inserted:{:?}", insert_into(website).values(w).execute(&conn));
+    let w = Website { id: 2, title: "".to_string(), metadata: "".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
+    let vals_inserted = db::Database::insert_w(&w, &conn);
+    println!("values inserted: {:?}", vals_inserted);
 }
