@@ -38,14 +38,28 @@ impl Database {
     }
 
     pub fn create_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
-        let return_code = match sql_query("CREATE TABLE IF NOT EXISTS website (
-            id INT PRIMARY KEY,
-            title TEXT,
-            metadata TEXT,
-            url VARCHAR(100),
-            rank INT,
-            type_of_website VARCHAR(50)
-        )").execute(conn) {
+        let mut return_code = match sql_query("
+            CREATE TABLE IF NOT EXISTS website (
+                id INT PRIMARY KEY,
+                title TEXT,
+                metadata TEXT,
+                url VARCHAR(100),
+                rank INT,
+                type_of_website VARCHAR(50)
+            )
+        ").execute(conn) {
+            Ok(r_code)  => r_code,
+            Err(err) => return Err(err),
+        };
+
+        return_code = match sql_query("
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(25) UNIQUE,
+                rank DOUBLE NOT NULL,
+                CountryISO_A2 VARCHAR(3)
+            )
+        ").execute(conn) {
             Ok(r_code)  => r_code,
             Err(err) => return Err(err),
         };
