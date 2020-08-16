@@ -1,15 +1,19 @@
 use config::{ConfigError};
 
+// TODO getters instead of pub?
 #[derive(Debug, Deserialize)]
-struct Database {
-    server: String,
-    port: u16
+pub struct Database {
+    pub server: String,
+    pub port: u16,
+    pub db_name: String,
+    pub user: String,
+    pub pass: String
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     debug: bool,
-    database: Database
+    pub database: Database
 }
 
 impl Settings {

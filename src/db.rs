@@ -52,7 +52,7 @@ impl Database {
             Err(err) => return Err(err),
         };
 
-        return_code = match sql_query("
+        return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(25) UNIQUE,

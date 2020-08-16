@@ -11,12 +11,16 @@ use db::Website;
 
 fn main() {
     // TODO https://lucene.apache.org/solr instead of mysql
-    let settings = settings::Settings::new(false);
-    println!("{:?}", settings);
-    println!("{:?}", settings.unwrap().get_serv());
+    let settings = settings::Settings::new(false).unwrap();
+    let db = &settings.database;
+    println!("{:?}", db);
+    println!("{:?}", settings.get_serv());
+
+    let url = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
+    println!("{:?}", url);
 
     // TODO get url from config
-    let conn = db::Database::establish_connection(&"mysql://asdf:asdf@localhost:3306/querty");
+    let conn = db::Database::establish_connection(&url);
 
     // TODO foreign keys
     let creat_website = db::Database::create_tables(&conn);
