@@ -4,12 +4,14 @@ diesel::table! {
         id -> Integer,
         title -> Text,
         metadata -> Text,
+        text -> Text,                           // the body/whole text of the website
         url -> Varchar,
         rank -> Integer,
         type_of_website -> Varchar,             // TODO table for website types?
     }
 }
 diesel::table! {
+    // TODO probably not needed table!
     keywords (website_id, keyword) {
         website_id -> Integer,
         keyword -> Varchar,

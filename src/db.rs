@@ -11,9 +11,10 @@ use crate::schema::website::dsl::*;
 #[derive(Queryable, Insertable, Debug)]
 #[table_name = "website"]
 pub struct Website {
-    pub id: i32,
+    pub id: Option<i32>,
     pub title: String,
     pub metadata: String,
+    pub text: String,
     pub url: String,
     pub rank: i32,
     pub type_of_website: String
@@ -40,9 +41,10 @@ impl Database {
     pub fn create_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
         let mut return_code = match sql_query("
             CREATE TABLE IF NOT EXISTS website (
-                id INT PRIMARY KEY,
+                id INT AUTO_INCREMENT PRIMARY KEY,
                 title TEXT,
                 metadata TEXT,
+                text TEXT,
                 url VARCHAR(100),
                 rank INT,
                 type_of_website VARCHAR(50)

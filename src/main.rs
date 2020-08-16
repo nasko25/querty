@@ -26,7 +26,7 @@ fn main() {
     let creat_website = db::Database::create_tables(&conn);
     println!("table website created: {:?}", creat_website);
 
-    let w = Website { id: 2, title: "".to_string(), metadata: "".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
+    let w = Website { id: None, title: "".to_string(), metadata: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
     let vals_inserted = db::Database::insert_w(&w, &conn);
     println!("values inserted: {:?}", vals_inserted);
 }
