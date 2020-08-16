@@ -1,5 +1,8 @@
 // TODO solr
 diesel::table! {
+    // depending on where the keyword is (title, text, url), this will afftect the rank of the keyword
+    // also consecutive keywords will have a higher rank the closer they are together
+    // tf-idf
     website (id) {
         id -> Integer,
         title -> Text,

@@ -45,7 +45,7 @@
     that avoids logging every request
 -->
 
-<schema name="example" version="1.6">
+<schema name="querty" version="1.6">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and 
        semantics.  It should not normally be changed by applications.
@@ -64,7 +64,7 @@
        1.6: useDocValuesAsStored defaults to true.
      -->
 
-
+   <!-- TODO which would be useful ? -->
    <!-- Valid attributes for fields:
      name: mandatory - the name for the field
      type: mandatory - the name of a field type from the 
@@ -129,46 +129,21 @@
      in a compatible way. Any analysis applied to the <uniqueKey> should _not_ produce multiple
      tokens
    -->   
-   <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
+   <field name="id" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
 
    <field name="pre" type="preanalyzed" indexed="true" stored="true"/>
    <field name="sku" type="text_en_splitting_tight" indexed="true" stored="true" omitNorms="true"/>
    <!--field name="name" type="text_general" indexed="true" stored="true"/-->
     <!-- text_en uses a stemmer; it would probably be best if I used a dynamic field that applies the text_en type -->
-   <field name="name" type="text_en" indexed="true" stored="true"/>
-   <field name="manu" type="text_gen_sort" indexed="true" stored="true" omitNorms="true" multiValued="false"/>
-   <field name="cat" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="features" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="includes" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true" />
+   <field name="title" type="text_en" indexed="true" stored="true" multiValued="false"/>
+   <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="false" required="false"/> <!-- can it be required=false ? -->
+   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false"/>
+   <field name="url" type="text_general" indexed="true" stored="true" multiValued="false"/>
+   <field name="rank" type="pint" indexed="true" stored="true" multiValued="false"/>
 
-   <field name="weight" type="pfloat" indexed="true" stored="true"/>
-   <field name="price"  type="pfloat" indexed="true" stored="true"/>
-   <field name="popularity" type="pint" indexed="true" stored="true" />
-   <field name="inStock" type="boolean" indexed="true" stored="true" />
-
-   <field name="store" type="location" indexed="true" stored="true"/>
-
-   <!-- Common metadata fields, named specifically to match up with
-     SolrCell metadata when parsing rich documents such as Word, PDF.
-     Some fields are multiValued only because Tika currently may return
-     multiple values for them. Some metadata is parsed from the documents,
-     but there are some which come from the client context:
-       "content_type": From the HTTP headers of incoming stream
-       "resourcename": From SolrCell request param resource.name
-   -->
-   <field name="title" type="text_gen_sort" indexed="true" stored="true" multiValued="true"/>
-   <field name="subject" type="text_gen_sort" indexed="true" stored="true" multiValued="false"/>
-   <field name="description" type="text_general" indexed="true" stored="true"/>
-   <field name="comments" type="text_general" indexed="true" stored="true"/>
-   <field name="author" type="text_gen_sort" indexed="true" stored="true" multiValued="false"/>
-   <field name="keywords" type="text_general" indexed="true" stored="true"/>
-   <field name="category" type="text_general" indexed="true" stored="true"/>
-   <field name="resourcename" type="text_general" indexed="true" stored="true"/>
-   <field name="url" type="text_general" indexed="true" stored="true"/>
-   <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="last_modified" type="pdate" indexed="true" stored="true"/>
-   <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="_src_" type="string" indexed="false" stored="true"/>
+   <!-- TODO what does type of website actually mean and is it useful ?
+        Also, maybe make it a custom type? -->
+   <field name="type_of_website" type="text_general" indexed="false" stored="true" multiValued="false">
 
    <!-- Main body of document extracted by SolrCell.
         NOTE: This field is not indexed by default, since it is also copied to "text"
