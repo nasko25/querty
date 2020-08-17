@@ -9,6 +9,9 @@ mod db;
 
 use db::Website;
 
+// TODO separate file requests
+use reqwest;
+
 fn main() {
     // TODO https://lucene.apache.org/solr instead of mysql
     let settings = settings::Settings::new(false).unwrap();
