@@ -113,7 +113,7 @@
       or Solr won't start. _version_ and update log are required for SolrCloud
    --> 
    <!-- doc values are enabled by default for primitive types such as long so we don't index the version field  -->
-   <field name="_version_" type="plong" indexed="false" stored="false"/>
+   <field name="_version_" type="plong" indexed="false" stored="false" />
    
    <!-- points to the root document of a block of nested documents. Required for nested
       document support, may be removed otherwise
@@ -129,42 +129,42 @@
      in a compatible way. Any analysis applied to the <uniqueKey> should _not_ produce multiple
      tokens
    -->   
-   <field name="id" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
+   <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
 
-   <field name="pre" type="preanalyzed" indexed="true" stored="true"/>
-   <field name="sku" type="text_en_splitting_tight" indexed="true" stored="true" omitNorms="true"/>
+   <field name="pre" type="preanalyzed" indexed="true" stored="true" />
+   <field name="sku" type="text_en_splitting_tight" indexed="true" stored="true" omitNorms="true" />
    <!--field name="name" type="text_general" indexed="true" stored="true"/-->
     <!-- text_en uses a stemmer; it would probably be best if I used a dynamic field that applies the text_en type -->
-   <field name="title" type="text_en" indexed="true" stored="true" multiValued="false"/>
-   <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="false" required="false"/> <!-- can it be required=false ? -->
-   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false"/>
-   <field name="url" type="text_general" indexed="true" stored="true" multiValued="false"/>
-   <field name="rank" type="pint" indexed="true" stored="true" multiValued="false"/>
+   <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
+   <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="false" required="false" /> <!-- can it be required=false ? -->
+   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+   <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
+   <field name="rank" type="pint" indexed="true" stored="true" multiValued="false" />
 
    <!-- TODO what does type of website actually mean and is it useful ?
         Also, maybe make it a custom type? -->
-   <field name="type_of_website" type="text_general" indexed="false" stored="true" multiValued="false">
+   <field name="type_of_website" type="text_general" indexed="false" stored="true" multiValued="false" />
 
    <!-- Main body of document extracted by SolrCell.
         NOTE: This field is not indexed by default, since it is also copied to "text"
         using copyField below. This is to save space. Use this field for returning and
         highlighting document content. Use the "text" field to search the content. -->
-   <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
+   <field name="content" type="text_general" indexed="false" stored="true" multiValued="true" />
    
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
-   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   <field name="text_all" type="text_general" indexed="true" stored="false" multiValued="true" />
 
    <!-- catchall text field that indexes tokens both normally and in reverse for efficient
         leading wildcard queries. -->
-   <field name="text_rev" type="text_general_rev" indexed="true" stored="false" multiValued="true"/>
+   <field name="text_all_rev" type="text_general_rev" indexed="true" stored="false" multiValued="true" />
 
    <!-- non-tokenized version of manufacturer to make it easier to sort or group
         results by manufacturer.  copied from "manu" via copyField -->
    <field name="manu_exact" type="string" indexed="true" stored="false" docValues="false" />
 
-   <field name="payloads" type="payloads" indexed="true" stored="true"/>
+   <field name="payloads" type="payloads" indexed="true" stored="true" />
 
 
    <!-- Dynamic field definitions allow using convention over configuration
@@ -218,29 +218,17 @@
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
         or to add multiple fields to the same field for easier/faster searching.  -->
-
-   <copyField source="cat" dest="text"/>
-   <copyField source="name" dest="text"/>
-   <copyField source="manu" dest="text"/>
-   <copyField source="features" dest="text"/>
-   <copyField source="includes" dest="text"/>
-   <copyField source="manu" dest="manu_exact"/>
-
-   <!-- Copy the price into a currency enabled field (default USD) -->
-   <copyField source="price" dest="price_c"/>
-
+  
    <!-- Text fields from SolrCell to search by default in our catch-all field -->
-   <copyField source="title" dest="text"/>
-   <copyField source="author" dest="text"/>
-   <copyField source="description" dest="text"/>
-   <copyField source="keywords" dest="text"/>
-   <copyField source="content" dest="text"/>
-   <copyField source="content_type" dest="text"/>
-   <copyField source="resourcename" dest="text"/>
-   <copyField source="url" dest="text"/>
+   <copyField source="title" dest="text_all"/>
+   <copyField source="metadata" dest="text_all"/>
+   <copyField source="text" dest="text_all"/>
+   <copyField source="url" dest="text_all"/>
+   <copyField source="rank" dest="text_all"/>
+   <copyField source="type_of_website" dest="text_all"/>
    
    <!-- Create a string version of author for faceting -->
-   <copyField source="author" dest="author_s"/>
+   <!-- <copyField source="author" dest="author_s"/> -->
   
    <!-- Above, multiple source fields are copied to the [text] field. 
     Another way to map multiple source fields to the same 

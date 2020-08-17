@@ -103,6 +103,29 @@
     -->
   <dataDir>${solr.data.dir:}</dataDir>
 
+<!--dataConfig>
+<dataSource type="JdbcDataSource" driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/querty" user="asdf" password="asdf" />
+    <document name="querty">
+        <entity name="website" query="select * from website">
+            <field column="id" name="id" />
+            <field column="title" name="title" />
+            <field column="metadata" name="metadata" />
+            <field column="text" name="text" />
+            <field column="url" name="url" />
+            <field column="rank" name="rank" />
+            <field column="type_of_website" name="type_of_website" />
+
+            <entity name="feature" query="select description from feature where item_id='${item.ID}'">
+                <field name="features" column="description" />
+            </entity>
+            <entity name="item_category" query="select CATEGORY_ID from item_category where item_id='${item.ID}'">
+                <entity name="category" query="select description from category where id = '${item_category.CATEGORY_ID}'">
+                    <field column="description" name="cat" />
+                </entity>
+            </entity>
+        </entity>
+    </document>
+</dataConfig-->
 
   <!-- The DirectoryFactory to use for indexes.
 
