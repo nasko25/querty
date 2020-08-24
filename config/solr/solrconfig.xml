@@ -90,6 +90,12 @@
   <lib dir="${solr.install.dir:../../../..}/contrib/velocity/lib" regex=".*\.jar" />
   <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-velocity-\d.*\.jar" />
 
+  <lib dir="${solr.install.dir:../../../..}/contrib/dataimporthandler/lib" regex=".*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-dataimporthandler-\d.*\.jar" />
+
+  <lib dir="${solr.install.dir:../../../..}/contrib/dataimporthandler-extras/lib" regex=".*\.jar" />
+  <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-dataimporthandler-extras-\d.*\.jar" />
+
   <!-- an exact 'path' can be used instead of a 'dir' to specify a
        specific jar file.  This will cause a serious error to be logged
        if it can't be loaded.
@@ -107,30 +113,11 @@
     -->
   <dataDir>${solr.data.dir:}</dataDir>
 
-<!--dataConfig>
-<dataSource type="JdbcDataSource" driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/querty" user="asdf" password="asdf" />
-    <document name="querty">
-        <entity name="website" query="select * from website">
-            <field column="id" name="id" />
-            <field column="title" name="title" />
-            <field column="metadata" name="metadata" />
-            <field column="text" name="text" />
-            <field column="url" name="url" />
-            <field column="rank" name="rank" />
-            <field column="type_of_website" name="type_of_website" />
-
-            <entity name="feature" query="select description from feature where item_id='${item.ID}'">
-                <field name="features" column="description" />
-            </entity>
-            <entity name="item_category" query="select CATEGORY_ID from item_category where item_id='${item.ID}'">
-                <entity name="category" query="select description from category where id = '${item_category.CATEGORY_ID}'">
-                    <field column="description" name="cat" />
-                </entity>
-            </entity>
-        </entity>
-    </document>
-</dataConfig-->
-
+  <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
+    <lst name="defaults">
+      <str name="config">data-config.xml</str>
+    </lst>
+  </requestHandler>
   <!-- The DirectoryFactory to use for indexes.
 
        solr.StandardDirectoryFactory is filesystem
@@ -851,7 +838,7 @@
        <str name="echoParams">explicit</str>
        <str name="wt">json</str>
        <str name="indent">true</str>
-       <str name="df">_text_</str>
+       <str name="df">text</str>
      </lst>
   </requestHandler>
 
@@ -957,7 +944,7 @@
 
   <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell,/browse,update">
     <lst name="defaults">
-      <str name="df">_text_</str>
+      <str name="df">text</str>
     </lst>
   </initParams>
 
@@ -1054,7 +1041,7 @@
     <!-- a spellchecker built from a field of the main index -->
     <lst name="spellchecker">
       <str name="name">default</str>
-      <str name="field">_text_</str>
+      <str name="field">text</str>
       <str name="classname">solr.DirectSolrSpellChecker</str>
       <!-- the spellcheck distance measure used, the default is the internal levenshtein -->
       <str name="distanceMeasure">internal</str>
