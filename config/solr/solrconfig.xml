@@ -20,6 +20,10 @@
      For more details about configurations options that may appear in
      this file, see http://wiki.apache.org/solr/SolrConfigXml.
 -->
+<!--
+  bin/solr create -c querty -s 2 -rf 2 -d /home/chrome/Documents/querty/config/solr -p 8983  -  create a collection
+  bin/solr delete -c querty -p 8983  -  delete the collection
+-->
 <config>
   <!-- In all configuration below, a prefix of "solr." for class names
        is an alias that causes solr to search appropriate packages,
