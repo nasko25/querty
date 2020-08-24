@@ -847,7 +847,7 @@
        <str name="echoParams">explicit</str>
        <str name="wt">json</str>
        <str name="indent">true</str>
-       <str name="df">text</str>
+       <str name="df">_text_</str>
      </lst>
   </requestHandler>
 
@@ -860,18 +860,19 @@
        (SearchHandler) can be registered multiple times with different
        names (and different init parameters)
     -->
+<!-- 
   <requestHandler name="/browse" class="solr.SearchHandler">
      <lst name="defaults">
        <str name="echoParams">explicit</str>
-
+-->
        <!-- VelocityResponseWriter settings -->
-       <str name="wt">velocity</str>
+       <!-- <str name="wt">velocity</str>
        <str name="v.template">browse</str>
        <str name="v.layout">layout</str>
-       <str name="title">Solritas</str>
+       <str name="title">Solritas</str> -->
 
        <!-- Query settings -->
-       <str name="defType">edismax</str>
+       <!-- <str name="defType">edismax</str>
        <str name="qf">
           text^0.5 features^1.0 name^1.2 sku^1.5 id^10.0 manu^1.1 cat^1.4
           title^10.0 description^5.0 keywords^5.0 author^2.0 resourcename^1.0
@@ -886,10 +887,10 @@
          title^10.0 description^5.0 keywords^5.0 author^2.0 resourcename^1.0
        </str>
        <str name="mlt.fl">text,features,name,sku,id,manu,cat,title,description,keywords,author,resourcename</str>
-       <int name="mlt.count">3</int>
+       <int name="mlt.count">3</int> -->
 
        <!-- Faceting defaults -->
-       <str name="facet">on</str>
+       <!-- <str name="facet">on</str>
        <str name="facet.missing">true</str>
        <str name="facet.field">cat</str>
        <str name="facet.field">manu_exact</str>
@@ -913,10 +914,10 @@
        <str name="f.manufacturedate_dt.facet.range.end">NOW</str>
        <str name="f.manufacturedate_dt.facet.range.gap">+1YEAR</str>
        <str name="f.manufacturedate_dt.facet.range.other">before</str>
-       <str name="f.manufacturedate_dt.facet.range.other">after</str>
+       <str name="f.manufacturedate_dt.facet.range.other">after</str> -->
 
        <!-- Highlighting defaults -->
-       <str name="hl">on</str>
+       <!-- <str name="hl">on</str>
        <str name="hl.fl">content features title name</str>
        <str name="hl.preserveMulti">true</str>
        <str name="hl.encoder">html</str>
@@ -929,10 +930,10 @@
        <str name="f.content.hl.snippets">3</str>
        <str name="f.content.hl.fragsize">200</str>
        <str name="f.content.hl.alternateField">content</str>
-       <str name="f.content.hl.maxAlternateFieldLength">750</str>
+       <str name="f.content.hl.maxAlternateFieldLength">750</str> -->
 
        <!-- Spell checking defaults -->
-       <str name="spellcheck">on</str>
+       <!-- <str name="spellcheck">on</str>
        <str name="spellcheck.extendedResults">false</str>
        <str name="spellcheck.count">5</str>
        <str name="spellcheck.alternativeTermCount">2</str>
@@ -941,18 +942,18 @@
        <str name="spellcheck.collateExtendedResults">true</str>
        <str name="spellcheck.maxCollationTries">5</str>
        <str name="spellcheck.maxCollations">3</str>
-     </lst>
+     </lst> -->
 
      <!-- append spellchecking to our list of components -->
-     <arr name="last-components">
+     <!-- <arr name="last-components">
        <str>spellcheck</str>
      </arr>
-  </requestHandler>
+  </requestHandler>  -->
 
 
   <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell,/browse,update">
     <lst name="defaults">
-      <str name="df">text</str>
+      <str name="df">_text_</str>
     </lst>
   </initParams>
 
@@ -972,7 +973,7 @@
   <!-- Solr Cell Update Request Handler
 
        http://wiki.apache.org/solr/ExtractingRequestHandler
-
+      TODO ?
     -->
   <requestHandler name="/update/extract"
                   startup="lazy"
@@ -1049,7 +1050,7 @@
     <!-- a spellchecker built from a field of the main index -->
     <lst name="spellchecker">
       <str name="name">default</str>
-      <str name="field">text</str>
+      <str name="field">_text_</str>
       <str name="classname">solr.DirectSolrSpellChecker</str>
       <!-- the spellcheck distance measure used, the default is the internal levenshtein -->
       <str name="distanceMeasure">internal</str>
@@ -1201,15 +1202,17 @@
 
        In reality you will likely want to add the component to your
        already specified request handlers.
+
+       TODO ?
     -->
-  <requestHandler name="/tvrh" class="solr.SearchHandler" startup="lazy">
+  <!-- <requestHandler name="/tvrh" class="solr.SearchHandler" startup="lazy">
     <lst name="defaults">
       <bool name="tv">true</bool>
     </lst>
     <arr name="last-components">
       <str>tvComponent</str>
     </arr>
-  </requestHandler>
+  </requestHandler> -->
 
   <!-- Clustering Component
 
@@ -1266,28 +1269,28 @@
        In reality you will likely want to add the component to your
        already specified request handlers.
     -->
-  <requestHandler name="/clustering"
+  <!-- <requestHandler name="/clustering"
                   startup="lazy"
                   enable="${solr.clustering.enabled:false}"
                   class="solr.SearchHandler">
     <lst name="defaults">
       <bool name="clustering">true</bool>
-      <bool name="clustering.results">true</bool>
+      <bool name="clustering.results">true</bool> -->
       <!-- Field name with the logical "title" of a each document (optional) -->
-      <str name="carrot.title">name</str>
+      <!-- <str name="carrot.title">name</str> -->
       <!-- Field name with the logical "URL" of a each document (optional) -->
-      <str name="carrot.url">id</str>
+      <!-- <str name="carrot.url">id</str> -->
       <!-- Field name with the logical "content" of a each document (optional) -->
-      <str name="carrot.snippet">features</str>
+      <!-- <str name="carrot.snippet">features</str> -->
       <!-- Apply highlighter to the title/ content and use this for clustering. -->
-      <bool name="carrot.produceSummary">true</bool>
+      <!-- <bool name="carrot.produceSummary">true</bool> -->
       <!-- the maximum number of labels per cluster -->
       <!--<int name="carrot.numDescriptions">5</int>-->
       <!-- produce sub clusters -->
-      <bool name="carrot.outputSubClusters">false</bool>
+      <!-- <bool name="carrot.outputSubClusters">false</bool> -->
 
       <!-- Configure the remaining request handler parameters. -->
-      <str name="defType">edismax</str>
+      <!-- <str name="defType">edismax</str>
       <str name="qf">
         text^0.5 features^1.0 name^1.2 sku^1.5 id^10.0 manu^1.1 cat^1.4
       </str>
@@ -1298,7 +1301,7 @@
     <arr name="last-components">
       <str>clustering</str>
     </arr>
-  </requestHandler>
+  </requestHandler> -->
 
   <!-- Terms Component
 
