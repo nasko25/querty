@@ -113,6 +113,10 @@
     -->
   <dataDir>${solr.data.dir:}</dataDir>
 
+  <!-- The configuration of a Data Import Handler
+      It will be deprecated in the near future (probably a third party extention will take its place),
+      so probably using json files instead is not a bad idea.
+  -->
   <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
     <lst name="defaults">
       <str name="config">data-config.xml</str>
