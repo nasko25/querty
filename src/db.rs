@@ -43,6 +43,7 @@ pub struct Database {
     // port: u16
 }
 
+#[derive(Debug)]
 pub enum DB {
     Website(Website),
     User(User),
@@ -84,7 +85,6 @@ impl Database {
         Ok(return_code)
     }
 
-    // TODO macros or generic types to avoid code duplication?
     pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         println!("{:?}", website.order(website::id.desc()).first::<Website>(conn));
         match insert_into(website).values(w).execute(conn) {
@@ -100,10 +100,27 @@ impl Database {
         }
     }
 
-    pub fn insert(db: &DB, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+    pub fn insert(db: &DB, conn: &MysqlConnection) -> Result<DB, diesel::result::Error> {
         match db {
-            DB::Website(w) => return insert_into(website).values(w).execute(conn),
-            DB::User(u) => return insert_into(users).values(u).execute(conn),
+            DB::Website(w) => {
+                let inserted = insert_into(website).values(w).execute(conn);
+                let ret = match website.order(website::id.desc()).first::<Website>(conn) {
+                    Ok(r) => r,
+                    Err(err) => return Err(err)
+                };
+                match inserted {
+                    Ok(_) => return Ok(DB::Website(ret)),
+                    Err(err) => return Err(err),
+                }
+            },
+            DB::User(u) => {
+                let inserted = insert_into(users).values(u).execute(conn);
+                let ret = users.order(users::id.desc()).first::<User>(conn).unwrap();
+                match inserted {
+                    Ok(_) => return Ok(DB::User(ret)),
+                    Err(err) => return Err(err),
+                }
+            }
         }
     }
 }

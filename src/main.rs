@@ -35,11 +35,14 @@ fn main() {
     // let mut vals_inserted = db::Database::insert_w(&w, &conn);
     // println!("values inserted: {:?}", vals_inserted);
 
+    // TODO handle duplicate usernames -> throw an error
     let u = DB::User(User {id: None, username: "asdf".to_string(), rank: 1.123123, CountryISO_A2: "EN".to_string()});
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 
-    println!("{:?}", db::Database::insert(&w, &conn));
+    if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
+        println!("{:?}", website.id);
+    }
     println!("{:?}", db::Database::insert(&u, &conn));
     println!("{:?}", db::Database::insert(&w, &conn));
 

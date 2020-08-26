@@ -26,7 +26,7 @@ diesel::table! {
 // TODO what data to track with users?
 diesel::table! {
     users {
-        id -> Integer,
+        id -> Nullable<Integer>,
         username -> Varchar,
         rank -> Double,
         CountryISO_A2 -> Varchar,
