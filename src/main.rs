@@ -76,9 +76,9 @@ use std::fmt::Display;
 use serde::de::{self, Deserialize, Deserializer};
 #[derive(Debug, Serialize, Deserialize)]
 struct TempWebsite {
-    // TODO cannot cast from string to Option<i32>
+    // TODO the TempWebsite struct is no longer needed; just add #[serde(...)] to the Website struct
     #[serde(deserialize_with = "from_str")]
-    id: i32,
+    id: Option<i32>,
     title: String,
     metadata: String,
     text: String,
@@ -88,13 +88,16 @@ struct TempWebsite {
 }
 
 // CITATION: https://github.com/serde-rs/json/issues/317#issuecomment-300251188
-fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
     where T: FromStr,
           T::Err: Display,
           D: Deserializer<'de>
 {
     let s = String::deserialize(deserializer)?;
-    T::from_str(&s).map_err(de::Error::custom)
+    match T::from_str(&s).map_err(de::Error::custom) {
+        Ok(r) => return Ok(Some(r)),
+        Err(err) => return Err(err)
+    }
 }
 
 
