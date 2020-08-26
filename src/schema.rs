@@ -4,7 +4,7 @@ diesel::table! {
     // also consecutive keywords will have a higher rank the closer they are together
     // tf-idf
     website (id) {
-        id -> Integer,
+        id -> Nullable<Integer>,
         title -> Text,
         metadata -> Text,
         text -> Text,                           // the body/whole text of the website

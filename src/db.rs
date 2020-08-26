@@ -43,6 +43,11 @@ pub struct Database {
     // port: u16
 }
 
+pub enum DB {
+    Website(Website),
+    User(User),
+}
+
 impl Database {
     pub fn establish_connection(db_url: &str) -> MysqlConnection {
         MysqlConnection::establish(&db_url)
@@ -79,8 +84,9 @@ impl Database {
         Ok(return_code)
     }
 
-    // TODO macros
-    pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+    // TODO macros or generic types to avoid code duplication?
+    pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+        println!("{:?}", website.order(website::id.desc()).first::<Website>(conn));
         match insert_into(website).values(w).execute(conn) {
             Ok(r_code) => return Ok(r_code),
             Err(err) => return Err(err),
@@ -91,6 +97,13 @@ impl Database {
         match insert_into(users).values(u).execute(conn) {
             Ok(r_code) => return Ok(r_code),
             Err(err) => return Err(err),
+        }
+    }
+
+    pub fn insert(db: &DB) {
+        match db {
+            DB::Website(w) => println!("insert into website!"),
+            DB::User(u) => println!("insert into user!"),
         }
     }
 }
