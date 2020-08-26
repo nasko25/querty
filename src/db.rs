@@ -100,10 +100,10 @@ impl Database {
         }
     }
 
-    pub fn insert(db: &DB) {
+    pub fn insert(db: &DB, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         match db {
-            DB::Website(w) => println!("insert into website!"),
-            DB::User(u) => println!("insert into user!"),
+            DB::Website(w) => return insert_into(website).values(w).execute(conn),
+            DB::User(u) => return insert_into(users).values(u).execute(conn),
         }
     }
 }

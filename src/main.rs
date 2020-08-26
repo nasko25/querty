@@ -39,5 +39,8 @@ fn main() {
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 
-    db::Database::insert(&w);
+    println!("{:?}", db::Database::insert(&w, &conn));
+    println!("{:?}", db::Database::insert(&u, &conn));
+    println!("{:?}", db::Database::insert(&w, &conn));
+
 }
