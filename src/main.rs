@@ -76,7 +76,7 @@ use std::fmt::Display;
 use serde::de::{self, Deserialize, Deserializer};
 #[derive(Debug, Serialize, Deserialize)]
 struct TempWebsite {
-    // TODO since id is a string, the conversion to an object fails; maybe try casting?
+    // TODO cannot cast from string to Option<i32>
     #[serde(deserialize_with = "from_str")]
     id: i32,
     title: String,
