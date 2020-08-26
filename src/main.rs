@@ -8,6 +8,7 @@ mod schema;
 mod db;
 
 use db::Website;
+use db::User;
 
 // TODO separate file requests
 use reqwest;
@@ -30,6 +31,10 @@ fn main() {
     println!("table website created: {:?}", creat_website);
 
     let w = Website { id: None, title: "".to_string(), metadata: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() };
-    let vals_inserted = db::Database::insert_w(&w, &conn);
+    let mut vals_inserted = db::Database::insert_w(&w, &conn);
     println!("values inserted: {:?}", vals_inserted);
+
+    let u = User {id: None, username: "asdf".to_string(), rank: 1.123123, CountryISO_A2: "EN".to_string()};
+    vals_inserted = db::Database::insert_u(&u, &conn);
+    println!("user values inseted: {:?}", vals_inserted);
 }

@@ -116,6 +116,8 @@
   <!-- The configuration of a Data Import Handler
       It will be deprecated in the near future (probably a third party extention will take its place),
       so probably using json files instead is not a bad idea.
+      TODO use mysql only for users; use couchdb or even mongo for website information.
+      When a new website is added, add it to both the database and solr in separate thread(s).
   -->
   <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
     <lst name="defaults">

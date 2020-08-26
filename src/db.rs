@@ -6,6 +6,8 @@ use diesel::{ insert_into, sql_query };
 
 use crate::schema::website;
 use crate::schema::website::dsl::*;
+use crate::schema::users;
+use crate::schema::users::dsl::*;
 
 
 #[derive(Queryable, Insertable, Debug)]
@@ -18,6 +20,15 @@ pub struct Website {
     pub url: String,
     pub rank: i32,
     pub type_of_website: String
+}
+
+#[derive(Queryable, Insertable, Debug)]
+#[table_name = "users"]
+pub struct User {
+    pub id: Option<i32>,
+    pub username: String,
+    pub rank: f64,
+    pub CountryISO_A2: String
 }
 
 #[derive(Queryable)]
@@ -68,13 +79,18 @@ impl Database {
         Ok(return_code)
     }
 
+    // TODO macros
     pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
         match insert_into(website).values(w).execute(conn) {
             Ok(r_code) => return Ok(r_code),
             Err(err) => return Err(err),
         }
     }
-    // pub fn conn() {
-    //     // TODO
-    // }
+
+    pub fn insert_u(u: &User, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+        match insert_into(users).values(u).execute(conn) {
+            Ok(r_code) => return Ok(r_code),
+            Err(err) => return Err(err),
+        }
+    }
 }
