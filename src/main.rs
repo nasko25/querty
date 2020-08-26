@@ -46,4 +46,19 @@ fn main() {
     println!("{:?}", db::Database::insert(&u, &conn));
     println!("{:?}", db::Database::insert(&w, &conn));
 
+    req();
+
+}
+
+#[tokio::main]
+async fn req() -> Result<(), reqwest::Error> {
+    let res = reqwest::get("http://localhost:8983/solr/querty/select?q=*:*").await?;
+
+    println!("Status: {}", res.status());
+
+    let body = res.text().await?;
+
+    println!("Body:\n\n{}", body);
+
+    Ok(())
 }
