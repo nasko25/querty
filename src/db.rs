@@ -10,7 +10,7 @@ use crate::schema::users;
 use crate::schema::users::dsl::*;
 
 
-#[derive(Queryable, Insertable, Debug)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "website"]
 pub struct Website {
     pub id: Option<i32>,

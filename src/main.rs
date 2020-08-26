@@ -46,19 +46,54 @@ fn main() {
     println!("{:?}", db::Database::insert(&u, &conn));
     println!("{:?}", db::Database::insert(&w, &conn));
 
-    req();
+    println!("{:?}", req());
 
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Response {
+    #[serde(rename = "responseHeader")]
+    response_header: Header,
+    response: ResponseBody
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Header {
+    #[serde(rename = "zkConnected")]
+    zk_connected: bool,
+    status: i8,
+    #[serde(rename = "QTime")]
+    q_time: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ResponseBody {
+    docs: Vec<TempWebsite>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct TempWebsite {
+    // TODO since id is a map, the conversion to an object fails; maybe try casting?
+    id: String,
+    title: String,
+    metadata: String,
+    text: String,
+    url: String,
+    rank: i32,
+    type_of_website: String
 }
 
 #[tokio::main]
 async fn req() -> Result<(), reqwest::Error> {
-    let res = reqwest::get("http://localhost:8983/solr/querty/select?q=*:*").await?;
+    println!("{}", reqwest::get("http://localhost:8983/solr/querty/select?q=*:*").await?.text().await?);
+    let res: Response = reqwest::Client::new()
+        .get("http://localhost:8983/solr/querty/select?q=*:*")
+        .send()
+        .await?
+        .json()
+        .await?;
 
-    println!("Status: {}", res.status());
-
-    let body = res.text().await?;
-
-    println!("Body:\n\n{}", body);
+    println!("Result: {:?}", res);
 
     Ok(())
 }
