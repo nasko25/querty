@@ -29,6 +29,7 @@ diesel::table! {
         id -> Nullable<Integer>,
         username -> Varchar,
         rank -> Double,
-        CountryISO_A2 -> Varchar,
+        #[sql_name = "CountryISO_A2"]
+        country_iso_a2 -> Varchar,
     }
 }

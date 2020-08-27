@@ -24,7 +24,6 @@ fn main() {
     let url = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
     println!("{:?}", url);
 
-    // TODO get url from config
     let conn = db::Database::establish_connection(&url);
 
     // TODO foreign keys
@@ -36,7 +35,7 @@ fn main() {
     // println!("values inserted: {:?}", vals_inserted);
 
     // TODO handle duplicate usernames -> throw an error
-    let u = DB::User(User {id: None, username: "asdf".to_string(), rank: 1.123123, CountryISO_A2: "EN".to_string()});
+    let u = DB::User(User {id: None, username: "asdf".to_string(), rank: 1.123123, country_iso_a2: "EN".to_string()});
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 

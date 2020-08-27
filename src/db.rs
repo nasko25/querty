@@ -46,14 +46,7 @@ pub struct User {
     pub id: Option<i32>,
     pub username: String,
     pub rank: f64,
-    pub CountryISO_A2: String
-}
-
-#[derive(Queryable)]
-pub struct Keywords {
-    pub website_id: i32,
-    pub keyword: String,
-    pub rank_per_kw: String
+    pub country_iso_a2: String
 }
 
 pub struct Database {
