@@ -10,9 +10,11 @@ use crate::schema::users;
 use crate::schema::users::dsl::*;
 
 
+// TODO maybe add a field for links to other websies that can be used by something like PageRank?
 #[derive(Queryable, Insertable, Debug, Serialize, Deserialize)]
 #[table_name = "website"]
 pub struct Website {
+    #[serde(deserialize_with = "from_str")]
     pub id: Option<i32>,
     pub title: String,
     pub metadata: String,
@@ -20,6 +22,22 @@ pub struct Website {
     pub url: String,
     pub rank: i32,
     pub type_of_website: String
+}
+
+use std::str::FromStr;
+use std::fmt::Display;
+use serde::de::{self, Deserialize, Deserializer};
+// CITATION: https://github.com/serde-rs/json/issues/317#issuecomment-300251188
+fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+    where T: FromStr,
+          T::Err: Display,
+          D: Deserializer<'de>
+{
+    let s = String::deserialize(deserializer)?;
+    match T::from_str(&s).map_err(de::Error::custom) {
+        Ok(r) => return Ok(Some(r)),
+        Err(err) => return Err(err)
+    }
 }
 
 #[derive(Queryable, Insertable, Debug)]
