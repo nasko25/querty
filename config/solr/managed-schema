@@ -140,7 +140,7 @@
    <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="false" required="false" /> <!-- can it be required=false ? -->
    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
    <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
-   <field name="rank" type="pint" indexed="true" stored="true" multiValued="false" />
+   <field name="rank" type="pdouble" indexed="true" stored="true" multiValued="false" />
 
    <!-- TODO what does type of website actually mean and is it useful ?
         Also, maybe make it a custom type? -->

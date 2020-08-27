@@ -40,11 +40,11 @@ fn main() {
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 
-    if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
-        println!("{:?}", website.id);
-    }
-    println!("{:?}", db::Database::insert(&u, &conn));
-    println!("{:?}", db::Database::insert(&w, &conn));
+    // if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
+    //     println!("{:?}", website.id);
+    // }
+    // println!("{:?}", db::Database::insert(&u, &conn));
+    // println!("{:?}", db::Database::insert(&w, &conn));
 
     println!("{:?}", req(&settings));
 

@@ -81,7 +81,7 @@ impl Database {
                 metadata TEXT,
                 text TEXT,
                 url VARCHAR(100),
-                rank INT,
+                rank DOUBLE,
                 type_of_website VARCHAR(50)
             )
         ").execute(conn) {
