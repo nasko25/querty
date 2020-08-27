@@ -11,9 +11,17 @@ pub struct Database {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Solr {
+    pub server: String,
+    pub port: u16,
+    pub collection: String
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Settings {
     debug: bool,
-    pub database: Database
+    pub database: Database,
+    pub solr: Solr
 }
 
 impl Settings {

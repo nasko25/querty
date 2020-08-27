@@ -46,7 +46,7 @@ fn main() {
     println!("{:?}", db::Database::insert(&u, &conn));
     println!("{:?}", db::Database::insert(&w, &conn));
 
-    println!("{:?}", req());
+    println!("{:?}", req(&settings));
 
 }
 
@@ -102,10 +102,18 @@ fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
 
 
 #[tokio::main]
-async fn req() -> Result<(), reqwest::Error> {
-    println!("{}", reqwest::get("http://localhost:8983/solr/querty/select?q=*:*").await?.text().await?);
+async fn req(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+    let solr = &settings.solr;
+    println!("Solr config: {:?}", solr);
+
+    let method = "select";
+    let query = "*:*";
+    // TODO more options
+    let url =  format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &query);
+
+    println!("{}", reqwest::get(&url).await?.text().await?);
     let res: Response = reqwest::Client::new()
-        .get("http://localhost:8983/solr/querty/select?q=*:*")
+        .get(&url)
         .send()
         .await?
         .json()

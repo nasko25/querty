@@ -4,3 +4,8 @@ port = 3306
 db_name = "querty"
 user = "asdf"
 pass = "asdf"
+
+[solr]
+server = "localhost"
+port = 8983
+collection = "querty"
