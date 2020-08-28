@@ -56,7 +56,7 @@ fn main() {
 
     // TODO extract as a select method in DB
     let website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
-    let md = metadata::table.filter(metadata::website_id.eq(website_ids[0].id)).load::<Metadata>(&conn).expect("Error loading metadata");
+    let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
     println!("{:?}", &md);
 }
 
