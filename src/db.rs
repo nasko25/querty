@@ -8,16 +8,17 @@ use crate::schema::website;
 use crate::schema::website::dsl::*;
 use crate::schema::users;
 use crate::schema::users::dsl::*;
+use crate::schema::metadata;
+use crate::schema::metadata::dsl::*;
 
 
 // TODO maybe add a field for links to other websies that can be used by something like PageRank?
-#[derive(Queryable, Insertable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable)]
 #[table_name = "website"]
 pub struct Website {
     #[serde(deserialize_with = "from_str")]
-    pub id: Option<i32>,
+    pub id: i32,
     pub title: String,
-    pub metadata: String,
     pub text: String,
     pub url: String,
     pub rank: i32,
@@ -28,16 +29,13 @@ use std::str::FromStr;
 use std::fmt::Display;
 use serde::de::{self, Deserialize, Deserializer};
 // CITATION: https://github.com/serde-rs/json/issues/317#issuecomment-300251188
-fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
     where T: FromStr,
           T::Err: Display,
           D: Deserializer<'de>
 {
     let s = String::deserialize(deserializer)?;
-    match T::from_str(&s).map_err(de::Error::custom) {
-        Ok(r) => return Ok(Some(r)),
-        Err(err) => return Err(err)
-    }
+    T::from_str(&s).map_err(de::Error::custom)
 }
 
 #[derive(Queryable, Insertable, Debug)]
@@ -47,6 +45,15 @@ pub struct User {
     pub username: String,
     pub rank: f64,
     pub country_iso_a2: String
+}
+
+#[derive(Identifiable, Queryable, Associations, Debug)]
+#[belongs_to(Website)]
+#[table_name = "metadata"]
+pub struct Metadata {
+    pub id: i32,
+    pub metadata_text: String,
+    pub website_id: i32,
 }
 
 pub struct Database {
@@ -71,7 +78,6 @@ impl Database {
             CREATE TABLE IF NOT EXISTS website (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title TEXT,
-                metadata TEXT,
                 text TEXT,
                 url VARCHAR(100),
                 rank DOUBLE,
@@ -93,6 +99,19 @@ impl Database {
             Ok(r_code)  => r_code,
             Err(err) => return Err(err),
         };
+
+        return_code += match sql_query("
+            CREATE TABLE IF NOT EXISTS metadata (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                metadata TEXT,
+                website_id INT,
+                FOREIGN KEY (website_id) REFERENCES website(id)
+            )
+        ").execute(conn) {
+            Ok(r_code)  => r_code,
+            Err(err) => return Err(err),
+        };
+
         Ok(return_code)
     }
 

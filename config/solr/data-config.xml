@@ -1,6 +1,6 @@
 <dataConfig>
 <!-- TODO get config from config file -->
-<!-- TODO metadata - one-to-many
+<!-- TODO metadata - one-to-many https://lucene.apache.org/solr/guide/7_2/uploading-structured-data-store-data-with-the-data-import-handler.html
           links_to_external_websites - many-to-many
 -->
 <dataSource type="JdbcDataSource" driver="com.mysql.cj.jdbc.Driver" url="jdbc:mysql://localhost:3306/querty" user="asdf" password="asdf" />
@@ -8,7 +8,7 @@
         <entity name="website" query="select * from website">
             <field column="id" name="id" />
             <field column="title" name="title" />
-            <field column="metadata" name="metadata" />
+            <!-- TODO <field column="metadata" name="metadata" /> -->
             <field column="text" name="text" />
             <field column="url" name="url" />
             <field column="rank" name="rank" />

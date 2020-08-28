@@ -10,6 +10,12 @@ mod db;
 use db::Website;
 use db::User;
 use db::DB;
+use db::Metadata;
+
+// TODO tmp ----------------------------------------
+use diesel::prelude::*;
+use crate::schema::metadata;
+// -------------------------------------------------
 
 // TODO separate file requests
 use reqwest;
@@ -30,7 +36,8 @@ fn main() {
     let creat_website = db::Database::create_tables(&conn);
     println!("table website created: {:?}", creat_website);
 
-    let w = DB::Website(Website { id: None, title: "".to_string(), metadata: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() });
+    // TODO NewWebsite without the id, when you need to insert https://github.com/ChristophWurst/diesel_many_to_many/blob/master/src/models.rs
+    let w = DB::Website(Website { id: 12, title: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() });
     // let mut vals_inserted = db::Database::insert_w(&w, &conn);
     // println!("values inserted: {:?}", vals_inserted);
 
@@ -47,6 +54,10 @@ fn main() {
 
     println!("{:?}", req(&settings));
 
+    // TODO extract as a select method in DB
+    let website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
+    let md = metadata::table.filter(metadata::website_id.eq(website_ids[0].id)).load::<Metadata>(&conn).expect("Error loading metadata");
+    println!("{:?}", &md);
 }
 
 #[derive(Debug, Serialize, Deserialize)]
