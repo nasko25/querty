@@ -5,14 +5,21 @@
 -->
 <dataSource type="JdbcDataSource" driver="com.mysql.cj.jdbc.Driver" url="jdbc:mysql://localhost:3306/querty" user="asdf" password="asdf" />
     <document name="querty">
-        <entity name="website" query="select * from website">
+        <entity name="website" query="select * from website"
+                deltaQuery="select id from website where last_modified > '${dataimporter.last_index_time}'">
             <field column="id" name="id" />
             <field column="title" name="title" />
-            <!-- TODO <field column="metadata" name="metadata" /> -->
             <field column="text" name="text" />
             <field column="url" name="url" />
             <field column="rank" name="rank" />
             <field column="type_of_website" name="type_of_website" />
+
+            <entity name="metadata"
+                    query="select metadata from metadata where website_id='${website.id}'"
+                    deltaQuery="select website_id from metadata where last_modified > '${dataimporter.last_index_time}'"
+                    parentDeltaQuery="select id from website where id=${metadata.website_id}">
+                <field name="metadata" column="metadata"/>
+            </entity>
 
             <!-- <entity name="feature" query="select description from querty where item_id='${item.ID}'">
                 <field name="features" column="description" />

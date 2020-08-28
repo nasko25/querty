@@ -137,7 +137,7 @@
    <!--field name="name" type="text_general" indexed="true" stored="true"/-->
     <!-- text_en uses a stemmer; it would probably be best if I used a dynamic field that applies the text_en type -->
    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
-   <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="false" required="false" /> <!-- can it be required=false ? -->
+   <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="true" required="false" /> <!-- can it be required=false ? -->
    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
    <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
    <field name="rank" type="pdouble" indexed="true" stored="true" multiValued="false" />
