@@ -36,8 +36,7 @@ fn main() {
     let creat_website = db::Database::create_tables(&conn);
     println!("table website created: {:?}", creat_website);
 
-    // TODO NewWebsite without the id, when you need to insert https://github.com/ChristophWurst/diesel_many_to_many/blob/master/src/models.rs
-    let w = DB::Website(Website { id: 12, title: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() });
+    let w = DB::Website(Website { id: None, title: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), rank: 3, type_of_website: "".to_string() });
     // let mut vals_inserted = db::Database::insert_w(&w, &conn);
     // println!("values inserted: {:?}", vals_inserted);
 

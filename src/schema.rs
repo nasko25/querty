@@ -4,7 +4,7 @@ diesel::table! {
     // also consecutive keywords will have a higher rank the closer they are together
     // tf-idf
     website (id) {
-        id -> Unsigned<Integer>,
+        id -> Nullable<Unsigned<Integer>>,
         title -> Text,
         text -> Text,                           // the body/whole text of the website
         url -> Varchar,
@@ -15,10 +15,10 @@ diesel::table! {
 // TODO table metadata! + foreign key constraint https://github.com/ChristophWurst/diesel_many_to_many/blob/master/src/schema.rs
 diesel::table! {
     metadata(id) {
-        id -> Unsigned<Integer>,
+        id -> Nullable<Unsigned<Integer>>,
         #[sql_name = "metadata"]
         metadata_text -> Text,
-        website_id -> Unsigned<Integer>,
+        website_id -> Nullable<Unsigned<Integer>>,
     }
 }
 diesel::joinable!(metadata -> website (website_id));

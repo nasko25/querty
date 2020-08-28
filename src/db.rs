@@ -17,7 +17,7 @@ use crate::schema::metadata::dsl::*;
 #[table_name = "website"]
 pub struct Website {
     #[serde(deserialize_with = "from_str")]
-    pub id: u32,
+    pub id: Option<u32>,
     pub title: String,
     pub text: String,
     pub url: String,
@@ -29,13 +29,16 @@ use std::str::FromStr;
 use std::fmt::Display;
 use serde::de::{self, Deserialize, Deserializer};
 // CITATION: https://github.com/serde-rs/json/issues/317#issuecomment-300251188
-fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
     where T: FromStr,
           T::Err: Display,
           D: Deserializer<'de>
 {
     let s = String::deserialize(deserializer)?;
-    T::from_str(&s).map_err(de::Error::custom)
+    match T::from_str(&s).map_err(de::Error::custom) {
+        Ok(r) => return Ok(Some(r)),
+        Err(err) => return Err(err)
+    }
 }
 
 #[derive(Queryable, Insertable, Debug)]
@@ -52,9 +55,9 @@ pub struct User {
 #[belongs_to(Website)]
 #[table_name = "metadata"]
 pub struct Metadata {
-    pub id: u32,
+    pub id: Option<u32>,
     pub metadata_text: String,
-    pub website_id: u32,
+    pub website_id: Option<u32>,
 }
 
 pub struct Database {
