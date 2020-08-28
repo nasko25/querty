@@ -17,7 +17,7 @@ use crate::schema::metadata::dsl::*;
 #[table_name = "website"]
 pub struct Website {
     #[serde(deserialize_with = "from_str")]
-    pub id: i32,
+    pub id: u32,
     pub title: String,
     pub text: String,
     pub url: String,
@@ -41,19 +41,20 @@ fn from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 #[derive(Queryable, Insertable, Debug)]
 #[table_name = "users"]
 pub struct User {
-    pub id: Option<i32>,
+    pub id: Option<u32>,
     pub username: String,
     pub rank: f64,
     pub country_iso_a2: String
 }
 
+// TODO insert Metadata
 #[derive(Identifiable, Queryable, Associations, Debug)]
 #[belongs_to(Website)]
 #[table_name = "metadata"]
 pub struct Metadata {
-    pub id: i32,
+    pub id: u32,
     pub metadata_text: String,
-    pub website_id: i32,
+    pub website_id: u32,
 }
 
 pub struct Database {
@@ -76,7 +77,7 @@ impl Database {
     pub fn create_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
         let mut return_code = match sql_query("
             CREATE TABLE IF NOT EXISTS website (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 title TEXT,
                 text TEXT,
                 url VARCHAR(100),
@@ -90,7 +91,7 @@ impl Database {
 
         return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(25) UNIQUE,
                 rank DOUBLE NOT NULL,
                 CountryISO_A2 VARCHAR(3)
@@ -102,9 +103,9 @@ impl Database {
 
         return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS metadata (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 metadata TEXT,
-                website_id INT,
+                website_id INT UNSIGNED,
                 FOREIGN KEY (website_id) REFERENCES website(id)
             )
         ").execute(conn) {
