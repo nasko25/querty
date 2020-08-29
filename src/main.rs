@@ -57,6 +57,12 @@ fn main() {
     let website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
     let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
     println!("{:?}", &md);
+
+    let m = DB::Metadata(Metadata {id: None, metadata_text: "some metadata text".to_string(), website_id: website_ids.get(0).unwrap().id});
+    println!("{:?}", db::Database::insert(&m, &conn));
+
+    let m_err = DB::Metadata(Metadata {id: None, metadata_text: "some metadata text".to_string(), website_id: Some(9)});
+    println!("{:?}", db::Database::insert(&m_err, &conn));
 }
 
 #[derive(Debug, Serialize, Deserialize)]

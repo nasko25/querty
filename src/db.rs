@@ -50,8 +50,7 @@ pub struct User {
     pub country_iso_a2: String
 }
 
-// TODO insert Metadata
-#[derive(Identifiable, Queryable, Associations, Debug)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
 #[belongs_to(Website)]
 #[table_name = "metadata"]
 pub struct Metadata {
@@ -69,6 +68,7 @@ pub struct Database {
 pub enum DB {
     Website(Website),
     User(User),
+    Metadata(Metadata)
 }
 
 impl Database {
@@ -152,6 +152,14 @@ impl Database {
                 let ret = users.order(users::id.desc()).first::<User>(conn).unwrap();
                 match inserted {
                     Ok(_) => return Ok(DB::User(ret)),
+                    Err(err) => return Err(err),
+                }
+            },
+            DB::Metadata(m) => {
+                let inserted = insert_into(metadata).values(m).execute(conn);
+                let ret = metadata.order(metadata::id.desc()).first::<Metadata>(conn).unwrap();
+                match inserted {
+                    Ok(_) => return Ok(DB::Metadata(ret)),
                     Err(err) => return Err(err),
                 }
             }
