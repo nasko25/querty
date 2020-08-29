@@ -10,6 +10,10 @@ use crate::schema::users;
 use crate::schema::users::dsl::*;
 use crate::schema::metadata;
 use crate::schema::metadata::dsl::*;
+use crate::schema::external_links;
+use crate::schema::external_links::dsl::*;
+use crate::schema::website_ref_ext_links;
+use crate::schema::website_ref_ext_links::dsl::*;
 
 
 // TODO maybe add a field for links to other websies that can be used by something like PageRank?
@@ -57,6 +61,21 @@ pub struct Metadata {
     pub id: Option<u32>,
     pub metadata_text: String,
     pub website_id: Option<u32>,
+}
+
+#[derive(Identifiable, Queryable, Associations)]
+#[table_name = "external_links"]
+pub struct ExternalLink {
+    pub id: Option<u32>,
+    pub url: String,
+}
+
+#[derive(Identifiable, Queryable, Associations)]
+#[table_name = "website_ref_ext_links"]
+pub struct WebsiteRefExtLink {
+    pub id: Option<u32>,
+    pub website_id: Option<u32>,
+    pub ext_link_id: Option<u32>,
 }
 
 pub struct Database {
@@ -110,6 +129,27 @@ impl Database {
                 metadata TEXT,
                 website_id INT UNSIGNED,
                 FOREIGN KEY (website_id) REFERENCES website(id)
+            )
+        ").execute(conn) {
+            Ok(r_code)  => r_code,
+            Err(err) => return Err(err),
+        };
+
+        return_code += match sql_query("
+            CREATE TABLE IF NOT EXISTS external_links (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                url VARCHAR(2200)
+            )
+        ").execute(conn) {
+            Ok(r_code)  => r_code,
+            Err(err) => return Err(err),
+        };
+
+        return_code += match sql_query("
+            CREATE TABLE IF NOT EXISTS website_ref_ext_links (
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                website_id INT UNSIGNED,
+                ext_link_id INT UNSIGNED
             )
         ").execute(conn) {
             Ok(r_code)  => r_code,

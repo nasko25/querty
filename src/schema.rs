@@ -12,7 +12,7 @@ diesel::table! {
         type_of_website -> Varchar,             // TODO table for website types?
     }
 }
-// TODO table metadata! + foreign key constraint https://github.com/ChristophWurst/diesel_many_to_many/blob/master/src/schema.rs
+
 diesel::table! {
     metadata(id) {
         id -> Nullable<Unsigned<Integer>>,
@@ -26,6 +26,31 @@ diesel::joinable!(metadata -> website (website_id));
 diesel::allow_tables_to_appear_in_same_query!(
     website,
     metadata
+);
+
+diesel::table! {
+    external_links(id) {
+        id -> Nullable<Unsigned<Integer>>,
+        url -> Varchar,
+    }
+}
+
+diesel::table! {
+    website_ref_ext_links(id) {
+        id -> Nullable<Unsigned<Integer>>,
+        // TODO NOT NULL? (and not Nullable?)
+        website_id -> Nullable<Unsigned<Integer>>,
+        ext_link_id -> Nullable<Unsigned<Integer>>,
+    }
+}
+
+diesel::joinable!(website_ref_ext_links -> website (website_id));
+diesel::joinable!(website_ref_ext_links -> external_links (ext_link_id));
+
+diesel::allow_tables_to_appear_in_same_query!(
+    website,
+    website_ref_ext_links,
+    external_links
 );
 // ____________________________________________________________________________________________________________
 // users

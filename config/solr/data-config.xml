@@ -20,6 +20,7 @@
                     parentDeltaQuery="select id from website where id=${metadata.website_id}">
                 <field name="metadata" column="metadata"/>
             </entity>
+            <!-- TODO external_links -->
 
             <!-- <entity name="feature" query="select description from querty where item_id='${item.ID}'">
                 <field name="features" column="description" />
