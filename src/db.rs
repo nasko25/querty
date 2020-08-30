@@ -63,7 +63,8 @@ pub struct Metadata {
     pub website_id: Option<u32>,
 }
 
-#[derive(Identifiable, Queryable, Associations)]
+// TODO insert external_links and website_ref_ext_links
+#[derive(Identifiable, Queryable, Associations, Debug)]
 #[table_name = "external_links"]
 pub struct ExternalLink {
     pub id: Option<u32>,
@@ -71,6 +72,8 @@ pub struct ExternalLink {
 }
 
 #[derive(Identifiable, Queryable, Associations)]
+#[belongs_to(Website)]
+#[belongs_to(ExternalLink, foreign_key = "ext_link_id")]
 #[table_name = "website_ref_ext_links"]
 pub struct WebsiteRefExtLink {
     pub id: Option<u32>,
@@ -149,7 +152,9 @@ impl Database {
             CREATE TABLE IF NOT EXISTS website_ref_ext_links (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 website_id INT UNSIGNED,
-                ext_link_id INT UNSIGNED
+                ext_link_id INT UNSIGNED,
+                FOREIGN KEY (website_id) REFERENCES website(id) ON DELETE CASCADE,
+                FOREIGN KEY (ext_link_id) REFERENCES external_links(id) ON DELETE CASCADE
             )
         ").execute(conn) {
             Ok(r_code)  => r_code,

@@ -11,10 +11,14 @@ use db::Website;
 use db::User;
 use db::DB;
 use db::Metadata;
+use db::ExternalLink;
+use db::WebsiteRefExtLink;
 
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 use crate::schema::metadata;
+use crate::schema::external_links;
+use crate::schema::website_ref_ext_links;
 // -------------------------------------------------
 
 // TODO separate file requests
@@ -54,7 +58,7 @@ fn main() {
     println!("{:?}", req(&settings));
 
     // TODO extract as a select method in DB
-    let website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
+    let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
     let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
     println!("{:?}", &md);
 
@@ -63,6 +67,12 @@ fn main() {
 
     let m_err = DB::Metadata(Metadata {id: None, metadata_text: "some metadata text".to_string(), website_id: Some(9)});
     println!("{:?}", db::Database::insert(&m_err, &conn));
+
+    website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(109)).load::<Website>(&conn).expect("Error loading website");
+    let link_ids = WebsiteRefExtLink::belonging_to(website_ids.get(0).unwrap()).select(website_ref_ext_links::ext_link_id).load::<Option<u32>>(&conn).expect("");
+
+    let ext_links = external_links::table.filter(external_links::id.eq(link_ids.get(0).unwrap())).load::<ExternalLink>(&conn).expect("Error loading external links.");
+    println!("External Links: {:?}", ext_links);
 }
 
 #[derive(Debug, Serialize, Deserialize)]
