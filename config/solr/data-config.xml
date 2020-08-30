@@ -20,7 +20,18 @@
                     parentDeltaQuery="select id from website where id=${metadata.website_id}">
                 <field name="metadata" column="metadata"/>
             </entity>
-            <!-- TODO external_links -->
+
+            <entity name="website_ref_ext_links"
+                    query="select ext_link_id from website_ref_ext_links where website_id='${website.id}'"
+                    deltaQuery="select website_id, ext_link_id from website_ref_ext_links where last_modified > '${dataimporter.last_index_time}'"
+                    parentDeltaQuery="select id from website where id=${website_ref_ext_links.website_id}">
+                <entity name="external_links"
+                        query="select url from external_links where id='${website_ref_ext_links.ext_link_id}'"
+                        deltaQuery="select id from external_links where last_modified > '${dataimporter.last_index_time}'"
+                        parentDeltaQuery="select website_id, ext_link_id from website_ref_ext_links where ext_link_id=${external_links.id}">
+                    <field column="url" name="external_links" />
+                </entity>
+            </entity>
 
             <!-- <entity name="feature" query="select description from querty where item_id='${item.ID}'">
                 <field name="features" column="description" />

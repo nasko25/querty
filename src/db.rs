@@ -150,6 +150,7 @@ impl Database {
             Err(err) => return Err(err),
         };
 
+        // TODO (website_id, ext_link_id) should be unique
         return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS website_ref_ext_links (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
