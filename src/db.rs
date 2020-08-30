@@ -64,14 +64,14 @@ pub struct Metadata {
 }
 
 // TODO insert external_links and website_ref_ext_links
-#[derive(Identifiable, Queryable, Associations, Debug)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
 #[table_name = "external_links"]
 pub struct ExternalLink {
     pub id: Option<u32>,
     pub url: String,
 }
 
-#[derive(Identifiable, Queryable, Associations)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
 #[belongs_to(Website)]
 #[belongs_to(ExternalLink, foreign_key = "ext_link_id")]
 #[table_name = "website_ref_ext_links"]
@@ -90,7 +90,9 @@ pub struct Database {
 pub enum DB {
     Website(Website),
     User(User),
-    Metadata(Metadata)
+    Metadata(Metadata),
+    ExternalLink(ExternalLink),
+    WebsiteRefExtLink(WebsiteRefExtLink)
 }
 
 impl Database {
@@ -205,6 +207,22 @@ impl Database {
                 let ret = metadata.order(metadata::id.desc()).first::<Metadata>(conn).unwrap();
                 match inserted {
                     Ok(_) => return Ok(DB::Metadata(ret)),
+                    Err(err) => return Err(err),
+                }
+            },
+            DB::ExternalLink(ext_l) => {
+                let inserted = insert_into(external_links).values(ext_l).execute(conn);
+                let ret = external_links.order(external_links::id.desc()).first::<ExternalLink>(conn).unwrap();
+                match inserted {
+                    Ok(_) => return Ok(DB::ExternalLink(ret)),
+                    Err(err) => return Err(err),
+                }
+            },
+            DB::WebsiteRefExtLink(web_ref_ext_link) => {
+                let inserted = insert_into(website_ref_ext_links).values(web_ref_ext_link).execute(conn);
+                let ret = website_ref_ext_links.order(website_ref_ext_links::id.desc()).first::<WebsiteRefExtLink>(conn).unwrap();
+                match inserted {
+                    Ok(_) => return Ok(DB::WebsiteRefExtLink(ret)),
                     Err(err) => return Err(err),
                 }
             }
