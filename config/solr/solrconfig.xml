@@ -950,12 +950,13 @@
 
   <initParams path="/update/**,/query,/select,/tvrh,/elevate,/spell,/browse,update">
     <lst name="defaults">
+      <!-- TODO text or text_all (if text_all change all occurences of text!) -->
       <str name="df">text</str>
     </lst>
   </initParams>
 
   <!-- isn't it a better idea to update the database directly and then just reindex? -->
-  <requestHandler name="/update" class="solr.UpdateRequestHandler" />
+  <!-- <requestHandler name="/update" class="solr.UpdateRequestHandler" /> -->
 
   <!-- The following are implicitly added
   <requestHandler name="/update/json" class="solr.UpdateRequestHandler">
@@ -969,6 +970,20 @@
        </lst>
   </requestHandler>
   -->
+
+
+  <!-- <initParams path="/update/json/docs">
+    <lst name="defaults"> -->
+      <!-- this ensures that the entire json doc will be stored verbatim into one field -->
+      <!-- <str name="srcField">_src_</str> -->
+      <!-- This means a the uniqueKeyField will be extracted from the fields and
+          all fields go into the 'df' field. In this config df is already configured to be 'text'
+      -->
+      <!-- <str name="mapUniqueKeyOnly">true</str> -->
+      <!-- The default search field where all the values are indexed to -->
+      <!-- <str name="df">text</str> -->
+    <!-- </lst>
+  </initParams> -->
 
   <!-- Solr Cell Update Request Handler
 
@@ -1552,7 +1567,8 @@
      <queryResponseWriter name="csv" class="solr.CSVResponseWriter"/>
      <queryResponseWriter name="schema.xml" class="solr.SchemaXmlResponseWriter"/>
     -->
-    <schemaFactory class="ClassicIndexSchemaFactory"/>
+    <!-- uncomment if you want to change the name of managed-schema to schema.xml -->
+    <!-- <schemaFactory class="ClassicIndexSchemaFactory"/> -->
 
   <queryResponseWriter name="json" class="solr.JSONResponseWriter">
      <!-- For the purposes of the tutorial, JSON responses are written as
