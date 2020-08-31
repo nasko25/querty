@@ -14,6 +14,8 @@ use db::Metadata;
 use db::ExternalLink;
 use db::WebsiteRefExtLink;
 
+use db::from_str;
+
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 use crate::schema::metadata;
@@ -111,7 +113,21 @@ struct ResponseBody {
     max_score: f32,
     #[serde(rename = "numFoundExact")]
     num_found_exact: bool,
-    docs: Vec<Website>
+    docs: Vec<WebsiteSolr>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct WebsiteSolr {
+    #[serde(deserialize_with = "from_str")]
+    id: Option<u32>,
+    title: String,
+    text: String,
+    url: String,
+    rank: f64,
+    type_of_website: String,
+    // not in the db, but present in solr:
+    metadata: Option<Vec<String>>,
+    external_links: Option<Vec<String>>
 }
 
 #[tokio::main]
@@ -132,7 +148,7 @@ async fn req(settings: &settings::Settings) -> Result<(), reqwest::Error> {
         .json()
         .await?;
 
-    println!("Result: {:?}", res);
+    println!("Result: {:?}", res.response.docs.get(1).unwrap().metadata);
 
     Ok(())
 }

@@ -33,7 +33,7 @@ use std::str::FromStr;
 use std::fmt::Display;
 use serde::de::{self, Deserialize, Deserializer};
 // CITATION: https://github.com/serde-rs/json/issues/317#issuecomment-300251188
-fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+pub fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
     where T: FromStr,
           T::Err: Display,
           D: Deserializer<'de>
