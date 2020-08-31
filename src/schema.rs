@@ -8,7 +8,7 @@ diesel::table! {
         title -> Text,
         text -> Text,                           // the body/whole text of the website
         url -> Varchar,
-        rank -> Integer,
+        rank -> Double,
         type_of_website -> Varchar,             // TODO table for website types?
     }
 }

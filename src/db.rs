@@ -25,7 +25,7 @@ pub struct Website {
     pub title: String,
     pub text: String,
     pub url: String,
-    pub rank: i32,
+    pub rank: f64,
     pub type_of_website: String
 }
 
