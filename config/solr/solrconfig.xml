@@ -956,7 +956,7 @@
   </initParams>
 
   <!-- isn't it a better idea to update the database directly and then just reindex? -->
-  <!-- <requestHandler name="/update" class="solr.UpdateRequestHandler" /> -->
+  <requestHandler name="/update" class="solr.UpdateRequestHandler" />
 
   <!-- The following are implicitly added
   <requestHandler name="/update/json" class="solr.UpdateRequestHandler">
