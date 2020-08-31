@@ -16,6 +16,7 @@ use db::ExternalLink;
 use db::WebsiteRefExtLink;
 
 use solr::req;
+use solr::insert;
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 use crate::schema::metadata;
@@ -55,6 +56,7 @@ fn main() {
     // println!("{:?}", db::Database::insert(&w, &conn));
 
     println!("{:?}", req(&settings));
+    println!("Inserted in Solr: {:?}", insert(&settings));
 
     // TODO extract as a select methods in DB
     let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");

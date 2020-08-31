@@ -66,3 +66,38 @@ pub async fn req(settings: &settings::Settings) -> Result<(), reqwest::Error> {
 
     Ok(())
 }
+
+#[tokio::main]
+pub async fn insert(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+    let solr = &settings.solr;
+
+    let method = "update";
+
+    let url = format!("http://{}:{}/solr/{}/{}/json/docs",  &solr.server, &solr.port, &solr.collection, &method);
+
+    // TODO pass object as parameter to the method (like the db::insert)
+    let w = WebsiteSolr {id: Some(1), title: "new solr website".to_string(), text: "hello there. asdasd".to_string(), url: "http://asdf.com/hello".to_string(), rank: 1.009, type_of_website: "test".to_string(), metadata: None, external_links: None};
+    let res = reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&w)
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    println!("\nResult of insert: {:?}", &res);
+    Ok(())
+    /* TODO
+    curl -X POST -H 'Content-Type: application/json' 'http://localhost:8983/solr/querty/update/json/docs' --data-binary '
+{
+  "id": "2222",
+  "title": "heyo",
+
+"text": "ok",
+"url": "test.com",
+"rank": 0.999,
+"type_of_website": "test", "metadata":[], "external_links":[]}
+'
+    */
+}
