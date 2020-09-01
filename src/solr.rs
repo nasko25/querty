@@ -31,17 +31,17 @@ struct ResponseBody {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct WebsiteSolr {
+pub struct WebsiteSolr {
     #[serde(deserialize_with = "from_str")]
-    id: Option<u32>,
-    title: String,
-    text: String,
-    url: String,
-    rank: f64,
-    type_of_website: String,
+    pub id: Option<u32>,
+    pub title: String,
+    pub text: String,
+    pub url: String,
+    pub rank: f64,
+    pub type_of_website: String,
     // not in the db, but present in solr:
-    metadata: Option<Vec<String>>,
-    external_links: Option<Vec<String>>
+    pub metadata: Option<Vec<String>>,
+    pub external_links: Option<Vec<String>>
 }
 
 #[tokio::main]
@@ -68,7 +68,7 @@ pub async fn req(settings: &settings::Settings) -> Result<(), reqwest::Error> {
 }
 
 #[tokio::main]
-pub async fn insert(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let solr = &settings.solr;
 
     let method = "update";
@@ -76,17 +76,13 @@ pub async fn insert(settings: &settings::Settings) -> Result<(), reqwest::Error>
     let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
 
     // TODO pass object as parameter to the method (like the db::insert)
-    let w = WebsiteSolr {id: Some(1), title: "new solr website".to_string(), text: "hello there. asdasd".to_string(), url: "http://asdf.com/hello".to_string(), rank: 1.009, type_of_website: "test".to_string(), metadata: None, external_links: None};
-    let res = reqwest::Client::new()
+        reqwest::Client::new()
         .post(&url)
         .header("Content-Type", "application/json")
-        .json(&w)
+        .json(&website)
         .send()
-        .await?
-        .json()
         .await?;
 
-    println!("\nResult of insert: {:?}", &res);
     Ok(())
     /*
     curl -X POST -H 'Content-Type: application/json' 'http://localhost:8983/solr/querty/update/json/docs?commit=true' --data-binary '

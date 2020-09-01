@@ -15,6 +15,8 @@ use db::Metadata;
 use db::ExternalLink;
 use db::WebsiteRefExtLink;
 
+use solr::WebsiteSolr;
+
 use solr::req;
 use solr::insert;
 // TODO tmp ----------------------------------------
@@ -49,14 +51,15 @@ fn main() {
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 
-    // if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
-    //     println!("{:?}", website.id);
-    // }
+    if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
+        println!("{:?}", website.id);
+        let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None};
+        println!("Inserted in Solr: {:?}", insert(&settings, &website_solr));
+    }
     // println!("{:?}", db::Database::insert(&u, &conn));
     // println!("{:?}", db::Database::insert(&w, &conn));
 
     println!("{:?}", req(&settings));
-    println!("Inserted in Solr: {:?}", insert(&settings));
 
     // TODO extract as a select methods in DB
     let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
