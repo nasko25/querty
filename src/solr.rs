@@ -97,3 +97,4 @@ pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Res
 '
     */
 }
+// TODO insert metadata and external_links by updating a website with an already existsing id

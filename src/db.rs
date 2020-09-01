@@ -63,7 +63,6 @@ pub struct Metadata {
     pub website_id: Option<u32>,
 }
 
-// TODO insert external_links and website_ref_ext_links
 #[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
 #[table_name = "external_links"]
 pub struct ExternalLink {
