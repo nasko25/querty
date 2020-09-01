@@ -67,7 +67,9 @@ fn main() {
     let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
     println!("{:?}", &md);
 
-    println!("\n\nUpdate metadata: {:?}", update_metadata(&settings, &md, website_ids.get(0).unwrap().id.unwrap()));
+    let website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
+    let website_solr = website_solr_vec.get(0).unwrap();
+    println!("\n\nUpdate metadata: {:?}", update_metadata(&settings, &md, &website_solr));
 
     website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(109)).load::<Website>(&conn).expect("Error loading website");
     let link_ids = WebsiteRefExtLink::belonging_to(website_ids.get(0).unwrap()).select(website_ref_ext_links::ext_link_id).load::<Option<u32>>(&conn).expect("");

@@ -62,7 +62,7 @@ pub async fn req(settings: &settings::Settings, query: String) -> Result<Vec<Web
         .json()
         .await?;
 
-    println!("Result: {:?}", res.response.docs.get(1).unwrap().metadata);
+    // println!("Result: {:?}", res.response.docs.get(1).unwrap().metadata);
 
     Ok(res.response.docs)
 }
@@ -97,37 +97,22 @@ pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Res
 }
 // TODO insert metadata and external_links by updating a website with an already existsing id
 #[tokio::main]
-pub async fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, website_id: u32) -> Result<(), reqwest::Error> {
-    let solr = &settings.solr;
-    let mut method = "select";
-    let query = format!("id:{}", &website_id);
-
-    let mut url =  format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &query);
-
-    let res: Response = reqwest::Client::new()
-        .get(&url)
-        .send()
-        .await?
-        .json()
-        .await?;
-    let websites = res.response.docs;
-
-    let mut website = websites.get(0).unwrap().clone();
-
+pub async fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let mut new_metadata = Vec::new();
     for m in metadata {
         new_metadata.push(m.metadata_text.clone());
     }
 
-    website.metadata = Some(new_metadata);
+    let mut website_mut = website.clone();
+    website_mut.metadata = Some(new_metadata);
 
-    method = "update";
-
-    url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
+    let solr = &settings.solr;
+    let method = "update";
+    let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
     reqwest::Client::new()
         .post(&url)
         .header("Content-Type", "application/json")
-        .json(&website)
+        .json(&website_mut)
         .send()
         .await?;
 
