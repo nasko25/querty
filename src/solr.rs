@@ -2,6 +2,7 @@ use reqwest;
 use crate::settings;
 use crate::db::from_str;
 use crate::db::Metadata;
+use crate::db::ExternalLink;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
@@ -105,6 +106,30 @@ pub async fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metad
 
     let mut website_mut = website.clone();
     website_mut.metadata = Some(new_metadata);
+
+    let solr = &settings.solr;
+    let method = "update";
+    let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
+    reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&website_mut)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
+// TODO surely can do something about code duplication
+#[tokio::main]
+pub async fn update_ext_links(settings: &settings::Settings, external_links: &Vec<ExternalLink>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+    let mut new_ext_links = Vec::new();
+    for el in external_links {
+        new_ext_links.push(el.url.clone());
+    }
+
+    let mut website_mut = website.clone();
+    website_mut.external_links = Some(new_ext_links);
 
     let solr = &settings.solr;
     let method = "update";

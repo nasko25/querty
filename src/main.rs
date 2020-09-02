@@ -20,6 +20,7 @@ use solr::WebsiteSolr;
 use solr::req;
 use solr::insert;
 use solr::update_metadata;
+use solr::update_ext_links;
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 use crate::schema::metadata;
@@ -67,8 +68,8 @@ fn main() {
     let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
     println!("{:?}", &md);
 
-    let website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
-    let website_solr = website_solr_vec.get(0).unwrap();
+    let mut website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
+    let mut website_solr = website_solr_vec.get(0).unwrap();
     println!("\n\nUpdate metadata: {:?}", update_metadata(&settings, &md, &website_solr));
 
     website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(109)).load::<Website>(&conn).expect("Error loading website");
@@ -76,6 +77,9 @@ fn main() {
 
     let ext_links = external_links::table.filter(external_links::id.eq(link_ids.get(0).unwrap())).load::<ExternalLink>(&conn).expect("Error loading external links.");
     println!("External Links: {:?}", ext_links);
+    website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+    println!("\nUpdate external links: {:?}", update_ext_links(&settings, &ext_links, &website_solr));
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
     // some insert tests
