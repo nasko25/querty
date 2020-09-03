@@ -228,4 +228,21 @@ impl Database {
             }
         }
     }
+
+    // TODO
+    // external links and metadata as well
+    // select website(s)
+    pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) {
+        let mut websites = Vec::new();
+        match ids {
+            Some(ids_ref) => {
+                for w_id in ids_ref {
+                    websites.push(crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(w_id)).load::<Website>(conn).expect("Error loading website"));
+                }
+            },
+            None => {
+                websites.push(crate::schema::website::dsl::website.load::<Website>(conn).expect("Error loading websites"));
+            }
+        }
+    }
 }
