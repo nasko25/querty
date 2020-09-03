@@ -28,6 +28,7 @@ use crate::schema::external_links;
 use crate::schema::website_ref_ext_links;
 // -------------------------------------------------
 
+// TODO add a testing database
 fn main() {
     // TODO https://lucene.apache.org/solr instead of mysql
     let settings = settings::Settings::new(false).unwrap();
