@@ -96,9 +96,23 @@ pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Res
 '
     */
 }
-// TODO insert metadata and external_links by updating a website with an already existsing id
+
 #[tokio::main]
-pub async fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+pub async fn update(settings: &settings::Settings, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+    let solr = &settings.solr;
+    let method = "update";
+    let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
+    reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(website)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
+pub fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let mut new_metadata = Vec::new();
     for m in metadata {
         new_metadata.push(m.metadata_text.clone());
@@ -107,22 +121,11 @@ pub async fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metad
     let mut website_mut = website.clone();
     website_mut.metadata = Some(new_metadata);
 
-    let solr = &settings.solr;
-    let method = "update";
-    let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
-    reqwest::Client::new()
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .json(&website_mut)
-        .send()
-        .await?;
-
-    Ok(())
+    update(settings, &website_mut)
 }
 
-// TODO surely can do something about code duplication
-#[tokio::main]
-pub async fn update_ext_links(settings: &settings::Settings, external_links: &Vec<ExternalLink>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+// TODO code duplication?
+pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<ExternalLink>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let mut new_ext_links = Vec::new();
     for el in external_links {
         new_ext_links.push(el.url.clone());
@@ -131,15 +134,5 @@ pub async fn update_ext_links(settings: &settings::Settings, external_links: &Ve
     let mut website_mut = website.clone();
     website_mut.external_links = Some(new_ext_links);
 
-    let solr = &settings.solr;
-    let method = "update";
-    let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
-    reqwest::Client::new()
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .json(&website_mut)
-        .send()
-        .await?;
-
-    Ok(())
+    update(settings, &website_mut)
 }
