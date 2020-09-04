@@ -54,7 +54,7 @@ pub struct User {
     pub country_iso_a2: String
 }
 
-#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable, Clone)]
 #[belongs_to(Website)]
 #[table_name = "metadata"]
 pub struct Metadata {
@@ -238,7 +238,7 @@ impl Database {
             Some(ids_ref) => {
                 for w_id in ids_ref {
                     for w in crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(w_id)).load::<Website>(conn).expect("Error loading website").iter() {
-                        websites.push(w.clone());
+                        websites.push(w.clone()); // TODO is clone necessary?
                     }
                 }
             },
@@ -251,4 +251,25 @@ impl Database {
 
         websites
     }
+
+    pub fn select_m(websites: &Option<Vec<Website>>, conn: &MysqlConnection) -> Vec<Metadata>{
+        let mut md = Vec::<Metadata>::new();
+        match websites {
+            Some(ws) => {
+                for w in ws {
+                    for m in metadata::table.filter(metadata::website_id.eq(w.id)).load::<Metadata>(conn).expect("Error loading metadata").iter() {
+                        md.push(m.clone());
+                    }
+                }
+            },
+            None => {
+                for m in metadata.load::<Metadata>(conn).expect("Error loading all metadata").iter() {
+                    md.push(m.clone());
+                }
+            }
+        }
+        md
+    }
+
+    // TODO update all tables
 }
