@@ -251,7 +251,7 @@ impl Database {
 
         websites
     }
-    // TODO  &Option<Vec<&Website>>
+
     pub fn select_m(websites: &Option<Vec<Website>>, conn: &MysqlConnection) -> Vec<Metadata>{
         let mut md = Vec::<Metadata>::new();
         match websites {
