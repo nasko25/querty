@@ -76,10 +76,9 @@ fn main() {
     let mut website_solr = website_solr_vec.get(0).unwrap();
     println!("\n\nUpdate metadata: {:?}", update_metadata(&settings, &md, &website_solr));
 
-    website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(109)).load::<Website>(&conn).expect("Error loading website");
-    let link_ids = WebsiteRefExtLink::belonging_to(website_ids.get(0).unwrap()).select(website_ref_ext_links::ext_link_id).load::<Option<u32>>(&conn).expect("");
+    website_ids = db::Database::select_w(&Some(vec![ 109 ]), &conn);
 
-    let ext_links = external_links::table.filter(external_links::id.eq(link_ids.get(0).unwrap())).load::<ExternalLink>(&conn).expect("Error loading external links.");
+    let ext_links = db::Database::select_el(&website_ids.get(0), &conn);
     println!("External Links: {:?}", ext_links);
     website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     website_solr = website_solr_vec.get(0).unwrap();

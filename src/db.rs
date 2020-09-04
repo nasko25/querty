@@ -251,7 +251,7 @@ impl Database {
 
         websites
     }
-
+    // TODO  &Option<Vec<&Website>>
     pub fn select_m(websites: &Option<Vec<Website>>, conn: &MysqlConnection) -> Vec<Metadata>{
         let mut md = Vec::<Metadata>::new();
         match websites {
@@ -269,6 +269,19 @@ impl Database {
             }
         }
         md
+    }
+
+    pub fn select_el(website_opt: &Option<&Website>, conn: &MysqlConnection) -> Vec<ExternalLink>{
+        let mut els = Vec::<ExternalLink>::new();
+        if (website_opt.is_some()) {
+            let link_ids = WebsiteRefExtLink::belonging_to(website_opt.unwrap()).select(website_ref_ext_links::ext_link_id).load::<Option<u32>>(conn).expect("Error loading external_link ids");
+            for link_id in link_ids {
+                for el in external_links::table.filter(external_links::id.eq(link_id)).load::<ExternalLink>(conn).expect("Error loading external links.") {
+                    els.push(el);
+                }
+            }
+        }
+        els
     }
 
     // TODO update all tables
