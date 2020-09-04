@@ -17,7 +17,7 @@ use crate::schema::website_ref_ext_links::dsl::*;
 
 
 // TODO maybe add a field for links to other websies that can be used by something like PageRank?
-#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable, Clone)]
 #[table_name = "website"]
 pub struct Website {
     #[serde(deserialize_with = "from_str")]
@@ -232,17 +232,23 @@ impl Database {
     // TODO
     // external links and metadata as well
     // select website(s)
-    pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) {
-        let mut websites = Vec::new();
+    pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Website> {
+        let mut websites = Vec::<Website>::new();
         match ids {
             Some(ids_ref) => {
                 for w_id in ids_ref {
-                    websites.push(crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(w_id)).load::<Website>(conn).expect("Error loading website"));
+                    for w in crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(w_id)).load::<Website>(conn).expect("Error loading website").iter() {
+                        websites.push(w.clone());
+                    }
                 }
             },
             None => {
-                websites.push(crate::schema::website::dsl::website.load::<Website>(conn).expect("Error loading websites"));
+                for w in crate::schema::website::dsl::website.load::<Website>(conn).expect("Error loading websites").iter() {
+                    websites.push(w.clone());
+                }
             }
         }
+
+        websites
     }
 }

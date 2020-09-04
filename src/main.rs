@@ -65,9 +65,10 @@ fn main() {
     println!("{:?}", req(&settings, "*:*".to_string()));
 
     // TODO extract as a select methods in DB
-    let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
+    // let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(&conn).expect("Error loading website");
+    let mut website_ids = db::Database::select_w(&Some(vec![ 110 ]), &conn);
     let md = metadata::table.filter(metadata::website_id.eq(website_ids.get(0).unwrap().id)).load::<Metadata>(&conn).expect("Error loading metadata");
-    println!("{:?}", &md);
+    println!("Metadata: {:?}", &md);
 
     let mut website_solr_vec = req(&settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
