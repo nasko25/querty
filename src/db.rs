@@ -15,8 +15,10 @@ use crate::schema::external_links::dsl::*;
 use crate::schema::website_ref_ext_links;
 use crate::schema::website_ref_ext_links::dsl::*;
 
+// TODO comments
 
 // TODO maybe add a field for links to other websies that can be used by something like PageRank?
+// TODO add a field last_visited that will indicate when the bot (that will be used to rank the quality of the website) last visited the site
 #[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable, Clone)]
 #[table_name = "website"]
 pub struct Website {
@@ -285,4 +287,19 @@ impl Database {
     }
 
     // TODO update all tables
+    // update the website_id_opt based on its id
+    pub fn update(website_id_opt: &Option<Website>, conn: &MysqlConnection) -> Result<Website, diesel::result::Error>{
+        let w = website_id_opt.as_ref().unwrap();
+        diesel::update(website.filter(crate::schema::website::dsl::id.eq(w.id))).set(
+            ( crate::schema::website::title.eq(&w.title),
+            crate::schema::website::text.eq(&w.text),
+            crate::schema::website::url.eq(&w.url),
+            crate::schema::website::rank.eq(&w.rank),
+            crate::schema::website::type_of_website.eq(&w.type_of_website) )
+        ).execute(conn)?;
+        // TODO maybe use select_w
+        let updated_row_vec = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(website_id_opt.as_ref().unwrap().id)).load::<Website>(conn).expect("Error loading website");
+        let updated_row = updated_row_vec.get(0).unwrap().clone();
+        Ok(updated_row)
+    }
 }

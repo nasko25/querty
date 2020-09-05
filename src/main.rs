@@ -28,6 +28,7 @@ use crate::schema::external_links;
 use crate::schema::website_ref_ext_links;
 // -------------------------------------------------
 
+// TODO move all the tests from main to tests.rs
 // TODO add a testing database
 fn main() {
     // TODO https://lucene.apache.org/solr instead of mysql
@@ -54,8 +55,11 @@ fn main() {
     // vals_inserted = db::Database::insert_u(&u, &conn);
     // println!("user values inseted: {:?}", vals_inserted);
 
-    if let DB::Website(website) = db::Database::insert(&w, &conn).unwrap() {
+    if let DB::Website(mut website) = db::Database::insert(&w, &conn).unwrap() {
         println!("{:?}", website.id);
+        println!("Inserted website: {:?}", website);
+        website.rank = 7.0;
+        println!("Website rank should be updated: {:?}", db::Database::update(&Some(website.clone()), &conn));
         let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None};
         println!("Inserted in Solr: {:?}", insert(&settings, &website_solr));
     }
