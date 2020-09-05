@@ -8,6 +8,7 @@ mod schema;
 mod db;
 mod solr;
 mod tests;
+mod bot;
 
 use tests::test_all;
 
@@ -26,4 +27,5 @@ fn main() {
     let conn = db::Database::establish_connection(&url);
 
     println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
+    bot::analyse_website("https://www.rust-lang.org");
 }
