@@ -1,4 +1,5 @@
 use reqwest;
+use scraper::{Html, Selector};
 
 #[tokio::main]
 pub async fn analyse_website(url: &str) -> Result<(), reqwest::Error>{
@@ -7,13 +8,22 @@ pub async fn analyse_website(url: &str) -> Result<(), reqwest::Error>{
     .text()
     .await?;
 
-    println!("body = {:?}; type = {:?}", body, website_type(&body));
+    website_type(&body);
     Ok(())
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
 // TODO different languages?
 fn website_type(body: &str) -> &str {
+
+    let fragment = Html::parse_document(body);
+    let selector = Selector::parse("meta").unwrap();
+    // println!("Selected meta tags: {:?}", fragment.select(&selector));
+    for element in fragment.select(&selector) {
+        println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
+            element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
+    }
+
     let body_lc = body.to_lowercase();
 
     // TODO also check meta tags for website type
