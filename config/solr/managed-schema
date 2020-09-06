@@ -139,6 +139,7 @@
    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
    <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="true" required="false" /> <!-- can it be required=false ? -->
    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+   <!-- TODO url should be unique -->
    <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
    <field name="external_links" type="text_general" indexed="true" stored="true" multiValued="true" required="false"/>
    <field name="rank" type="pdouble" indexed="true" stored="true" multiValued="false" />

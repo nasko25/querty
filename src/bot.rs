@@ -1,15 +1,28 @@
 use reqwest;
 use scraper::{Html, Selector};
 
+use crate::solr::WebsiteSolr;
+
 #[tokio::main]
-pub async fn analyse_website(url: &str) -> Result<(), reqwest::Error>{
+pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error>{
     let body = reqwest::get(url)
     .await?
     .text()
     .await?;
 
     website_type(&body);
+
+    if  websites_saved.is_empty() {
+        save_website_info();
+    }
     Ok(())
+}
+
+fn save_website_info() {
+    // TODO
+    // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
+    // (because the database should (eventually) have a unique constraint on url)
+    // if the website cannot be inserted in the database, throw an error
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
@@ -19,6 +32,8 @@ fn website_type(body: &str) -> &str {
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("meta").unwrap();
     // println!("Selected meta tags: {:?}", fragment.select(&selector));
+    // meta tags can provide info for the type of website
+    // TODO content of meta tag can have capital letters -> case insensitive search for "article"
     for element in fragment.select(&selector) {
         println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
             element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());

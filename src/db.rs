@@ -103,6 +103,7 @@ impl Database {
     }
 
     pub fn create_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        // TODO website url should be unique
         let mut return_code = match sql_query("
             CREATE TABLE IF NOT EXISTS website (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

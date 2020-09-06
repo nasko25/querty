@@ -27,5 +27,10 @@ fn main() {
     let conn = db::Database::establish_connection(&url);
 
     println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
-    bot::analyse_website("https://www.rust-lang.org");
+
+    let url = "https://www.rust-lang.org";
+    // load the website with this url from solr to see if it is in the database
+    let websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+    println!("web saved: {:?}", websites_saved);
+    bot::analyse_website(&url, &websites_saved);
 }
