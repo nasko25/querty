@@ -5,24 +5,48 @@ use crate::solr::WebsiteSolr;
 
 #[tokio::main]
 pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error>{
-    let body = reqwest::get(url)
-    .await?
-    .text()
-    .await?;
+    // await is not necessary
+    let res = reqwest::get(url).await?;
+    assert!(res.status().is_success());
+
+    let body = res.text().await?;
 
     website_type(&body);
 
     if  websites_saved.is_empty() {
-        save_website_info();
+        save_website_info(&body);
     }
     Ok(())
 }
 
-fn save_website_info() {
+fn save_website_info(body: &str) {
     // TODO
     // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
     // (because the database should (eventually) have a unique constraint on url)
     // if the website cannot be inserted in the database, throw an error
+
+    let fragment = Html::parse_document(body);
+    let mut selector = Selector::parse("title").unwrap();
+
+    // if there are multiple titles, only the first is used
+    println!("Website title: {:?}", fragment.select(&selector).next().unwrap().inner_html().trim());
+
+    // select all text
+    selector = Selector::parse("body").unwrap();
+    let text = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
+    println!("\nWebsite body text: {:?}", text);
+
+    // trim the trailing and leading white spaces
+    let mut trimmed_text = Vec::new();
+    let mut trimmed_element;
+    for element in text {
+        trimmed_element = element.trim();
+        if trimmed_element != "" {
+            trimmed_text.push(trimmed_element);
+        }
+    }
+
+    println!("\nWebsite body text trimmed: {:?}", trimmed_text);
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
