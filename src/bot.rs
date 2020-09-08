@@ -2,6 +2,7 @@ use reqwest;
 use scraper::{Html, Selector};
 
 use crate::solr::WebsiteSolr;
+use crate::db::Website;
 
 #[tokio::main]
 pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error>{
@@ -14,12 +15,12 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Re
     website_type(&body);
 
     if  websites_saved.is_empty() {
-        save_website_info(&body);
+        save_website_info(&body, &url);
     }
     Ok(())
 }
 
-fn save_website_info(body: &str) {
+fn save_website_info(body: &str, url: &str) {
     // TODO
     // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
     // (because the database should (eventually) have a unique constraint on url)
@@ -29,7 +30,9 @@ fn save_website_info(body: &str) {
     let mut selector = Selector::parse("title").unwrap();
 
     // if there are multiple titles, only the first is used
-    println!("Website title: {:?}", fragment.select(&selector).next().unwrap().inner_html().trim());
+    let title_raw = fragment.select(&selector).next().unwrap().inner_html();
+    let title = title_raw.trim();
+    println!("Website title: {:?}", title);
 
     // select all text
     selector = Selector::parse("body").unwrap();
@@ -46,7 +49,9 @@ fn save_website_info(body: &str) {
         }
     }
 
-    println!("\nWebsite body text trimmed: {:?}", trimmed_text);
+    println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
+
+    let website = Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()};
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
