@@ -51,6 +51,11 @@ fn save_website_info(body: &str) {
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
 // TODO different languages?
+
+// TODO train a model to guess the type of website (feed in the html document and classify its type)
+//          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
+//              -> this looks like a good source to use on web page classification
+//              -> it also contains some optimization options that can help speed up the web page analysis
 fn website_type(body: &str) -> &str {
 
     let fragment = Html::parse_document(body);
