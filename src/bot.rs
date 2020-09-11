@@ -1,11 +1,14 @@
 use reqwest;
 use scraper::{Html, Selector};
 
+use diesel::MysqlConnection;
+
 use crate::solr::WebsiteSolr;
 use crate::db::Website;
 
+// TODO conn should probably not be passed here
 #[tokio::main]
-pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error>{
+pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection) -> Result<(), reqwest::Error>{
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
@@ -15,12 +18,12 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>) -> Re
     website_type(&body);
 
     if  websites_saved.is_empty() {
-        save_website_info(&body, &url);
+        save_website_info(&body, &url, &conn);
     }
     Ok(())
 }
 
-fn save_website_info(body: &str, url: &str) {
+fn save_website_info(body: &str, url: &str, conn: &MysqlConnection) {
     // TODO
     // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
     // (because the database should (eventually) have a unique constraint on url)
@@ -51,7 +54,11 @@ fn save_website_info(body: &str, url: &str) {
 
     println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
-    let website = Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()};
+    let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
+    if let crate::db::DB::Website(mut website) = crate::db::Database::insert(&w, conn).unwrap() {
+        // let w_solr = WebsiteSolr {};
+        println!("{:?}", website.id);
+    }
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
