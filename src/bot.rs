@@ -5,10 +5,11 @@ use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
 use crate::db::Website;
+use crate::settings::Settings;
 
-// TODO conn should probably not be passed here
+// TODO conn and settings should probably not be passed here
 #[tokio::main]
-pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection) -> Result<(), reqwest::Error>{
+pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error>{
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
@@ -18,12 +19,12 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
     website_type(&body);
 
     if  websites_saved.is_empty() {
-        save_website_info(&body, &url, &conn);
+        save_website_info(&body, &url, &conn, &settings);
     }
     Ok(())
 }
 
-fn save_website_info(body: &str, url: &str, conn: &MysqlConnection) {
+fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &Settings) {
     // TODO
     // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
     // (because the database should (eventually) have a unique constraint on url)
@@ -54,9 +55,11 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection) {
 
     println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
+    // TODO save metadata and external_links
     let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
-    if let crate::db::DB::Website(mut website) = crate::db::Database::insert(&w, conn).unwrap() {
-        // let w_solr = WebsiteSolr {};
+    if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
+        let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
+        crate::solr::insert(settings, &w_solr);
         println!("{:?}", website.id);
     }
 }

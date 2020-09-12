@@ -32,5 +32,5 @@ fn main() {
     // load the website with this url from solr to see if it is in the database
     let websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
-    bot::analyse_website(&url, &websites_saved, &conn);
+    bot::analyse_website(&url, &websites_saved, &conn, &settings);
 }
