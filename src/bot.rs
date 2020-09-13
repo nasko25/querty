@@ -43,6 +43,10 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
     let text = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
     println!("\nWebsite body text: {:?}", text);
 
+    selector = Selector::parse("metadata").unwrap();
+    let metadata = fragment.select(&selector).next().unwrap().text();
+    println!("\nMetadatas: {:?}", metadata);
+
     // trim the trailing and leading white spaces
     let mut trimmed_text = Vec::new();
     let mut trimmed_element;
