@@ -18,7 +18,7 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
 
     website_type(&body);
 
-    if  websites_saved.is_empty() {
+    if websites_saved.is_empty() {
         save_website_info(&body, &url, &conn, &settings);
     }
     Ok(())
@@ -43,6 +43,7 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
     let text = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
     println!("\nWebsite body text: {:?}", text);
 
+    // parse the metadata and save it in the db
     selector = Selector::parse("metadata").unwrap();
     let metadata = fragment.select(&selector).next().unwrap().text();
     println!("\nMetadatas: {:?}", metadata);

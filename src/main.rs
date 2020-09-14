@@ -26,7 +26,7 @@ fn main() {
 
     let conn = db::Database::establish_connection(&url);
 
-    println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
+    // println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
 
     let url = "https://www.rust-lang.org";
     // load the website with this url from solr to see if it is in the database
