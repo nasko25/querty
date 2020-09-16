@@ -19,7 +19,8 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
     website_type(&body);
 
     if websites_saved.is_empty() {
-        save_website_info(&body, &url, &conn, &settings);
+        // TODO cannot be called from an async context
+        // save_website_info(&body, &url, &conn, &settings);
     }
     Ok(())
 }
@@ -36,17 +37,12 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
     // if there are multiple titles, only the first is used
     let title_raw = fragment.select(&selector).next().unwrap().inner_html();
     let title = title_raw.trim();
-    println!("Website title: {:?}", title);
+    // println!("Website title: {:?}", title);
 
     // select all text
     selector = Selector::parse("body").unwrap();
     let text = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
-    println!("\nWebsite body text: {:?}", text);
-
-    // parse the metadata and save it in the db
-    selector = Selector::parse("metadata").unwrap();
-    let metadata = fragment.select(&selector).next().unwrap().text();
-    println!("\nMetadatas: {:?}", metadata);
+    // println!("\nWebsite body text: {:?}", text);
 
     // trim the trailing and leading white spaces
     let mut trimmed_text = Vec::new();
@@ -58,7 +54,24 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
         }
     }
 
-    println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
+    // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
+
+    // // parse the metadata
+    // selector = Selector::parse("meta").unwrap();
+    // let metadata = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
+    // println!("\nMetadatas: {:?}", metadata);
+
+    // // trim the trailing and leading white spaces
+    // let mut trimmed_metadata = Vec::new();
+    // trimmed_element = "";
+    // for element in metadata {
+    //     trimmed_element = element.trim();
+    //     if trimmed_element != "" {
+    //         trimmed_metadata.push(trimmed_element);
+    //     }
+    // }
+
+    // println!("\nWebsite metadata trimmed: {:?}", trimmed_metadata.join(", "));
 
     // TODO save metadata and external_links
     let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
@@ -84,8 +97,12 @@ fn website_type(body: &str) -> &str {
     // meta tags can provide info for the type of website
     // TODO content of meta tag can have capital letters -> case insensitive search for "article"
     for element in fragment.select(&selector) {
-        println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
-            element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
+        // iterate over each meta tag's attributes
+        for attr in element.value().attrs() {
+            println!("{:?}", attr);
+        }
+        // println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
+        //     element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
     }
 
     let body_lc = body.to_lowercase();
