@@ -10,20 +10,26 @@ use crate::settings::Settings;
 // TODO conn and settings should probably not be passed here
 // TODO return calculated rank of the website
 #[tokio::main]
-pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error>{
+pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
 
     let body = res.text().await?;
 
-    website_type(&body);
+    // website_type(&body, meta);
 
     if websites_saved.is_empty() {
         // TODO cannot be called from an async context
         // save_website_info(&body, &url, &conn, &settings);
     }
+    // temporary for testing
+    save_website_info(&body, &url, &conn, &settings);
     Ok(())
+}
+
+fn extract_website_info() {
+    // TODO
 }
 
 fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &Settings) {
@@ -74,24 +80,6 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
 
     // println!("\nWebsite metadata trimmed: {:?}", trimmed_metadata.join(", "));
 
-    // TODO save metadata and external_links
-    let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
-    if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
-        let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
-        crate::solr::insert(settings, &w_solr);
-        println!("{:?}", website.id);
-    }
-}
-
-// TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
-// TODO different languages?
-
-// TODO train a model to guess the type of website (feed in the html document and classify its type)
-//          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
-//              -> this looks like a good source to use on web page classification
-//              -> it also contains some optimization options that can help speed up the web page analysis
-fn website_type(body: &str) -> &str {
-
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("meta").unwrap();
     // println!("Selected meta tags: {:?}", fragment.select(&selector));
@@ -106,6 +94,23 @@ fn website_type(body: &str) -> &str {
         //     element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
     }
 
+    // TODO save metadata and external_links
+    // let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
+    // if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
+    //     let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
+    //     crate::solr::insert(settings, &w_solr);
+    //     println!("{:?}", website.id);
+    // }
+}
+
+// TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
+// TODO different languages?
+
+// TODO train a model to guess the type of website (feed in the html document and classify its type)
+//          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
+//              -> this looks like a good source to use on web page classification
+//              -> it also contains some optimization options that can help speed up the web page analysis
+fn website_type<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
     let body_lc = body.to_lowercase();
 
     // TODO also check meta tags for website type
