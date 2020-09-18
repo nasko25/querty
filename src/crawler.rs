@@ -8,6 +8,7 @@ use crate::db::Website;
 use crate::settings::Settings;
 
 // TODO conn and settings should probably not be passed here
+// TODO return calculated rank of the website
 #[tokio::main]
 pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error>{
     // await is not necessary

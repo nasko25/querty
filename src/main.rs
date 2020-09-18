@@ -33,4 +33,6 @@ fn main() {
     let websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
     bot::analyse_website(&url, &websites_saved, &conn, &settings);
+    // TODO save_website_info(...)
+    // get rank from analyse_website
 }
