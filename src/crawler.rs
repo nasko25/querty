@@ -23,7 +23,7 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
         // TODO cannot be called from an async context
         // save_website_info(&body, &url, &conn, &settings);
     }
-    // temporary for testing
+    // TODO temporary for testing; remove when done
     save_website_info(&body, &url, &conn, &settings);
     Ok(())
 }
