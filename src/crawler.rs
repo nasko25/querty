@@ -5,6 +5,7 @@ use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
 use crate::db::Website;
+use crate::db::Metadata;
 use crate::settings::Settings;
 
 // TODO conn and settings should probably not be passed here
@@ -24,20 +25,14 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
         // save_website_info(&body, &url, &conn, &settings);
     }
     // TODO temporary for testing; remove when done
-    save_website_info(&body, &url, &conn, &settings);
+    let w = extract_website_info(&body, &url);
+    save_website_info(w, &conn, &settings);
+    let meta = extract_metadata_info(&body, Some(123));
+
     Ok(())
 }
 
-fn extract_website_info() {
-    // TODO
-}
-
-fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &Settings) {
-    // TODO
-    // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
-    // (because the database should (eventually) have a unique constraint on url)
-    // if the website cannot be inserted in the database, throw an error
-
+fn extract_website_info(body: &str, url: &str) -> Website {
     let fragment = Html::parse_document(body);
     let mut selector = Selector::parse("title").unwrap();
 
@@ -60,26 +55,13 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
             trimmed_text.push(trimmed_element);
         }
     }
-
     // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
-    // // parse the metadata
-    // selector = Selector::parse("meta").unwrap();
-    // let metadata = fragment.select(&selector).next().unwrap().text().collect::<Vec<_>>();
-    // println!("\nMetadatas: {:?}", metadata);
+    let w = Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string() };
+    return w;
+}
 
-    // // trim the trailing and leading white spaces
-    // let mut trimmed_metadata = Vec::new();
-    // trimmed_element = "";
-    // for element in metadata {
-    //     trimmed_element = element.trim();
-    //     if trimmed_element != "" {
-    //         trimmed_metadata.push(trimmed_element);
-    //     }
-    // }
-
-    // println!("\nWebsite metadata trimmed: {:?}", trimmed_metadata.join(", "));
-
+fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Metadata {
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("meta").unwrap();
     // println!("Selected meta tags: {:?}", fragment.select(&selector));
@@ -93,9 +75,18 @@ fn save_website_info(body: &str, url: &str, conn: &MysqlConnection, settings: &S
         // println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
         //     element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
     }
+    // TODO
+    Metadata { id:None, metadata_text:"".to_string(), website_id: website_id }
+}
+
+fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settings) {
+    // TODO
+    // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
+    // (because the database should (eventually) have a unique constraint on url)
+    // if the website cannot be inserted in the database, throw an error
 
     // TODO save metadata and external_links
-    // let w = crate::db::DB::Website (Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string()} );
+    let w = crate::db::DB::Website (website);
     // if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
     //     let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
     //     crate::solr::insert(settings, &w_solr);
