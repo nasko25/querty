@@ -20,6 +20,7 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
 
     // website_type(&body, meta);
 
+    // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
         // TODO cannot be called from an async context
         // save_website_info(&body, &url, &conn, &settings);
@@ -27,7 +28,8 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
     // TODO temporary for testing; remove when done
     let w = extract_website_info(&body, &url);
     save_website_info(w, &conn, &settings);
-    let meta = extract_metadata_info(&body, Some(123));
+                                    // should get the id from the save_website_info() function
+    let meta = extract_metadata_info(&body, Some(184));
 
     Ok(())
 }
@@ -57,26 +59,29 @@ fn extract_website_info(body: &str, url: &str) -> Website {
     }
     // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
-    let w = Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string() };
-    return w;
+    Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string() }
 }
 
-fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Metadata {
+fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("meta").unwrap();
     // println!("Selected meta tags: {:?}", fragment.select(&selector));
     // meta tags can provide info for the type of website
     // TODO content of meta tag can have capital letters -> case insensitive search for "article"
+    let mut metas = Vec::new();
     for element in fragment.select(&selector) {
         // iterate over each meta tag's attributes
         for attr in element.value().attrs() {
-            println!("{:?}", attr);
+            // attr is a (&str, &str) tuple
+            // the first string is the meta tag attribute and will be ignored, because it does not convey any useful information
+            // (can later be saved in the db in a new "attribute" column, but it is not needed for now)
+            // the second string is the actual value stored in the meta tag, and it will be saved
+            metas.push(Metadata { id: None, metadata_text: attr.1.to_string(), website_id: website_id });
         }
         // println!("element.value(): {:?}, element charset: {:?}, element name: {:?}, element content: {:?}, element.value.name: {:?}", 
         //     element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
     }
-    // TODO
-    Metadata { id:None, metadata_text:"".to_string(), website_id: website_id }
+    metas
 }
 
 fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settings) {
