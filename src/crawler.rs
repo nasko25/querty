@@ -6,6 +6,8 @@ use diesel::MysqlConnection;
 use crate::solr::WebsiteSolr;
 use crate::db::Website;
 use crate::db::Metadata;
+use crate::db::ExternalLink;
+use crate::db::WebsiteRefExtLink;
 use crate::settings::Settings;
 
 // TODO conn and settings should probably not be passed here
@@ -28,8 +30,10 @@ pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn:
     // TODO temporary for testing; remove when done
     let w = extract_website_info(&body, &url);
     save_website_info(w, &conn, &settings);
-                                    // should get the id from the save_website_info() function
-    let meta = extract_metadata_info(&body, Some(184));
+    // should get the id from the save_website_info() function
+    let website_id = Some(184);
+    let meta = extract_metadata_info(&body, website_id);
+    let ext_links = extract_external_links(&body, website_id);
 
     Ok(())
 }
@@ -82,6 +86,25 @@ fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
         //     element.value(), element.value().attr("charset"), element.value().attr("name"), element.value().attr("content"), element.value().name());
     }
     metas
+}
+
+fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (ExternalLink, WebsiteRefExtLink) > {
+    let fragment = Html::parse_document(body);
+    let selector = Selector::parse("a").unwrap();
+
+    let mut ext_links = Vec::new();
+    let mut href;
+    for element in fragment.select(&selector) {
+        href = element.value().attr("href");
+        match href {
+            Some(l) => {
+                                                                                                                // TODO change ext_link_id when the ExternalLink is inserter in the database
+                ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+            },
+            None => (),
+        }
+    }
+    ext_links
 }
 
 fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settings) {
