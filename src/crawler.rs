@@ -131,7 +131,14 @@ fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settin
 //              -> it also contains some optimization options that can help speed up the web page analysis
 fn website_type<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
     let body_lc = body.to_lowercase();
+    // let mut meta_lc;
 
+    // for m in meta {
+    //     meta_lc = m.to_lowercase();
+    //     if meta_lc.contains("article") {
+    //         return "article";
+    //     }
+    // }
     // TODO also check meta tags for website type
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
