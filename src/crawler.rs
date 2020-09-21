@@ -25,7 +25,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_id = website.id;
     let meta = extract_metadata_info(&body, website_id);
     let ext_links = extract_external_links(&body, website_id);
-    let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id)).unwrap();
+    let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let website_solr = website_solr_vec.get(0).unwrap();
     save_metadata(meta, website_solr, &conn, &settings);
 
@@ -127,7 +127,7 @@ fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, setting
     // TODO save metadata and external_links
     let w = crate::db::DB::Website (website_to_insert);
     if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
-        let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
+        let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
         crate::solr::insert(settings, &w_solr);
         println!("{:?}", website.id);
         Ok(website.clone())
