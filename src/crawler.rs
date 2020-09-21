@@ -137,13 +137,21 @@ fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, setting
     }
 }
 
-fn save_metadata(metadata: Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) {
-    // let m = crate::db::DB::Metadata (metadata);
-
-    // TODO
-    // if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
-    //     update_metadata(...)
-    // }
+fn save_metadata(metadata_vec: Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
+    let mut m;
+    let mut metadata_solr = Vec::new();
+    for metadata in metadata_vec {
+        m = crate::db::DB::Metadata (metadata);
+        if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
+            println!("meta id: {:?}", meta.id);
+            metadata_solr.push(meta);
+        }
+        else {
+            throw_new!("Could not insert metadata in the database");
+        }
+    }
+    update_metadata(settings, &metadata_solr, website_to_update);
+    Ok(metadata_solr)
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
