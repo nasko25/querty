@@ -5,38 +5,46 @@ use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
 use crate::solr::update_metadata;
+use crate::solr::req;
 use crate::db::Website;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
 use crate::db::WebsiteRefExtLink;
 use crate::settings::Settings;
 
+
+pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
+    let body = fetch_url(url, conn, settings).unwrap();
+
+    // website_type(&body, meta);
+
+    // TODO temporary for testing; remove when done
+    let w = extract_website_info(&body, &url); // TODO could call this in the save_website_info function
+    let website = save_website_info(w, &conn, &settings).unwrap();
+    // should get the id from the save_website_info() function
+    let website_id = website.id;
+    let meta = extract_metadata_info(&body, website_id);
+    let ext_links = extract_external_links(&body, website_id);
+    let website_solr = req(&settings, format!("id:\"{:?}\"", website_id)).unwrap().get(0).unwrap();
+    save_metadata(meta, website_solr, &conn, &settings);
+
+    // TODO if it is not empty, update the website(s) in it
+    if websites_saved.is_empty() {
+        // save_website_info(&body, &url, &conn, &settings);
+    }
+    Ok(())
+}
 // TODO conn and settings should probably not be passed here
 // TODO return calculated rank of the website
 #[tokio::main]
-pub async fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
+async fn fetch_url<'a>(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<&'a String, reqwest::Error> {
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
 
     let body = res.text().await?;
 
-    // website_type(&body, meta);
-
-    // TODO if it is not empty, update the website(s) in it
-    if websites_saved.is_empty() {
-        // TODO cannot be called from an async context
-        // save_website_info(&body, &url, &conn, &settings);
-    }
-    // TODO temporary for testing; remove when done
-    let w = extract_website_info(&body, &url);
-    save_website_info(w, &conn, &settings);
-    // should get the id from the save_website_info() function
-    let website_id = Some(184);
-    let meta = extract_metadata_info(&body, website_id);
-    let ext_links = extract_external_links(&body, website_id);
-
-    Ok(())
+    Ok(&body)
 }
 
 fn extract_website_info(body: &str, url: &str) -> Website {
@@ -108,23 +116,28 @@ fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (External
     ext_links
 }
 
-fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settings) {
+// returns the Website saved to the database
+fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, settings: &Settings) -> Result<Website, throw::Error<&'static str>> {
     // TODO
     // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
     // (because the database should (eventually) have a unique constraint on url)
     // if the website cannot be inserted in the database, throw an error
 
     // TODO save metadata and external_links
-    let w = crate::db::DB::Website (website);
-    // if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
-    //     let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
-    //     crate::solr::insert(settings, &w_solr);
-    //     println!("{:?}", website.id);
-    // }
+    let w = crate::db::DB::Website (website_to_insert);
+    if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
+        let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
+        crate::solr::insert(settings, &w_solr);
+        println!("{:?}", website.id);
+        Ok(website.clone())
+    }
+    else {
+        throw_new!("Could not insert website in the database");
+    }
 }
 
-fn save_metadata(metadata: Metadata, website_to_update: WebsiteSolr, conn: &MysqlConnection, settings: &Settings) {
-    let m = crate::db::DB::Metadata (metadata);
+fn save_metadata(metadata: Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) {
+    // let m = crate::db::DB::Metadata (metadata);
 
     // TODO
     // if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
