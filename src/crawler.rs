@@ -25,7 +25,8 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_id = website.id;
     let meta = extract_metadata_info(&body, website_id);
     let ext_links = extract_external_links(&body, website_id);
-    let website_solr = req(&settings, format!("id:\"{:?}\"", website_id)).unwrap().get(0).unwrap();
+    let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id)).unwrap();
+    let website_solr = website_solr_vec.get(0).unwrap();
     save_metadata(meta, website_solr, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
@@ -37,14 +38,14 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
 // TODO conn and settings should probably not be passed here
 // TODO return calculated rank of the website
 #[tokio::main]
-async fn fetch_url<'a>(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<&'a String, reqwest::Error> {
+async fn fetch_url(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<String, reqwest::Error> {
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
 
     let body = res.text().await?;
 
-    Ok(&body)
+    Ok(body)
 }
 
 fn extract_website_info(body: &str, url: &str) -> Website {
