@@ -2,6 +2,7 @@ extern crate config;
 extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
+#[macro_use] extern crate throw;
 
 mod settings;
 mod schema;

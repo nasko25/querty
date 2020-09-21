@@ -901,6 +901,7 @@ dependencies = [
  "scraper",
  "serde 1.0.115",
  "serde_derive",
+ "throw",
  "tokio",
 ]
 
@@ -1309,6 +1310,12 @@ checksum = "d40c6d1b69745a6ec6fb1ca717914848da4b44ae29d9b3080cbee91d72a69b14"
 dependencies = [
  "lazy_static",
 ]
+
+[[package]]
+name = "throw"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ed011a2531182d1cbe134f1e48c0d348f0b47f95c6340874bff7bb3a1e10f75"
 
 [[package]]
 name = "time"
