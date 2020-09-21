@@ -4,6 +4,7 @@ use scraper::{Html, Selector};
 use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
+use crate::solr::update_metadata;
 use crate::db::Website;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
@@ -119,6 +120,15 @@ fn save_website_info(website: Website, conn: &MysqlConnection, settings: &Settin
     //     let w_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None };
     //     crate::solr::insert(settings, &w_solr);
     //     println!("{:?}", website.id);
+    // }
+}
+
+fn save_metadata(metadata: Metadata, website_to_update: WebsiteSolr, conn: &MysqlConnection, settings: &Settings) {
+    let m = crate::db::DB::Metadata (metadata);
+
+    // TODO
+    // if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
+    //     update_metadata(...)
     // }
 }
 
