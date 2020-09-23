@@ -5,6 +5,7 @@ use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
 use crate::solr::update_metadata;
+use crate::solr::update_ext_links;
 use crate::solr::req;
 use crate::db::Website;
 use crate::db::Metadata;
@@ -28,6 +29,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let website_solr = website_solr_vec.get(0).unwrap();
     save_metadata(meta, website_solr, &conn, &settings);
+    save_external_links(ext_links, website_solr, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -152,6 +154,31 @@ fn save_metadata(metadata_vec: Vec<Metadata>, website_to_update: &WebsiteSolr, c
     }
     update_metadata(settings, &metadata_solr, website_to_update);
     Ok(metadata_solr)
+}
+
+fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
+    let mut el;
+    let mut web_el;
+    let mut external_links_solr = Vec::new();
+    for mut external_link in external_links {
+        el = crate::db::DB::ExternalLink (external_link.0);
+        if let crate::db::DB::ExternalLink (ext_link) = crate::db::Database::insert(&el, conn).unwrap() {
+            external_link.1.ext_link_id = ext_link.id;
+            web_el = crate::db::DB::WebsiteRefExtLink (external_link.1);
+            if let crate::db::DB::WebsiteRefExtLink (webref_ext_link) = crate::db::Database::insert(&web_el, conn).unwrap() {
+                println!("external link id: {:?}; website ref external link id: {:?}; website ref external link link id (should be = to external link id): {:?}", ext_link.id, webref_ext_link.id, webref_ext_link.ext_link_id);
+                external_links_solr.push( (ext_link, webref_ext_link) );
+            }
+            else {
+                throw_new!("Could not insert website ref external link in the database.");
+            }
+        }
+        else {
+            throw_new!("Could not insert external link in the database.");
+        }
+    }
+    update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
+    Ok(external_links_solr)
 }
 
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.

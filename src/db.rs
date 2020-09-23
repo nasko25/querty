@@ -65,7 +65,7 @@ pub struct Metadata {
     pub website_id: Option<u32>,
 }
 
-#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable, Clone)]
 #[table_name = "external_links"]
 pub struct ExternalLink {
     pub id: Option<u32>,
