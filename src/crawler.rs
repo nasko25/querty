@@ -104,6 +104,7 @@ fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (External
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("a").unwrap();
 
+    // TODO check if the links are internal or external and only save the links to external domains
     let mut ext_links = Vec::new();
     let mut href;
     for element in fragment.select(&selector) {
