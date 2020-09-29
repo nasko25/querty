@@ -903,6 +903,7 @@ dependencies = [
  "serde_derive",
  "throw",
  "tokio",
+ "url 2.1.1",
 ]
 
 [[package]]
