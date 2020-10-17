@@ -201,6 +201,10 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
     }
 }
 
+
+// For now website genre classification is not really needed.
+// I found a lot of resources (mainly research papers) for web genre classification, but most use closed-source datasets for training.
+// The only dataset I could find was https://webis.de/data/genre-ki-04.html but it is from 2004, so it is probably quite outdated.
 // TODO javascript analysis -> execute javascript somehow? and check for popups, keywords that help determine website type, etc.
 // TODO different languages?
 
@@ -208,7 +212,7 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 //          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
 //              -> this looks like a good source to use on web page classification
 //              -> it also contains some optimization options that can help speed up the web page analysis
-fn website_type<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
+fn website_genre<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
     let body_lc = body.to_lowercase();
     // let mut meta_lc;
 
@@ -226,7 +230,7 @@ fn website_type<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
     else if body_lc.contains("author") || body_lc.contains("article") {
         // rank should additionally be determined by the quality of the article
         // (why was the article written -> are there too many ads and a short article
-        //                              -> do reviews downvote it a lot
+        //                              -> do reviewers downvote it a lot
         //                              -> is there a "subscribe to our newsletter"
         //                              -> popups, etc.)
         return "article";
