@@ -12,3 +12,59 @@ genres = {
     "portrait-priv",
     "shop"
 }
+
+'''
+    In order to train the classifier I will use the following features:
+        * the textual contents of the web page
+            - use information gain to extract the features
+        * the number of <a> tags
+        * the number of <ol/ul>-<li> tags
+        * number (and size? - number of words/characters) of <script> tags
+        * number of <iframe> tags
+        * number of <input> tags
+        * <meta> tag values
+        * ...
+'''
+
+import html2text
+import os
+from bs4 import BeautifulSoup
+
+def extract_text(html):
+    pass
+
+data_dir = "data/genre-corpus-04"
+data = {}
+
+# inilitize empty lists for each genre in the data dictionary
+for genre in genres:
+    data[genre] = []
+
+# save all html documents in a dictionary of lists
+# for subdir, dirs, files in os.walk(data_dir):
+#     dir = subdir.split("/")[-1]
+#     if dir in genres:
+#         for file_name in files:
+#             file = open(subdir + "/" + file_name, 'r')
+#             # TODO extract_text(file.read())
+#             data[dir].append(file.read())
+#             file.close()
+
+random_file = "data/genre-corpus-04/articles/0722219712.html"
+
+f = open(random_file, 'r')
+html = f.read()
+f.close()
+
+# TODO will need to manually extract the text?
+# TODO strip space characters (and \t\n)
+h = html2text.HTML2Text()
+h.ignore_links = True
+# h.ignore_images = True ?
+# print(h.handle(html))
+
+soup = BeautifulSoup(html)
+for script in soup(["script", "style", "iframe"]):
+    script.decompose()
+
+print(list(soup.stripped_strings))
