@@ -63,8 +63,11 @@ h.ignore_links = True
 # h.ignore_images = True ?
 # print(h.handle(html))
 
-soup = BeautifulSoup(html)
+soup = BeautifulSoup(html, features="html5lib")
+print(' '.join(soup.get_text().split()))   # still has some scripts
+
+print("\n\n")
+
 for script in soup(["script", "style", "iframe"]):
     script.decompose()
-
-print(list(soup.stripped_strings))
+print(' '.join(''.join(list(soup.stripped_strings)).split())) # it is probably fine, but check if it extracts all textual content
