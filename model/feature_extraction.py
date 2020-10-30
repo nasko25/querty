@@ -69,17 +69,32 @@ print(' '.join(soup.get_text().split()))   # still has some scripts
 print("\n\n")
 
 metas = soup.find_all("meta")
-# meta tabs can have the following attributes:
+# meta tags can have the following attributes:
 #       - charset
 #       - content
 #       - http-equiv
 #       - name
-print(metas)
-print(metas[0]["http-equiv"])
-print(metas[1]["content"])
+# print(metas)
+# print(metas[0]["http-equiv"])
+# print(metas[1]["content"])
+possible_attributes = {
+    "charset",
+    "content",
+    "http-equiv",
+    # "name"
+}
+meta_content = {}
 
-for property, value in metas[0].attrs.items():
-    print(property)
+for attr in possible_attributes:
+    meta_content[attr] = []
+for meta in metas:
+    for property, value in meta.attrs.items():
+        # if it is a new property, initilize it in the dictionary with an empty list
+        if property not in meta_content:
+            meta_content[property] = []
+        meta_content[property].append(value)
+
+print(meta_content)
 
 print(metas[0].attrs)
 # print(metas[0].attrs.values())
