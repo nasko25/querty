@@ -77,26 +77,13 @@ metas = soup.find_all("meta")
 # print(metas)
 # print(metas[0]["http-equiv"])
 # print(metas[1]["content"])
-possible_attributes = {
-    "charset",
-    "content",
-    "http-equiv",
-    # "name"
-}
-meta_content = {}
 
-for attr in possible_attributes:
-    meta_content[attr] = []
+meta_content = []
+
 for meta in metas:
-    for property, value in meta.attrs.items():
-        # if it is a new property, initilize it in the dictionary with an empty list
-        if property not in meta_content:
-            meta_content[property] = []
-        meta_content[property].append(value)
-
+    meta_content.append(list(meta.attrs.values()))
 print(meta_content)
 
-print(metas[0].attrs)
 # print(metas[0].attrs.values())
 
 # TODO text classification https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
