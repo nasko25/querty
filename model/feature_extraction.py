@@ -50,7 +50,7 @@ for genre in genres:
 #             data[dir].append(file.read())
 #             file.close()
 
-random_file = "data/genre-corpus-04/articles/0722219712.html"
+random_file = "data/genre-corpus-04/articles/5440455052.html"
 
 f = open(random_file, 'r')
 html = f.read()
@@ -68,6 +68,23 @@ print(' '.join(soup.get_text().split()))   # still has some scripts
 
 print("\n\n")
 
-for script in soup(["script", "style", "iframe"]):
-    script.decompose()
-print(' '.join(''.join(list(soup.stripped_strings)).split())) # it is probably fine, but check if it extracts all textual content
+metas = soup.find_all("meta")
+# meta tabs can have the following attributes:
+#       - charset
+#       - content
+#       - http-equiv
+#       - name
+print(metas)
+print(metas[0]["http-equiv"])
+print(metas[1]["content"])
+
+for property, value in metas[0].attrs.items():
+    print(property)
+
+print(metas[0].attrs)
+# print(metas[0].attrs.values())
+
+# TODO text classification https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
+# for script in soup(["script", "style", "iframe"]):
+#     script.decompose()
+# print(' '.join(''.join(list(soup.stripped_strings)).split())) # it is probably fine, but check if it extracts all textual content
