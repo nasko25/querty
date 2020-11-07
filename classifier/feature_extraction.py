@@ -29,6 +29,10 @@ genres = {
 import html2text
 import os
 import json
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
 
 def extract_text(soup):
@@ -103,17 +107,19 @@ def extract_metas(soup):
     # print(metas[0].attrs.values())
 
 data_dir = "data/genre-corpus-04"
-data = {}
+data = []
+labels = []
 
-# inilitize empty lists for each genre in the data dictionary
-for genre in genres:
-    data[genre] = []
-
-# save the data variable in a json file to access it without performing the text preprocessing again and again
+# save the data and labels variables in a json file to access it without performing the text preprocessing again and again
 data_saved_file = "data/data.json"
-if os.path.exists(data_saved_file) and os.path.isfile(data_saved_file):
+labels_saved_file = "data/data_labels.json"
+if (os.path.exists(data_saved_file) and os.path.isfile(data_saved_file)) and (os.path.exists(labels_saved_file) and os.path.isfile(labels_saved_file)):
     f = open(data_saved_file, 'r')
     data = json.load(f)
+    f.close()
+    
+    f = open(labels_saved_file, 'r')
+    labels = json.load(f)
     f.close()
 else:
     # save all html documents in a dictionary of lists
@@ -126,10 +132,15 @@ else:
                 print(file.name)
                 html = file.read()
                 soup = BeautifulSoup(html, features="html5lib")
-                data[dir].append(extract_text(soup))
+                data.append(str(extract_text(soup)))
+                labels.append(dir)
                 file.close()
     f = open(data_saved_file, 'w')
     json.dump(data, f)
+    f.close()
+
+    f = open(labels_saved_file, 'w')
+    json.dump(labels, f)
     f.close()
 
 # random_file = "data/genre-corpus-04/articles/5440455052.html"
@@ -146,3 +157,22 @@ else:
 # print(h.handle(html))
 
 # TODO html parser to count tags
+
+x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3)
+
+# encode labels into numerical values
+label_encoder = LabelEncoder()
+y_train = label_encoder.fit_transform(y_train)
+y_test = label_encoder.fit_transform(y_test)
+
+# vectorize the data using tf-idf
+tf_idf = TfidfVectorizer(max_features=5000)
+tf_idf.fit(data)
+
+tfidf_x_train = tf_idf.transform(x_train)
+tfidf_x_test = tf_idf.transform(x_test)
+
+print(tf_idf.vocabulary_)
+print(tfidf_x_train.shape)
+print(np.array(x_train).shape)
+print(np.array(y_train).shape)
