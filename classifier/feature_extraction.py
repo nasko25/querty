@@ -94,6 +94,38 @@ text = ' '.join(' '.join(list(soup.stripped_strings)).split())
 
 text = text.lower()
 
+# may need to download some nltk modules
+# import nltk
+# nltk.download('wordnet')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('stopwords')
+
 from nltk import word_tokenize
-print(word_tokenize(text))
+text = word_tokenize(text)
+
+# WordNetLemmatizer requires Pos tags to understand if the word is noun or verb or adjective etc. By default it is set to Noun
+from collections import defaultdict
+from nltk.corpus import wordnet as wn
+
+tag_map = defaultdict(lambda : wn.NOUN)
+tag_map['J'] = wn.ADJ
+tag_map['V'] = wn.VERB
+tag_map['R'] = wn.ADV
+
+from nltk.stem import WordNetLemmatizer
+from nltk import pos_tag
+
+from nltk.corpus import stopwords
+
+
+final_words = []
+word_lemmatized = WordNetLemmatizer()
+
+for word, tag in pos_tag(text):
+    if word not in stopwords.words('english') and word.isalnum():
+        word_final = word_lemmatized.lemmatize(word, tag_map[tag[0]])
+        final_words.append(word_final)
+
+print(final_words)
+
 # TODO html parser to count tags
