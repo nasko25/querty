@@ -45,6 +45,7 @@ print(tfidf_x_train_text.shape)
 print(np.array(x_train_text).shape)
 print(np.array(y_train).shape)
 
+# text classification inspired by https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
 # classifiers
 from sklearn import model_selection, naive_bayes, svm
 from sklearn.naive_bayes import MultinomialNB

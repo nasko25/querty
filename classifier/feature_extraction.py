@@ -36,7 +36,6 @@ def extract_text(soup):
 
     # print("\n\n")
 
-    # TODO text classification https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
     for script in soup(["script", "style", "iframe"]):
         script.decompose()
     # print(' '.join(' '.join(list(soup.stripped_strings)).split())) # it is probably fine, but check if it extracts all textual content
@@ -124,7 +123,7 @@ def extract_features():
         f.close()
     else:
         # save all html documents in a dictionary of lists
-        for subdir, dirs, files in os.walk(data_dir):
+        for subdir, _, files in os.walk(data_dir):
             dir = subdir.split("/")[-1]
             if dir in genres:
                 for file_name in files:
