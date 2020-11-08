@@ -29,14 +29,7 @@ genres = {
 import html2text
 import os
 import json
-import numpy as np
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
-
-np.random.seed(42)
 
 def extract_text(soup):
     # print(' '.join(soup.get_text().split()))   # still has some scripts
@@ -119,147 +112,38 @@ labels = []
 # save the data and labels variables in a json file to access it without performing the text preprocessing again and again
 data_saved_file = "data/data.json"
 labels_saved_file = "data/data_labels.json"
-if (os.path.exists(data_saved_file) and os.path.isfile(data_saved_file)) and (os.path.exists(labels_saved_file) and os.path.isfile(labels_saved_file)):
-    f = open(data_saved_file, 'r')
-    data = json.load(f)
-    f.close()
-    
-    f = open(labels_saved_file, 'r')
-    labels = json.load(f)
-    f.close()
-else:
-    # save all html documents in a dictionary of lists
-    for subdir, dirs, files in os.walk(data_dir):
-        dir = subdir.split("/")[-1]
-        if dir in genres:
-            for file_name in files:
-                file = open(subdir + "/" + file_name, 'r')
-                print(file.name)
-                html = file.read()
-                soup = BeautifulSoup(html, features="html5lib")
-                data["text"].append(str(extract_text(soup)))
-                data["meta"].append(str(extract_metas(soup)))
-                labels.append(dir)
-                file.close()
-    f = open(data_saved_file, 'w')
-    json.dump(data, f)
-    f.close()
 
-    f = open(labels_saved_file, 'w')
-    json.dump(labels, f)
-    f.close()
+def extract_features():
+    if (os.path.exists(data_saved_file) and os.path.isfile(data_saved_file)) and (os.path.exists(labels_saved_file) and os.path.isfile(labels_saved_file)):
+        f = open(data_saved_file, 'r')
+        data = json.load(f)
+        f.close()
 
-# random_file = "data/genre-corpus-04/articles/5440455052.html"
+        f = open(labels_saved_file, 'r')
+        labels = json.load(f)
+        f.close()
+    else:
+        # save all html documents in a dictionary of lists
+        for subdir, dirs, files in os.walk(data_dir):
+            dir = subdir.split("/")[-1]
+            if dir in genres:
+                for file_name in files:
+                    file = open(subdir + "/" + file_name, 'r')
+                    print(file.name)
+                    html = file.read()
+                    soup = BeautifulSoup(html, features="html5lib")
+                    data["text"].append(str(extract_text(soup)))
+                    data["meta"].append(str(extract_metas(soup)))
+                    labels.append(dir)
+                    file.close()
+        f = open(data_saved_file, 'w')
+        json.dump(data, f)
+        f.close()
 
-# f = open(random_file, 'r')
-# html = f.read()
-# f.close()
+        f = open(labels_saved_file, 'w')
+        json.dump(labels, f)
+        f.close()
 
-# TODO will need to manually extract the text?
-# TODO strip space characters (and \t\n)
-# h = html2text.HTML2Text()
-# h.ignore_links = True
-# h.ignore_images = True ?
-# print(h.handle(html))
+    return data, labels
 
 # TODO html parser to count tags
-
-# split the text and meta tag information into test and train sets
-x_train_text, x_test_text, x_train_meta, x_test_meta, y_train, y_test = train_test_split(data["text"], data["meta"], labels, test_size=0.3)
-
-# encode labels into numerical values
-label_encoder = LabelEncoder()
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.fit_transform(y_test)
-
-# vectorize the data's text and metadata fields using tf-idf
-tf_idf_text = TfidfVectorizer(max_features=5000)
-tf_idf_text.fit(data["text"])
-tfidf_x_train_text = tf_idf_text.transform(x_train_text)
-tfidf_x_test_text = tf_idf_text.transform(x_test_text)
-
-tf_idf_meta = TfidfVectorizer(max_features=5000)
-tf_idf_meta.fit(data["meta"])
-tfidf_x_train_meta = tf_idf_meta.transform(x_train_meta)
-tfidf_x_test_meta = tf_idf_meta.transform(x_test_meta)
-
-# combine both train features into one training feature
-df_train_text = pd.DataFrame(tfidf_x_train_text.toarray())
-df_train_meta = pd.DataFrame(tfidf_x_train_meta.toarray())
-
-train_features = pd.concat([df_train_text, df_train_meta], axis = 1)
-
-# combine both test features into one testing feature
-df_test_text = pd.DataFrame(tfidf_x_test_text.toarray())
-df_test_meta = pd.DataFrame(tfidf_x_test_meta.toarray())
-
-test_features = pd.concat([df_test_text, df_test_meta], axis = 1)
-
-print(tf_idf_text.vocabulary_)
-print(tfidf_x_train_text.shape)
-print(np.array(x_train_text).shape)
-print(np.array(y_train).shape)
-
-# classifiers
-from sklearn import model_selection, naive_bayes, svm
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import SVC
-
-# naive bayes classifier
-nb = MultinomialNB()
-
-nb.fit(train_features, y_train)
-
-# prediction
-pred_nb = nb.predict(test_features)
-
-# print the accuracy
-from sklearn.metrics import accuracy_score
-print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep = "")
-
-# svm classifier
-svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
-svm.fit(train_features, y_train)
-
-# prediction
-pred_svm = svm.predict(test_features)
-
-# print the accuracy
-print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
-
-# deep neural network
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.wrappers.scikit_learn import KerasClassifier
-from keras.utils import np_utils
-
-def build_model():
-    model = Sequential()
-    model.add(Dense(256, input_dim = 10000, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(200, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(160, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(120, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(80, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(20, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(8, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    # model.summary()
-    return model
-
-estimator = KerasClassifier(build_fn=build_model, epochs=25, batch_size=64)
-y_train_cat = np_utils.to_categorical(y_train, 8)
-estimator.fit(train_features, y_train_cat)
-
-# prediction
-pred_nn = estimator.predict(test_features)
-y_pred = label_encoder.inverse_transform(pred_nn)
-
-# print the accuracy
-print("Neural Network Accuracy = ",accuracy_score(pred_nn, y_test) * 100, "%", sep = "")
-# print(pred_nn, y_pred)
