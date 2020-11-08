@@ -30,10 +30,13 @@ import html2text
 import os
 import json
 import numpy as np
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from bs4 import BeautifulSoup
+
+np.random.seed(42)
 
 def extract_text(soup):
     # print(' '.join(soup.get_text().split()))   # still has some scripts
@@ -102,12 +105,15 @@ def extract_metas(soup):
     meta_content = []
     for meta in metas:
         meta_content.append(list(meta.attrs.values()))
-    print(meta_content)
+    return meta_content
 
     # print(metas[0].attrs.values())
 
 data_dir = "data/genre-corpus-04"
-data = []
+data = {
+    "text": [],
+    "meta" : []
+}
 labels = []
 
 # save the data and labels variables in a json file to access it without performing the text preprocessing again and again
@@ -123,7 +129,6 @@ if (os.path.exists(data_saved_file) and os.path.isfile(data_saved_file)) and (os
     f.close()
 else:
     # save all html documents in a dictionary of lists
-    # TODO instead of lists, make a dictionary to store text, meta tags information, etc.
     for subdir, dirs, files in os.walk(data_dir):
         dir = subdir.split("/")[-1]
         if dir in genres:
@@ -132,7 +137,8 @@ else:
                 print(file.name)
                 html = file.read()
                 soup = BeautifulSoup(html, features="html5lib")
-                data.append(str(extract_text(soup)))
+                data["text"].append(str(extract_text(soup)))
+                data["meta"].append(str(extract_metas(soup)))
                 labels.append(dir)
                 file.close()
     f = open(data_saved_file, 'w')
@@ -158,23 +164,41 @@ else:
 
 # TODO html parser to count tags
 
-x_train, x_test, y_train, y_test = train_test_split(data, labels, test_size=0.3)
+print(np.array(data).shape)
+print(np.array(labels).shape)
+x_train_text, x_test_text, x_train_meta, x_test_meta, y_train, y_test = train_test_split(data["text"], data["meta"], labels, test_size=0.3)
 
 # encode labels into numerical values
 label_encoder = LabelEncoder()
 y_train = label_encoder.fit_transform(y_train)
 y_test = label_encoder.fit_transform(y_test)
 
-# vectorize the data using tf-idf
-tf_idf = TfidfVectorizer(max_features=5000)
-tf_idf.fit(data)
+# vectorize the data's text and metadata fields using tf-idf
+tf_idf_text = TfidfVectorizer(max_features=5000)
+tf_idf_text.fit(data["text"])
 
-tfidf_x_train = tf_idf.transform(x_train)
-tfidf_x_test = tf_idf.transform(x_test)
+tf_idf_meta = TfidfVectorizer(max_features=5000)
+tf_idf_meta.fit(data["meta"])
 
-print(tf_idf.vocabulary_)
-print(tfidf_x_train.shape)
-print(np.array(x_train).shape)
+tfidf_x_train_text = tf_idf_text.transform(x_train_text)
+tfidf_x_test_text = tf_idf_text.transform(x_test_text)
+
+tfidf_x_train_meta = tf_idf_meta.transform(x_train_meta)
+tfidf_x_test_meta = tf_idf_meta.transform(x_test_meta)
+
+df1 = pd.DataFrame(tfidf_x_train_text.toarray())
+df2 = pd.DataFrame(tfidf_x_train_meta.toarray())
+
+train_features = pd.concat([df1, df2], axis = 1)
+
+df1 = pd.DataFrame(tfidf_x_test_text.toarray())
+df2 = pd.DataFrame(tfidf_x_test_meta.toarray())
+
+test_features = pd.concat([df1, df2], axis = 1)
+
+print(tf_idf_text.vocabulary_)
+print(tfidf_x_train_text.shape)
+print(np.array(x_train_text).shape)
 print(np.array(y_train).shape)
 
 from sklearn import model_selection, naive_bayes, svm
@@ -183,10 +207,11 @@ from sklearn.svm import SVC
 
 # naive bayes classifier
 nb = MultinomialNB()
-nb.fit(tfidf_x_train, y_train)
+
+nb.fit(train_features, y_train)
 
 # prediction
-pred_nb = nb.predict(tfidf_x_test)
+pred_nb = nb.predict(test_features)
 
 # print the accuracy
 from sklearn.metrics import accuracy_score
@@ -194,10 +219,10 @@ print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep
 
 # svm classifier
 svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
-svm.fit(tfidf_x_train, y_train)
+svm.fit(train_features, y_train)
 
 # prediction
-pred_svm = svm.predict(tfidf_x_test)
+pred_svm = svm.predict(test_features)
 
 # print the accuracy
 print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
