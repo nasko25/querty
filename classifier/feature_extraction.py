@@ -201,28 +201,68 @@ print(np.array(x_train_text).shape)
 print(np.array(y_train).shape)
 
 # classifiers
-from sklearn import model_selection, naive_bayes, svm
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import SVC
+# from sklearn import model_selection, naive_bayes, svm
+# from sklearn.naive_bayes import MultinomialNB
+# from sklearn.svm import SVC
 
-# naive bayes classifier
-nb = MultinomialNB()
+# # naive bayes classifier
+# nb = MultinomialNB()
 
-nb.fit(train_features, y_train)
+# nb.fit(train_features, y_train)
 
-# prediction
-pred_nb = nb.predict(test_features)
+# # prediction
+# pred_nb = nb.predict(test_features)
 
-# print the accuracy
+# # print the accuracy
 from sklearn.metrics import accuracy_score
-print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep = "")
+# print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep = "")
 
-# svm classifier
-svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
-svm.fit(train_features, y_train)
+# # svm classifier
+# svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
+# svm.fit(train_features, y_train)
 
-# prediction
-pred_svm = svm.predict(test_features)
+# # prediction
+# pred_svm = svm.predict(test_features)
 
-# print the accuracy
-print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
+# # print the accuracy
+# print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
+
+# deep neural network
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras.utils import np_utils
+
+# Model Training
+print ("Create model ... ")
+def build_model():
+    model = Sequential()
+    model.add(Dense(256, input_dim = 10000, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(200, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(160, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(120, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(80, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(20, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(8, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.summary()
+    return model
+
+print("Compile model ...")
+estimator = KerasClassifier(build_fn=build_model, epochs=15, batch_size=128)
+y_train_cat = np_utils.to_categorical(y_train, 8)
+estimator.fit(train_features, y_train_cat)
+
+# Predictions
+print ("Predict on test data ... ")
+pred_nn = estimator.predict(test_features)
+y_pred = label_encoder.inverse_transform(pred_nn)
+
+print("Neural Network Accuracy = ",accuracy_score(pred_nn, y_test) * 100, "%", sep = "")
+# print(pred_nn, y_pred)

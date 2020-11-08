@@ -20,3 +20,6 @@ After I set the random seed to get consistent results, the classifier, trained o
 Trained on both text and meta tag information (and the same random seed):
 * Naive Bayes Accuracy = 73.65591397849462%
 * SVM Accuracy = 78.76344086021506%
+
+Trained a deep neural network using the text and meta tags information:
+* Neural Network Accuracy = 67.20430107526882%
