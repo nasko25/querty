@@ -13,6 +13,10 @@ Trained on the text and meta tags of the webpages, the classifier achieved the f
 * Naive Bayes Accuracy = 75.26881720430107%
 * SVM Accuracy = 79.3010752688172%
 
-After I set the random seed to get consistent results, the classifier, trained on text and meta tags achieved:
+After I set the random seed to get consistent results, the classifier, trained on text only achieved:
+* Naive Bayes Accuracy = 74.19354838709677%
+* SVM Accuracy = 77.68817204301075%
+
+Trained on both text and meta tag information (and the same random seed):
 * Naive Bayes Accuracy = 73.65591397849462%
 * SVM Accuracy = 78.76344086021506%
