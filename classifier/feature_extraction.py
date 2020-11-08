@@ -164,8 +164,7 @@ else:
 
 # TODO html parser to count tags
 
-print(np.array(data).shape)
-print(np.array(labels).shape)
+# split the text and meta tag information into test and train sets
 x_train_text, x_test_text, x_train_meta, x_test_meta, y_train, y_test = train_test_split(data["text"], data["meta"], labels, test_size=0.3)
 
 # encode labels into numerical values
@@ -176,31 +175,32 @@ y_test = label_encoder.fit_transform(y_test)
 # vectorize the data's text and metadata fields using tf-idf
 tf_idf_text = TfidfVectorizer(max_features=5000)
 tf_idf_text.fit(data["text"])
-
-tf_idf_meta = TfidfVectorizer(max_features=5000)
-tf_idf_meta.fit(data["meta"])
-
 tfidf_x_train_text = tf_idf_text.transform(x_train_text)
 tfidf_x_test_text = tf_idf_text.transform(x_test_text)
 
+tf_idf_meta = TfidfVectorizer(max_features=5000)
+tf_idf_meta.fit(data["meta"])
 tfidf_x_train_meta = tf_idf_meta.transform(x_train_meta)
 tfidf_x_test_meta = tf_idf_meta.transform(x_test_meta)
 
-df1 = pd.DataFrame(tfidf_x_train_text.toarray())
-df2 = pd.DataFrame(tfidf_x_train_meta.toarray())
+# combine both train features into one training feature
+df_train_text = pd.DataFrame(tfidf_x_train_text.toarray())
+df_train_meta = pd.DataFrame(tfidf_x_train_meta.toarray())
 
-train_features = pd.concat([df1, df2], axis = 1)
+train_features = pd.concat([df_train_text, df_train_meta], axis = 1)
 
-df1 = pd.DataFrame(tfidf_x_test_text.toarray())
-df2 = pd.DataFrame(tfidf_x_test_meta.toarray())
+# combine both test features into one testing feature
+df_test_text = pd.DataFrame(tfidf_x_test_text.toarray())
+df_test_meta = pd.DataFrame(tfidf_x_test_meta.toarray())
 
-test_features = pd.concat([df1, df2], axis = 1)
+test_features = pd.concat([df_test_text, df_test_meta], axis = 1)
 
 print(tf_idf_text.vocabulary_)
 print(tfidf_x_train_text.shape)
 print(np.array(x_train_text).shape)
 print(np.array(y_train).shape)
 
+# classifiers
 from sklearn import model_selection, naive_bayes, svm
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
