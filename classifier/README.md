@@ -22,4 +22,4 @@ Trained on both text and meta tag information (and the same random seed):
 * SVM Accuracy = 78.76344086021506%
 
 Trained a deep neural network using the text and meta tags information:
-* Neural Network Accuracy = 67.20430107526882%
+* Neural Network Accuracy = 76.34408602150538%
