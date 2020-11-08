@@ -176,3 +176,28 @@ print(tf_idf.vocabulary_)
 print(tfidf_x_train.shape)
 print(np.array(x_train).shape)
 print(np.array(y_train).shape)
+
+from sklearn import model_selection, naive_bayes, svm
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+
+# naive bayes classifier
+nb = MultinomialNB()
+nb.fit(tfidf_x_train, y_train)
+
+# prediction
+pred_nb = nb.predict(tfidf_x_test)
+
+# print the accuracy
+from sklearn.metrics import accuracy_score
+print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep = "")
+
+# svm classifier
+svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
+svm.fit(tfidf_x_train, y_train)
+
+# prediction
+pred_svm = svm.predict(tfidf_x_test)
+
+# print the accuracy
+print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
