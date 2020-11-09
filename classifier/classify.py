@@ -36,6 +36,11 @@ tfidf_x_test_meta = tf_idf_meta.transform(x_test_meta)
 df_train_text = pd.DataFrame(tfidf_x_train_text.toarray())
 df_train_meta = pd.DataFrame(tfidf_x_train_meta.toarray())
 train_a = pd.DataFrame(get_values("a", x_train_html))
+train_li = pd.DataFrame(get_values("li", x_train_html))
+train_script = pd.DataFrame(get_values("script", x_train_html))
+train_script_words = pd.DataFrame(get_values("script_words", x_train_html))
+train_iframe = pd.DataFrame(get_values("iframe", x_train_html))
+train_input = pd.DataFrame(get_values("input", x_train_html))
 
 train_features = pd.concat([df_train_text, df_train_meta], axis = 1)
 
@@ -43,6 +48,11 @@ train_features = pd.concat([df_train_text, df_train_meta], axis = 1)
 df_test_text = pd.DataFrame(tfidf_x_test_text.toarray())
 df_test_meta = pd.DataFrame(tfidf_x_test_meta.toarray())
 test_a = pd.DataFrame(get_values("a", x_test_html))
+test_li = pd.DataFrame(get_values("li", x_test_html))
+test_script = pd.DataFrame(get_values("script", x_test_html))
+test_script_words = pd.DataFrame(get_values("script_words", x_test_html))
+test_iframe = pd.DataFrame(get_values("iframe", x_test_html))
+test_input = pd.DataFrame(get_values("input", x_test_html))
 
 test_features = pd.concat([df_test_text, df_test_meta], axis = 1)
 
@@ -60,6 +70,24 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from keras.utils import np_utils
 from sklearn.metrics import accuracy_score
 
+# tried scaling the data and reducing the features with PCA, but the produced accuracies were too small
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.decomposition import PCA
+
+# scaler = StandardScaler()
+
+# scaler.fit(train_features)
+# train_features = scaler.transform(train_features)
+# test_features = scaler.transform(test_features)
+
+
+# pca = PCA(n_components=100)
+
+# pca.fit(train_features)
+# train_features = pca.transform(train_features)
+# test_features = pca.transform(test_features)
+
+# the neural network and svm were trained with only the text and meta tag information extracted from the web pages
 tf.random.set_seed(42)
 
 def build_model():
@@ -93,28 +121,10 @@ y_pred = label_encoder.inverse_transform(pred_nn)
 print("Neural Network Accuracy = ", accuracy_score(pred_nn, y_test) * 100, "%", sep = "")
 # print(pred_nn, y_pred)
 
-# include the a tag
-train_features = pd.concat([train_features, train_a], axis = 1)
-test_features = pd.concat([test_features, test_a], axis = 1)
 
-
-# text classification inspired by https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
-# classifiers
-from sklearn import model_selection, naive_bayes, svm
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 
-# naive bayes classifier
-nb = MultinomialNB(alpha=0.001)
-
-nb.fit(train_features, y_train)
-
-# prediction
-pred_nb = nb.predict(test_features)
-
-# print the accuracy
-print("Naive Bayes Accuracy = ", accuracy_score(pred_nb, y_test) * 100, "%", sep = "")
-
+# the svm classifier was too slow with the additional html extracted features, so it is only trained with the text and meta tag information 
 # svm classifier
 svm = SVC(C = 1.0, kernel = 'linear', degree = 3, gamma = 'auto')
 svm.fit(train_features, y_train)
@@ -124,3 +134,67 @@ pred_svm = svm.predict(test_features)
 
 # print the accuracy
 print("SVM Accuracy = ",accuracy_score(pred_svm, y_test) * 100, "%", sep = "")
+
+
+# include the additional information from the html tags
+train_features = pd.concat([train_features, train_a, train_li, train_script, train_script_words, train_iframe, train_input], axis = 1)
+test_features = pd.concat([test_features, test_a, test_li, test_script, test_script_words, test_iframe, test_input], axis = 1)
+
+# text classification inspired by https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
+# classifiers
+from sklearn import model_selection, naive_bayes, svm
+from sklearn.naive_bayes import GaussianNB
+
+# Gaussian naive bayes classifier
+gnb = GaussianNB()
+
+gnb.fit(train_features, y_train)
+
+# prediction
+pred_gnb = gnb.predict(test_features)
+
+# print the accuracy
+print("Gaussian Naive Bayes Accuracy = ", accuracy_score(pred_gnb, y_test) * 100, "%", sep = "")
+
+from sklearn.naive_bayes import MultinomialNB
+
+# multinomial naive bayes classifier
+mnb = MultinomialNB(alpha=0.000001)
+
+mnb.fit(train_features, y_train)
+
+# prediction
+pred_mnb = mnb.predict(test_features)
+
+# print the accuracy
+print("Multinomial Naive Bayes Accuracy = ", accuracy_score(pred_mnb, y_test) * 100, "%", sep = "")
+
+from sklearn.ensemble import RandomForestClassifier
+
+# random forest classifier
+rand_forest = RandomForestClassifier()
+
+rand_forest.fit(train_features, y_train)
+
+# prediction
+pred_rand_forest = rand_forest.predict(test_features)
+
+# print the accuracy
+print("Random Forest Accuracy = ", accuracy_score(pred_rand_forest, y_test) * 100, "%", sep = "")
+
+
+from sklearn.neighbors import KNeighborsClassifier
+
+# knn classifier
+knn = KNeighborsClassifier(n_neighbors=50)
+
+knn.fit(train_features, y_train)
+
+# prediction
+pred_knn = knn.predict(test_features)
+
+# print the accuracy
+print("K Nearest Neighbors Accuracy = ", accuracy_score(pred_knn, y_test) * 100, "%", sep = "")
+
+# TODO save the fitted models to avoid training them over and over again
+# TODO classify.py and train.py should be separate; this file could be called test_models.py
