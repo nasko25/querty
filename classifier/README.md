@@ -32,7 +32,7 @@ After inclusing the number of `<a>` tags as a feature, only the SVM improved a b
 * SVM Accuracy = 79.03225806451613%
 
 After including all extracted information from the html tags, the svm training process became too slow, so the svm and the neural network were only trained with the textual and meta tag information.
-**The SVM classifier may benefit from some of the extracted information, but further tests are necessary to pick the best (training time):accuracy ratio.**
+**The SVM classifier may benefit from some of the extracted information, but further tests are necessary to pick the best (training time)/(accuracy) ratio.**
 I additionally included Gaussian Naive Bayes, Random Forest and K Nearest Neighbors classifiers. The achieved accuracies are:
 * Gaussian Naive Bayes Accuracy = 64.51612903225806%
 * Multinomial Naive Bayes Accuracy = 54.83870967741935%
