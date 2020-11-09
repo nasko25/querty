@@ -38,3 +38,6 @@ I additionally included Gaussian Naive Bayes, Random Forest and K Nearest Neighb
 * Multinomial Naive Bayes Accuracy = 54.83870967741935%
 * Random Forest Accuracy = 77.15053763440861%
 * K Nearest Neighbors Accuracy = 35.752688172043015%
+
+### TODO
+The classifiers were more accurate without all of the additional html features, so some of them should be excluded, but further testing is required.
