@@ -23,3 +23,9 @@ Trained on both text and meta tag information (and the same random seed):
 
 Trained a deep neural network using the text and meta tags information:
 * Neural Network Accuracy = 76.34408602150538%
+After setting the seed manually:
+* Neural Network Accuracy = 77.95698924731182%
+
+After inclusing the number of `<a>` tags as a feature, only the SVM improved a bit, while the neural network suffered greatly, so for now I decided to not include the `<a>` tag for the nn classifier.
+* Naive Bayes Accuracy = 73.38709677419355%
+* SVM Accuracy = 79.03225806451613%

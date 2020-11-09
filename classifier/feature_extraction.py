@@ -29,6 +29,7 @@ genres = {
 import html2text
 import os
 import json
+from html_extract_info import HTMLInfoExtractor
 from bs4 import BeautifulSoup
 
 def extract_text(soup):
@@ -101,18 +102,26 @@ def extract_metas(soup):
 
     # print(metas[0].attrs.values())
 
-data_dir = "data/genre-corpus-04"
-data = {
-    "text": [],
-    "meta" : []
-}
-labels = []
 
-# save the data and labels variables in a json file to access it without performing the text preprocessing again and again
-data_saved_file = "data/data.json"
-labels_saved_file = "data/data_labels.json"
+def extract_html_info(html):
+    parser = HTMLInfoExtractor()
+    parser.feed(html)
+    return parser.extract()
+
 
 def extract_features():
+    data_dir = "data/genre-corpus-04"
+    data = {
+        "text": [],
+        "meta" : [],
+        "html": []
+    }
+    labels = []
+
+    # save the data and labels variables in a json file to access it without performing the text preprocessing again and again
+    data_saved_file = "data/data.json"
+    labels_saved_file = "data/data_labels.json"
+
     if (os.path.exists(data_saved_file) and os.path.isfile(data_saved_file)) and (os.path.exists(labels_saved_file) and os.path.isfile(labels_saved_file)):
         f = open(data_saved_file, 'r')
         data = json.load(f)
@@ -133,6 +142,7 @@ def extract_features():
                     soup = BeautifulSoup(html, features="html5lib")
                     data["text"].append(str(extract_text(soup)))
                     data["meta"].append(str(extract_metas(soup)))
+                    data["html"].append(extract_html_info(html))
                     labels.append(dir)
                     file.close()
         f = open(data_saved_file, 'w')

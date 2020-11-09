@@ -53,7 +53,7 @@ class HTMLInfoExtractor(HTMLParser):
         return self.counter
 
 # test
-parser = HTMLInfoExtractor()
-parser.feed('<html><head><title>Test</title></head>'
-            '<body><h1><a href="asdf"><a> Parse </a> me!</h1></body> <script> </script></html>')
-print(parser.extract())
+# parser = HTMLInfoExtractor()
+# parser.feed('<html><head><title>Test</title></head><script> var asdf=2;</script>'
+#             '<body><h1><a href="asdf"><a> Parse </a> me!</h1></body> <script> </script></html>')
+# print(parser.extract())
