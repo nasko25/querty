@@ -142,7 +142,7 @@ test_features = pd.concat([test_features, test_a, test_li, test_script, test_scr
 
 # text classification inspired by https://medium.com/@bedigunjit/simple-guide-to-text-classification-nlp-using-svm-and-naive-bayes-with-python-421db3a72d34
 # classifiers
-from sklearn import model_selection, naive_bayes, svm
+from sklearn import model_selection, naive_bayes
 from sklearn.naive_bayes import GaussianNB
 
 # Gaussian naive bayes classifier
@@ -198,3 +198,40 @@ print("K Nearest Neighbors Accuracy = ", accuracy_score(pred_knn, y_test) * 100,
 
 # TODO save the fitted models to avoid training them over and over again
 # TODO classify.py and train.py should be separate; this file could be called test_models.py
+
+# temporary; bad code to classify webpage from a given url. Random forest performed decently.
+import urllib.request
+from bs4 import BeautifulSoup
+
+fp = urllib.request.urlopen("https://www.python.org/downloads/")
+mybytes = fp.read()
+
+mystr = mybytes.decode("utf8")
+fp.close()
+from feature_extraction import extract_text, extract_metas, extract_html_info
+
+soup = BeautifulSoup(mystr, features="html5lib")
+t = tf_idf_text.transform([str(extract_text(soup))])
+m = tf_idf_meta.transform([str(extract_metas(soup))])
+
+t = pd.DataFrame(t.toarray())
+m = pd.DataFrame(m.toarray())
+
+x = pd.concat([t, m], axis = 1)
+
+h = extract_html_info(mystr)
+a = pd.DataFrame([h["a"]])
+li = pd.DataFrame([h["li"]])
+script = pd.DataFrame([h["script"]])
+script_words = pd.DataFrame([h["script_words"]])
+iframe = pd.DataFrame([h["iframe"]])
+i = pd.DataFrame([h["input"]])
+
+print(label_encoder.inverse_transform(estimator.predict(x)))
+print(label_encoder.inverse_transform(svm.predict(x)))
+print()
+x = pd.concat([x, a, li, script, script_words, iframe, i], axis = 1)
+print(label_encoder.inverse_transform(gnb.predict(x)))
+print(label_encoder.inverse_transform(mnb.predict(x)))
+print(label_encoder.inverse_transform(rand_forest.predict(x)))
+print(label_encoder.inverse_transform(knn.predict(x)))
