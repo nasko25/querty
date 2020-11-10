@@ -5,6 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
+# TODO refactor and use train.py for training
+
 np.random.seed(42)
 
 # since data["html"] is a list of dictionaries, a helper function to extract all dictionary values from the list is needed
@@ -204,6 +206,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 fp = urllib.request.urlopen("https://www.python.org/downloads/")
+fp = urllib.request.urlopen("https://docs.python.org/3/library/html.parser.html")
 mybytes = fp.read()
 
 mystr = mybytes.decode("utf8")
