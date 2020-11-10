@@ -48,7 +48,7 @@ def _train_model(model, model_name):
 
     # TODO don't split in production
     # split the text, meta tag information, and the html extracted information into test and train sets
-    x_train_text, x_test_text, x_train_meta, x_test_meta, x_train_html, x_test_html, y_train, y_test = train_test_split(data["text"], data["meta"], data["html"], labels, test_size=0.3)
+    x_train_text, x_test_text, x_train_meta, x_test_meta, x_train_html, x_test_html, y_train, y_test = train_test_split(data["text"], data["meta"], data["html"], labels, test_size=0.3, random_state=42)
 
     # encode labels into numerical values
     label_encoder = LabelEncoder()

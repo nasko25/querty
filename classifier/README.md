@@ -39,5 +39,9 @@ I additionally included Gaussian Naive Bayes, Random Forest and K Nearest Neighb
 * Random Forest Accuracy = 77.15053763440861%
 * K Nearest Neighbors Accuracy = 35.752688172043015%
 
+After setting the random_state of train_test_split, only random forest's accuracy changed:
+* Random Forest Accuracy = 76.34408602150538%
+
 ### TODO
 The classifiers were more accurate without all of the additional html features, so some of them should be excluded, but further testing is required.
+Without the script_words, random_forest improved.

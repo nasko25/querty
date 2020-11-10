@@ -223,6 +223,10 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
     //     }
     // }
     // TODO also check meta tags for website type
+    /* TODO (if og:type meta tag is present, use its value as a website genre)
+        Most web pages that have og:type set are articles, but keep in mind it is not always the case. og:type can also be "website"
+        Also, add a list of well know domains that don't need to be classified, like facebook, google, gmail, twitter, etc.
+    */
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
         return "product";
