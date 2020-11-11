@@ -5,6 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from train import extract_features, TrainModels
 
 # Note: tried scaling the data and reducing the features with PCA, but the produced accuracies were too small
+# TODO refactor into functions for readability
 
 data, labels = extract_features()
 
@@ -24,59 +25,77 @@ for model in models:
 print("\n\n")
 
 # test the real-world classification
-train_models = TrainModels(data, labels)
-models = train_models.train_or_load()
-# temporary; very bad code to classify webpage from a given url; random forest performs decently
-# TODO refactor
 import urllib.request
 from bs4 import BeautifulSoup
 
-# fp = urllib.request.urlopen("https://www.python.org/downloads/")
-fp = urllib.request.urlopen("https://docs.python.org/3/library/html.parser.html")
-mybytes = fp.read()
+def test(webpage):
+    train_models = TrainModels(data, labels)
+    models = train_models.train_or_load()
 
-mystr = mybytes.decode("utf8")
-fp.close()
-from feature_extraction import extract_text, extract_metas, extract_html_info
+    raw_webpage = webpage.read()
 
-soup = BeautifulSoup(mystr, features="html5lib")
+    decoded_webpage = raw_webpage.decode("utf8")
 
-tf_idf_text = TfidfVectorizer(max_features=5000)
-tf_idf_meta = TfidfVectorizer(max_features=5000)
+    webpage.close()
+    from feature_extraction import extract_text, extract_metas, extract_html_info
 
-tf_idf_text.fit(data["text"])
-tf_idf_meta.fit(data["meta"])
-t = tf_idf_text.transform([str(extract_text(soup))])
-m = tf_idf_meta.transform([str(extract_metas(soup))])
+    soup = BeautifulSoup(decoded_webpage, features="html5lib")
 
-t = pd.DataFrame(t.toarray())
-m = pd.DataFrame(m.toarray())
+    # TODO extract this to a function; maybe in feature_extraction.py
+    tf_idf_text = TfidfVectorizer(max_features=5000)
+    tf_idf_meta = TfidfVectorizer(max_features=5000)
 
-x = pd.concat([t, m], axis = 1)
+    tf_idf_text.fit(data["text"])
+    tf_idf_meta.fit(data["meta"])
+    text = tf_idf_text.transform([str(extract_text(soup))])
+    meta = tf_idf_meta.transform([str(extract_metas(soup))])
 
-h = extract_html_info(mystr)
-a = pd.DataFrame([h["a"]])
-li = pd.DataFrame([h["li"]])
-script = pd.DataFrame([h["script"]])
-script_words = pd.DataFrame([h["script_words"]])
-iframe = pd.DataFrame([h["iframe"]])
-i = pd.DataFrame([h["input"]])
+    text = pd.DataFrame(text.toarray())
+    meta = pd.DataFrame(meta.toarray())
 
-label_encoder = LabelEncoder()
-label_encoder.fit(labels)
-try:
-    # This will work if the model was loaded from the files, because it is without the KerasClassifier wrapper
-    # If the model was just trained inverse_transform will throw a ValueError
-    print(label_encoder.inverse_transform(np.argmax(models["neural_net"].predict(x), axis=-1)))
-except ValueError:
-    print(label_encoder.inverse_transform(models["neural_net"].predict(x)))
+    features = pd.concat([text, meta], axis = 1)
 
-print(label_encoder.inverse_transform(models["svm"].predict(x)))
-x = pd.concat([x, a, li, script, script_words, iframe, i], axis = 1)
+    html = extract_html_info(decoded_webpage)
+    a = pd.DataFrame([html["a"]])
+    li = pd.DataFrame([html["li"]])
+    script = pd.DataFrame([html["script"]])
+    script_words = pd.DataFrame([html["script_words"]])
+    iframe = pd.DataFrame([html["iframe"]])
+    i = pd.DataFrame([html["input"]])
 
-print(label_encoder.inverse_transform(models["gnb"].predict(x)))
-print(label_encoder.inverse_transform(models["mnb"].predict(x)))
-print(label_encoder.inverse_transform(models["rand_forest"].predict(x)))
-print(label_encoder.inverse_transform(models["knn"].predict(x)))
+    label_encoder = LabelEncoder()
+    label_encoder.fit(labels)
+    try:
+        # This will work if the model was loaded from the files, because it is without the KerasClassifier wrapper
+        # If the model was just trained inverse_transform will throw a ValueError
+        print(label_encoder.inverse_transform(np.argmax(models["neural_net"].predict(features), axis=-1)))
+    except ValueError:
+        print(label_encoder.inverse_transform(models["neural_net"].predict(features)))
 
-# TODO delete /models and retrain to test the models without loading them from disk
+    print(label_encoder.inverse_transform(models["svm"].predict(features)))
+    features = pd.concat([features, a, li, script, script_words, iframe, i], axis = 1)
+
+    print(label_encoder.inverse_transform(models["gnb"].predict(features)))
+    print(label_encoder.inverse_transform(models["mnb"].predict(features)))
+    print(label_encoder.inverse_transform(models["rand_forest"].predict(features)))
+    print(label_encoder.inverse_transform(models["knn"].predict(features)))
+
+# if the data/models directory exists, delete it to test the training of the models
+import shutil
+import os
+models_dir = "data/models"
+if os.path.exists(models_dir) and os.path.isdir(models_dir):
+    print(models_dir, "directory found. Deleting...", end="")
+    # shutil.rmtree(models_dir)
+    print("Done")
+
+# webpage = urllib.request.urlopen("https://www.python.org/downloads/")
+webpage = urllib.request.urlopen("https://docs.python.org/3/library/html.parser.html")
+# train, save, and test the models
+test(webpage)
+
+# test the models saved above
+webpage = urllib.request.urlopen("https://docs.python.org/3/library/html.parser.html")
+test(webpage)
+# TODO maybe assert that the returned values from the test function are equal to some expected values
+# for example, the accuracies for each model are known, and predicted website genres for the given webpage are known
