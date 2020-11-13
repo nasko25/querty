@@ -108,6 +108,7 @@ def extract_html_info(html):
     parser.feed(html)
     return parser.extract()
 
+# TODO make the functions above private ^ (_)
 
 def extract_features():
     data_dir = "data/genre-corpus-04"
@@ -155,4 +156,40 @@ def extract_features():
 
     return data, labels
 
-# TODO html parser to count tags
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+
+def extract_features_from_html(data, webpage, extract_features_from_html=True):
+    raw_webpage = webpage.read()
+    decoded_webpage = raw_webpage.decode("utf8")
+    webpage.close()
+
+    soup = BeautifulSoup(decoded_webpage, features="html5lib")
+
+    tf_idf_text = TfidfVectorizer(max_features=5000)
+    tf_idf_meta = TfidfVectorizer(max_features=5000)
+
+    tf_idf_text.fit(data["text"])
+    tf_idf_meta.fit(data["meta"])
+    text = tf_idf_text.transform([str(extract_text(soup))])
+    meta = tf_idf_meta.transform([str(extract_metas(soup))])
+
+    text = pd.DataFrame(text.toarray())
+    meta = pd.DataFrame(meta.toarray())
+
+    features = pd.concat([text, meta], axis = 1)
+
+    # extract the features from html
+    if extract_features_from_html:
+        html = extract_html_info(decoded_webpage)
+        a = pd.DataFrame([html["a"]])
+        li = pd.DataFrame([html["li"]])
+        script = pd.DataFrame([html["script"]])
+        script_words = pd.DataFrame([html["script_words"]])
+        iframe = pd.DataFrame([html["iframe"]])
+        i = pd.DataFrame([html["input"]])
+
+        features = pd.concat([features, a, li, script, script_words, iframe, i], axis = 1)
+
+    return features
