@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from train import extract_features, TrainModels
 
 # Note: tried scaling the data and reducing the features with PCA, but the produced accuracies were too small
+# TODO maybe use unittest python library instead of assertions?
 
 data, labels = extract_features()
+np.random.seed(42)
+tf.random.set_seed(42)
 
 # test the models by splitting the original dataset into test and train datasets
 def test_models_split(data, labels):
@@ -49,37 +53,12 @@ def test_train_or_load(data, labels, webpage):
     models = train_models.train_or_load()
 
     raw_webpage = webpage.read()
-
     decoded_webpage = raw_webpage.decode("utf8")
-
     webpage.close()
+
     from feature_extraction import extract_features_from_html, extract_text, extract_metas, extract_html_info
 
-    soup = BeautifulSoup(decoded_webpage, features="html5lib")
-
-    # TODO extract this to a function; maybe in feature_extraction.py
-    tf_idf_text = TfidfVectorizer(max_features=5000)
-    tf_idf_meta = TfidfVectorizer(max_features=5000)
-
-    tf_idf_text.fit(data["text"])
-    tf_idf_meta.fit(data["meta"])
-    text = tf_idf_text.transform([str(extract_text(soup))])
-    meta = tf_idf_meta.transform([str(extract_metas(soup))])
-
-    text = pd.DataFrame(text.toarray())
-    meta = pd.DataFrame(meta.toarray())
-
-    features = pd.concat([text, meta], axis = 1)
-
-    html = extract_html_info(decoded_webpage)
-    a = pd.DataFrame([html["a"]])
-    li = pd.DataFrame([html["li"]])
-    script = pd.DataFrame([html["script"]])
-    script_words = pd.DataFrame([html["script_words"]])
-    iframe = pd.DataFrame([html["iframe"]])
-    i = pd.DataFrame([html["input"]])
-
-    # features = extract_features_from_html(data, webpage, extract_features_from_html=False)
+    features = extract_features_from_html(data, decoded_webpage, extract_features_from_html=False)
 
     label_encoder = LabelEncoder()
     label_encoder.fit(labels)
@@ -99,8 +78,7 @@ def test_train_or_load(data, labels, webpage):
     print(svm_pred)
     assert svm_pred == "help"
 
-    # features = extract_features_from_html(data, webpage, extract_features_from_html=True)
-    features = pd.concat([features, a, li, script, script_words, iframe, i], axis = 1)
+    features = extract_features_from_html(data, decoded_webpage, extract_features_from_html=True)
 
     gnb_pred = label_encoder.inverse_transform(models["gnb"].predict(features))
     print(gnb_pred)
@@ -120,7 +98,7 @@ def test_train_or_load(data, labels, webpage):
 
 
 # tests
-# test_models_split(data, labels)
+test_models_split(data, labels)
 print("\n\n")
 
 # if the data/models directory exists, delete it to test the training of the models
@@ -129,7 +107,7 @@ import os
 models_dir = "data/models"
 if os.path.exists(models_dir) and os.path.isdir(models_dir):
     print(models_dir, "directory found. Deleting...", end="")
-    # shutil.rmtree(models_dir)
+    shutil.rmtree(models_dir)
     print("Done")
 
 # webpage = urllib.request.urlopen("https://www.python.org/downloads/")

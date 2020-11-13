@@ -161,11 +161,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 
 def extract_features_from_html(data, webpage, extract_features_from_html=True):
-    raw_webpage = webpage.read()
-    decoded_webpage = raw_webpage.decode("utf8")
-    webpage.close()
-
-    soup = BeautifulSoup(decoded_webpage, features="html5lib")
+    soup = BeautifulSoup(webpage, features="html5lib")
 
     tf_idf_text = TfidfVectorizer(max_features=5000)
     tf_idf_meta = TfidfVectorizer(max_features=5000)
@@ -182,7 +178,7 @@ def extract_features_from_html(data, webpage, extract_features_from_html=True):
 
     # extract the features from html
     if extract_features_from_html:
-        html = extract_html_info(decoded_webpage)
+        html = extract_html_info(webpage)
         a = pd.DataFrame([html["a"]])
         li = pd.DataFrame([html["li"]])
         script = pd.DataFrame([html["script"]])

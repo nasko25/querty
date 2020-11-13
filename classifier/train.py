@@ -220,8 +220,9 @@ class TrainModels():
                     models[model] = self._load_model(filename)
             else:
                 # TODO remove in production
-                np.random.seed(42)
-                tf.random.set_seed(42)
+                # (moved it to train_and_test.py, so it will still be used when testing)
+                # np.random.seed(42)
+                # tf.random.set_seed(42)
                 # -------------------------
 
                 print("Model", model, "was not previously trained.")
