@@ -56,7 +56,7 @@ def test_train_or_load(data, labels, webpage):
     decoded_webpage = raw_webpage.decode("utf8")
     webpage.close()
 
-    from feature_extraction import extract_features_from_html, extract_text, extract_metas, extract_html_info
+    from feature_extraction import extract_features_from_html
 
     features = extract_features_from_html(data, decoded_webpage, extract_features_from_html=False)
 

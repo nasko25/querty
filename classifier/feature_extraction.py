@@ -32,7 +32,7 @@ import json
 from html_extract_info import HTMLInfoExtractor
 from bs4 import BeautifulSoup
 
-def extract_text(soup):
+def _extract_text(soup):
     # print(' '.join(soup.get_text().split()))   # still has some scripts
 
     # print("\n\n")
@@ -84,7 +84,7 @@ def extract_text(soup):
     # print(final_words)
     return final_words
 
-def extract_metas(soup):
+def _extract_metas(soup):
     metas = soup.find_all("meta")
     # meta tags can have the following attributes:
     #       - charset
@@ -103,12 +103,10 @@ def extract_metas(soup):
     # print(metas[0].attrs.values())
 
 
-def extract_html_info(html):
+def _extract_html_info(html):
     parser = HTMLInfoExtractor()
     parser.feed(html)
     return parser.extract()
-
-# TODO make the functions above private ^ (_)
 
 def extract_features():
     data_dir = "data/genre-corpus-04"
@@ -141,9 +139,9 @@ def extract_features():
                     print(file.name)
                     html = file.read()
                     soup = BeautifulSoup(html, features="html5lib")
-                    data["text"].append(str(extract_text(soup)))
-                    data["meta"].append(str(extract_metas(soup)))
-                    data["html"].append(extract_html_info(html))
+                    data["text"].append(str(_extract_text(soup)))
+                    data["meta"].append(str(_extract_metas(soup)))
+                    data["html"].append(_extract_html_info(html))
                     labels.append(dir)
                     file.close()
         f = open(data_saved_file, 'w')
@@ -168,8 +166,8 @@ def extract_features_from_html(data, webpage, extract_features_from_html=True):
 
     tf_idf_text.fit(data["text"])
     tf_idf_meta.fit(data["meta"])
-    text = tf_idf_text.transform([str(extract_text(soup))])
-    meta = tf_idf_meta.transform([str(extract_metas(soup))])
+    text = tf_idf_text.transform([str(_extract_text(soup))])
+    meta = tf_idf_meta.transform([str(_extract_metas(soup))])
 
     text = pd.DataFrame(text.toarray())
     meta = pd.DataFrame(meta.toarray())
@@ -178,7 +176,7 @@ def extract_features_from_html(data, webpage, extract_features_from_html=True):
 
     # extract the features from html
     if extract_features_from_html:
-        html = extract_html_info(webpage)
+        html = _extract_html_info(webpage)
         a = pd.DataFrame([html["a"]])
         li = pd.DataFrame([html["li"]])
         script = pd.DataFrame([html["script"]])
