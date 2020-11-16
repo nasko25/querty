@@ -45,3 +45,10 @@ After setting the random_state of train_test_split, only random forest's accurac
 ### TODO
 The classifiers were more accurate without all of the additional html features, so some of them should be excluded, but further testing is required.
 Without the script_words, random_forest improved.
+
+## How to test the classifier
+```bash
+cd classifier
+pip install -r requirements.txt
+python3 train_and_test.py
+```
