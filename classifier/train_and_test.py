@@ -121,8 +121,9 @@ class ClassifiersTest(unittest.TestCase):
         self._train_or_load(webpage)
 
 
-# tests
-# test_models_split(data, labels)
-# print("\n\n")
-
+# tests:
+#   - the classification accuracy
+#   - classifying a real webpage (https://docs.python.org/3/library/html.parser.html)
+#       - by training a new model and saving it
+#       - using the saved trained model
 unittest.main()
