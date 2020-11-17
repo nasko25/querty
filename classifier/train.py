@@ -46,6 +46,17 @@ def extract_features():
 
     return data, labels
 class TrainModels():
+    # extract the features automatically;
+    # no need for the user to call extract_features() externally
+    @classmethod
+    def auto_extract_features(cls, decoded_webpage):
+        data, labels = extract_features()
+
+        features = feature_extraction.extract_features_from_html(data, decoded_webpage, extract_features_from_html=False)
+        features_with_html_info = feature_extraction.extract_features_from_html(data, decoded_webpage, extract_features_from_html=True)
+
+        return cls(data, labels), features, features_with_html_info
+
     def __init__(self, X, y, test=False):
         self._trained_models_path = "data/models"
         self.data = X
