@@ -52,10 +52,17 @@ class TrainModels():
     def auto_extract_features(cls, decoded_webpage):
         data, labels = extract_features()
 
-        features = feature_extraction.extract_features_from_html(data, decoded_webpage, extract_features_from_html=False)
         features_with_html_info = feature_extraction.extract_features_from_html(data, decoded_webpage, extract_features_from_html=True)
 
-        return cls(data, labels), features, features_with_html_info
+        # instead of reextracting the features without the html information, just drop the html features from the existing dataframe
+        # features = feature_extraction.extract_features_from_html(data, decoded_webpage, extract_features_from_html=False)
+
+        # print(features_with_html_info.shape)
+        # print(features.shape)
+        # print(features_with_html_info.keys())
+        # print(features_with_html_info.drop([("a", 0), ("li", 0), ("script", 0), ("script_words", 0), ("iframe", 0), ("i", 0)], axis=1).shape)
+
+        return cls(data, labels), features_with_html_info.drop([("a", 0), ("li", 0), ("script", 0), ("script_words", 0), ("iframe", 0), ("i", 0)], axis=1), features_with_html_info
 
     def __init__(self, X, y, test=False):
         self._trained_models_path = "data/models"

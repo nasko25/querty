@@ -184,6 +184,6 @@ def extract_features_from_html(data, webpage, extract_features_from_html=True):
         iframe = pd.DataFrame([html["iframe"]])
         i = pd.DataFrame([html["input"]])
 
-        features = pd.concat([features, a, li, script, script_words, iframe, i], axis = 1)
+        features = pd.concat([features, a, li, script, script_words, iframe, i], keys=["features", "a", "li", "script", "script_words", "iframe", "i"], axis = 1)
 
     return features
