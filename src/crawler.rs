@@ -13,6 +13,7 @@ use crate::db::ExternalLink;
 use crate::db::WebsiteRefExtLink;
 use crate::settings::Settings;
 
+use pyo3::prelude::*;
 
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     let body = fetch_url(url, conn, settings).unwrap();
@@ -227,6 +228,15 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
         Most web pages that have og:type set are articles, but keep in mind it is not always the case. og:type can also be "website"
         Also, add a list of well know domains that don't need to be classified, like facebook, google, gmail, twitter, etc.
     */
+
+	Python::with_gil(|py| {
+        let classify = PyModule::from_code(py, "", "../classifier/classify.py", "classify").unwrap();
+        let classification: String = classify.call1("classify", ()).unwrap().extract().unwrap();
+        assert_eq!(classification, "downloads");
+        // Ok(())
+    });
+
+
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
         return "product";
