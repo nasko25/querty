@@ -29,8 +29,13 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let ext_links = extract_external_links(&body, website_id);
     let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let website_solr = website_solr_vec.get(0).unwrap();
+
+    let meta_copy = meta.clone();
+    // TODO pass by reference; don't move it
     save_metadata(meta, website_solr, &conn, &settings);
     save_external_links(ext_links, website_solr, &conn, &settings);
+
+    website_genre(&body, &meta_copy, &url);
 
     website.title = "TEST".to_string();
     update_website_info(website, &conn, &settings);
@@ -213,7 +218,7 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 //          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
 //              -> this looks like a good source to use on web page classification
 //              -> it also contains some optimization options that can help speed up the web page analysis
-fn website_genre<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
+fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str {
     let body_lc = body.to_lowercase();
     // let mut meta_lc;
 
@@ -231,8 +236,9 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<&str>) -> &'a str {
 
 	Python::with_gil(|py| {
         let classify = PyModule::from_code(py, "", "../classifier/classify.py", "classify").unwrap();
-        let classification: String = classify.call1("classify", ()).unwrap().extract().unwrap();
+        let classification: String = classify.call1("classify", (url,)).unwrap().extract().unwrap();
         assert_eq!(classification, "downloads");
+        println!("classification! : {:?}", classification);
         // Ok(())
     });
 
