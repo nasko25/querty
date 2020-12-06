@@ -251,6 +251,9 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
 
 	let pow_request = Request::new("pow").arg(2).arg(8); // Compute 2**8
 
+	// TODO if it is not reachable, proceed with offline classification
+	// (meta tags and static ifs)
+	// and if nothing is found return an empty string
 	let request_result = pow_request.call_url("http://127.0.0.1:9999/classifier");
 
 	println!("Result: {:?}", request_result);
