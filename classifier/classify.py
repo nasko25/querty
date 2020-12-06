@@ -61,7 +61,7 @@ def classify(url):
 
     return webpage_classified
 
-classification = classify("https://python.or")
+classification = classify("https://www.rust-lang.org")
 if classification != None:
     print("Type of website:", classification)
 

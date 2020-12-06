@@ -35,6 +35,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     save_metadata(meta, website_solr, &conn, &settings);
     save_external_links(ext_links, website_solr, &conn, &settings);
 
+    println!("url is {:?}", &url);
     website_genre(&body, &meta_copy, &url);
 
     website.title = "TEST".to_string();
@@ -235,10 +236,13 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
     */
 
 	Python::with_gil(|py| {
-        let classify = PyModule::from_code(py, "", "../classifier/classify.py", "classify").unwrap();
-        let classification: String = classify.call1("classify", (url,)).unwrap().extract().unwrap();
-        assert_eq!(classification, "downloads");
-        println!("classification! : {:?}", classification);
+        let classify = PyModule::from_code(py, "", "classifier.classify.py", "classify").unwrap();
+        let classification: Result<&pyo3::PyAny, PyErr> = classify.call0("asdf");
+        classification.map_err(|e| {
+            e.print(py);
+        });
+        // assert_eq!(classification, "downloads");
+        // println!("classification! : {:?}", classification);
         // Ok(())
     });
 
