@@ -209,6 +209,8 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 }
 
 
+extern crate xmlrpc;
+use xmlrpc::{Request, Value};
 // For now website genre classification is not really needed.
 // I found a lot of resources (mainly research papers) for web genre classification, but most use closed-source datasets for training.
 // The only dataset I could find was https://webis.de/data/genre-ki-04.html but it is from 2004, so it is probably quite outdated.
@@ -235,16 +237,26 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
         Also, add a list of well know domains that don't need to be classified, like facebook, google, gmail, twitter, etc.
     */
 
-	Python::with_gil(|py| {
-        let classify = PyModule::from_code(py, "", "classifier.classify.py", "classify").unwrap();
-        let classification: Result<&pyo3::PyAny, PyErr> = classify.call0("asdf");
-        classification.map_err(|e| {
-            e.print(py);
-        });
+	// Python::with_gil(|py| {
+        // let classify = PyModule::from_code(py, "", "classifier.classify.py", "classify").unwrap();
+        // let classification: Result<&pyo3::PyAny, PyErr> = classify.call0("asdf");
+        // classification.map_err(|e| {
+        //     e.print(py);
+        // });
         // assert_eq!(classification, "downloads");
         // println!("classification! : {:?}", classification);
         // Ok(())
-    });
+    // });
+
+
+	let pow_request = Request::new("pow").arg(2).arg(8); // Compute 2**8
+
+	let request_result = pow_request.call_url("http://127.0.0.1:9999/classifier");
+
+	println!("Result: {:?}", request_result);
+
+	let pow_result = request_result.unwrap();
+	assert_eq!(pow_result, Value::Int(2i32.pow(8)));
 
 
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
