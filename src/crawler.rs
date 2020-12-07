@@ -248,19 +248,12 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
         // Ok(())
     // });
 
-
-	let pow_request = Request::new("pow").arg(2).arg(8); // Compute 2**8
-
 	// TODO if it is not reachable, proceed with offline classification
 	// (meta tags and static ifs)
 	// and if nothing is found return an empty string
-	let request_result = pow_request.call_url("http://127.0.0.1:9999/classifier");
-
-	println!("Result: {:?}", request_result);
-
-	let pow_result = request_result.unwrap();
-	assert_eq!(pow_result, Value::Int(2i32.pow(8)));
-
+    let classify_request = Request::new("classify").arg(url);
+    let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
+    println!("Result of classification: {:?}", classify_result.unwrap());
 
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
