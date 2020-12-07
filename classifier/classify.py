@@ -14,20 +14,20 @@ def _classify(webpage):
     models = train_models.train_or_load()
 
     # predicitons
-    neural_net_pred = ""
-    try:
+    # neural_net_pred = ""
+    # try:
         # This will work if the model was loaded from the files, because it is without the KerasClassifier wrapper
         # If the model was just trained inverse_transform will throw a ValueError
-        neural_net_pred = train_models.label_encoder.inverse_transform(np.argmax(models["neural_net"].predict(features), axis=-1))
-    except ValueError:
-        neural_net_pred = train_models.label_encoder.inverse_transform(models["neural_net"].predict(features))
+    #     neural_net_pred = train_models.label_encoder.inverse_transform(np.argmax(models["neural_net"].predict(features), axis=-1))
+    # except ValueError:
+    #     neural_net_pred = train_models.label_encoder.inverse_transform(models["neural_net"].predict(features))
 
-    svm_pred = train_models.label_encoder.inverse_transform(models["svm"].predict(features))
+    # svm_pred = train_models.label_encoder.inverse_transform(models["svm"].predict(features))
 
-    gnb_pred = train_models.label_encoder.inverse_transform(models["gnb"].predict(features_with_html_info))
-    mnb_pred = train_models.label_encoder.inverse_transform(models["mnb"].predict(features_with_html_info))
+    # gnb_pred = train_models.label_encoder.inverse_transform(models["gnb"].predict(features_with_html_info))
+    # mnb_pred = train_models.label_encoder.inverse_transform(models["mnb"].predict(features_with_html_info))
     rand_forest_pred = train_models.label_encoder.inverse_transform(models["rand_forest"].predict(features_with_html_info))
-    knn_pred = train_models.label_encoder.inverse_transform(models["knn"].predict(features_with_html_info))
+    # knn_pred = train_models.label_encoder.inverse_transform(models["knn"].predict(features_with_html_info))
 
     # TODO return accuracy based on some formula on what algorithm predicted what?
     # (but still use only rand_forest, unless probably all other predicitions are the same and only rand_forest is different?)
@@ -59,12 +59,12 @@ def classify(url):
         print('good!')
         webpage_classified = _classify(webpage)
 
-    return webpage_classified
+    return webpage_classified.tolist()
 
-classification = classify("https://www.rust-lang.org")
-if classification != None:
-    print("Type of website:", classification)
+# classification = classify("https://www.rust-lang.org")
+# if classification != None:
+#     print("Type of website:", classification)
 
-classification = classify("https://python.org")
-if classification != None:
-    print("Type of website:", classification)
+# classification = classify("https://python.org")
+# if classification != None:
+#     print("Type of website:", classification)
