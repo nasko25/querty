@@ -1146,6 +1146,7 @@ dependencies = [
  "scraper",
  "serde 1.0.115",
  "serde_derive",
+ "simple-error",
  "throw",
  "tokio",
  "url 2.1.1",
@@ -1445,6 +1446,12 @@ dependencies = [
  "nodrop",
  "stable_deref_trait",
 ]
+
+[[package]]
+name = "simple-error"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "634bf7bc1315698154cb1b45c1db17fcd2e5ce41f925b7b4063e971536714bf1"
 
 [[package]]
 name = "siphasher"

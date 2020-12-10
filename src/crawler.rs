@@ -36,7 +36,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     save_external_links(ext_links, website_solr, &conn, &settings);
 
     println!("url is {:?}", &url);
-    website_genre(&body, &meta_copy, &url);
+    println!("Website classification type: {:?}", website_genre(&body, &meta_copy, &url));
 
     website.title = "TEST".to_string();
     update_website_info(website, &conn, &settings);
@@ -211,6 +211,10 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 
 extern crate xmlrpc;
 use xmlrpc::{Request, Value};
+use std::error::Error;
+
+// TODO make async
+
 // For now website genre classification is not really needed.
 // I found a lot of resources (mainly research papers) for web genre classification, but most use closed-source datasets for training.
 // The only dataset I could find was https://webis.de/data/genre-ki-04.html but it is from 2004, so it is probably quite outdated.
@@ -221,7 +225,7 @@ use xmlrpc::{Request, Value};
 //          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
 //              -> this looks like a good source to use on web page classification
 //              -> it also contains some optimization options that can help speed up the web page analysis
-fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str {
+fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> Result<String, Box<Error>> {
     let body_lc = body.to_lowercase();
     // let mut meta_lc;
 
@@ -253,11 +257,26 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
 	// and if nothing is found return an empty string
     let classify_request = Request::new("classify").arg(url);
     let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
-    println!("Result of classification: {:?}", classify_result.unwrap());
+    // println!("Result of classification: {:?}", classify_result.unwrap());
+    match classify_result?.as_array() {
+        Some(res) => {
+            match res.get(0) {
+               Some(res) => {
+                   match res.as_str() {
+                       Some(res) => return Ok(res.to_string()),
+                       None => bail!("Classifier did not return an array of strings."),
+                   }
+               },
+               None => bail!("Classifier returned an empty array."),
+            }
+        },
+        None => bail!("Classifier does not respond."),
+    }
 
+    // TODO do this if the above returns an error
     if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
-        return "product";
+        return Ok("product".to_string());
     }
     else if body_lc.contains("author") || body_lc.contains("article") {
         // rank should additionally be determined by the quality of the article
@@ -265,8 +284,8 @@ fn website_genre<'a>(body: &str, meta: &'a Vec<Metadata>, url: &str) -> &'a str 
         //                              -> do reviewers downvote it a lot
         //                              -> is there a "subscribe to our newsletter"
         //                              -> popups, etc.)
-        return "article";
+        return Ok("article".to_string());
     }
     // TODO else if...
-    return "default";
+    return Ok("default".to_string());
 }
