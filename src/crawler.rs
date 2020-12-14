@@ -46,6 +46,8 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     }
 
     website.title = "TEST".to_string();
+
+    // for now updating the website info will remove the metadata and external links stored in solr
     // update_website_info(website, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
