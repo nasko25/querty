@@ -7,6 +7,7 @@ use crate::solr::WebsiteSolr;
 use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
 use crate::solr::req;
+use crate::db::DB;
 use crate::db::Website;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
@@ -205,7 +206,7 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
 fn update_website_info(website_to_update: Website, conn: &MysqlConnection, settings: &Settings) -> Result<Website, throw::Error<&'static str>>  {
     // TODO update the db::Database::update method to work for metadata and external_links - to work like insert()
     // Then update this function
-    if let website = crate::db::Database::update(&Some(website_to_update), conn).unwrap() {
+    if let DB::Website(website) = crate::db::Database::update(&DB::Website(website_to_update), conn).unwrap() {
         let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
         crate::solr::update(settings, &w_solr);
         println!("Updated website id: {:?}", website.id);

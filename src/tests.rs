@@ -37,7 +37,7 @@ pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result
         println!("{:?}", website.id);
         println!("Inserted website: {:?}", website);
         website.rank = 7.0;
-        println!("Website rank should be updated: {:?}", db::Database::update(&Some(website.clone()), conn));
+        println!("Website rank should be updated: {:?}", db::Database::update(&DB::Website(website.clone()), conn));
         let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None};
         println!("Inserted in Solr: {:?}", insert(settings, &website_solr));
     }

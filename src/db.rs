@@ -47,7 +47,7 @@ pub fn from_str<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
     }
 }
 
-#[derive(Queryable, Insertable, Debug)]
+#[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "users"]
 pub struct User {
     pub id: Option<u32>,
@@ -72,7 +72,7 @@ pub struct ExternalLink {
     pub url: String,
 }
 
-#[derive(Identifiable, Queryable, Associations, Debug, Insertable)]
+#[derive(Identifiable, Queryable, Associations, Debug, Insertable, Clone)]
 #[belongs_to(Website)]
 #[belongs_to(ExternalLink, foreign_key = "ext_link_id")]
 #[table_name = "website_ref_ext_links"]
@@ -287,20 +287,59 @@ impl Database {
         els
     }
 
-    // TODO update all tables
     // update the website_id_opt based on its id
-    pub fn update(website_id_opt: &Option<Website>, conn: &MysqlConnection) -> Result<Website, diesel::result::Error>{
-        let w = website_id_opt.as_ref().unwrap();
-        diesel::update(website.filter(crate::schema::website::dsl::id.eq(w.id))).set(
-            ( crate::schema::website::title.eq(&w.title),
-            crate::schema::website::text.eq(&w.text),
-            crate::schema::website::url.eq(&w.url),
-            crate::schema::website::rank.eq(&w.rank),
-            crate::schema::website::type_of_website.eq(&w.type_of_website) )
-        ).execute(conn)?;
-        // TODO maybe use select_w
-        let updated_row_vec = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(website_id_opt.as_ref().unwrap().id)).load::<Website>(conn).expect("Error loading website");
-        let updated_row = updated_row_vec.get(0).unwrap().clone();
-        Ok(updated_row)
+    pub fn update(db: &DB, conn: &MysqlConnection) -> Result<DB, diesel::result::Error>{
+        match db {
+            DB::Website(w) => {
+                // let w = website_id_opt.as_ref().unwrap();
+                diesel::update(website.filter(crate::schema::website::dsl::id.eq(w.id))).set(
+                    ( crate::schema::website::title.eq(&w.title),
+                    crate::schema::website::text.eq(&w.text),
+                    crate::schema::website::url.eq(&w.url),
+                    crate::schema::website::rank.eq(&w.rank),
+                    crate::schema::website::type_of_website.eq(&w.type_of_website) )
+                ).execute(conn)?;
+                // TODO maybe use select_w
+                let updated_row_vec = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(w.id)).load::<Website>(conn).expect("Error loading website");
+                let updated_row = updated_row_vec.get(0).unwrap().clone();
+                Ok(DB::Website(updated_row))
+            },
+            DB::User(u) => {
+                diesel::update(users.filter(crate::schema::users::dsl::id.eq(u.id))).set(
+                    ( crate::schema::users::username.eq(&u.username),
+                    crate::schema::users::rank.eq(&u.rank),
+                    crate::schema::users::country_iso_a2.eq(&u.country_iso_a2) )
+                ).execute(conn)?;
+                let updated_row_vec = crate::schema::users::dsl::users.filter(crate::schema::users::dsl::id.eq(u.id)).load::<User>(conn).expect("Error loading user");
+                let updated_row = updated_row_vec.get(0).unwrap().clone();
+                Ok(DB::User(updated_row))
+            },
+            DB::Metadata(m) => {
+                diesel::update(metadata.filter(crate::schema::metadata::dsl::id.eq(m.id))).set(
+                    ( crate::schema::metadata::metadata_text.eq(&m.metadata_text),
+                    crate::schema::metadata::website_id.eq(&m.website_id) )
+                ).execute(conn)?;
+                let updated_row_vec = crate::schema::metadata::dsl::metadata.filter(crate::schema::metadata::dsl::id.eq(m.id)).load::<Metadata>(conn).expect("Error loading metadata");
+                let updated_row = updated_row_vec.get(0).unwrap().clone();
+                Ok(DB::Metadata(updated_row))
+            },
+            DB::ExternalLink(ext_l) => {
+                diesel::update(external_links.filter(crate::schema::external_links::dsl::id.eq(ext_l.id))).set(
+                    ( crate::schema::external_links::url.eq(&ext_l.url) )
+                ).execute(conn)?;
+                let updated_row_vec = crate::schema::external_links::dsl::external_links.filter(crate::schema::external_links::dsl::id.eq(ext_l.id)).load::<ExternalLink>(conn).expect("Error loading external links");
+                let updated_row = updated_row_vec.get(0).unwrap().clone();
+                Ok(DB::ExternalLink(updated_row))
+            },
+            DB::WebsiteRefExtLink(web_ref_ext_link) => {
+                diesel::update(website_ref_ext_links.filter(crate::schema::website_ref_ext_links::dsl::id.eq(web_ref_ext_link.id))).set(
+                    ( crate::schema::website_ref_ext_links::website_id.eq(&web_ref_ext_link.website_id),
+                    crate::schema::website_ref_ext_links::ext_link_id.eq(&web_ref_ext_link.ext_link_id) )
+                ).execute(conn)?;
+                let updated_row_vec = crate::schema::website_ref_ext_links::dsl::website_ref_ext_links.filter(crate::schema::website_ref_ext_links::dsl::id.eq(web_ref_ext_link.id)).load::<WebsiteRefExtLink>(conn).expect("Error loading web_ref_ext_link");
+                let updated_row = updated_row_vec.get(0).unwrap().clone();
+                Ok(DB::WebsiteRefExtLink(updated_row))
+            }
+        }
     }
 }
