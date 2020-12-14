@@ -30,9 +30,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let website_solr = website_solr_vec.get(0).unwrap();
 
-    let meta_copy = meta.clone();
-    // TODO pass by reference; don't move it
-    save_metadata(meta, website_solr, &conn, &settings);
+    save_metadata(&meta, website_solr, &conn, &settings);
     save_external_links(ext_links, website_solr, &conn, &settings);
 
     println!("url is {:?}", &url);
@@ -43,7 +41,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
         Err(err) => {
             println!("Encountered an error while trying to classify the website: {:?}", err);
             println!("Attempting offline classification.");
-            website.type_of_website = website_genre_offline_classification(&body, &meta_copy);
+            website.type_of_website = website_genre_offline_classification(&body, &meta);
         }
     }
 
@@ -161,11 +159,11 @@ fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, setting
     }
 }
 
-fn save_metadata(metadata_vec: Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
+fn save_metadata(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
     let mut m;
     let mut metadata_solr = Vec::new();
     for metadata in metadata_vec {
-        m = crate::db::DB::Metadata (metadata);
+        m = crate::db::DB::Metadata (metadata.clone());
         if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
             println!("meta id: {:?}", meta.id);
             metadata_solr.push(meta);
