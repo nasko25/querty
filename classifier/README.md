@@ -1,6 +1,12 @@
 ## Description
 A search engine will benefit from a website classification model to differentiate the web pages into several categories. The rank of the web pages will be calculated based on its category.
 
+## Run
+To run the server just do:
+```python
+python3 serv.py
+```
+
 ## Dataset
 The model is trained on the KI-04 dataset, as it was the only publicly available dataset with website genres that I could find, although it probably is outdated.
 
