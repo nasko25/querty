@@ -16,7 +16,7 @@ use crate::settings::Settings;
 use pyo3::prelude::*;
 
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
-    let body = fetch_url(url, conn, settings).unwrap();
+    let body = fetch_url(url).unwrap();
 
     // website_type(&body, meta);
 
@@ -46,7 +46,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     }
 
     website.title = "TEST".to_string();
-    update_website_info(website, &conn, &settings);
+    // update_website_info(website, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -57,10 +57,10 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
         // also update metadata and external links connected to that website
     Ok(())
 }
-// TODO conn and settings should probably not be passed here
+
 // TODO return calculated rank of the website
 #[tokio::main]
-async fn fetch_url(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<String, reqwest::Error> {
+async fn fetch_url(url: &str) -> Result<String, reqwest::Error> {
     // await is not necessary
     let res = reqwest::get(url).await?;
     assert!(res.status().is_success());
@@ -141,12 +141,10 @@ fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (External
 }
 
 // returns the Website saved to the database
+// or returns an error if the website could not be saved to the database
 fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, settings: &Settings) -> Result<Website, throw::Error<&'static str>> {
-    // TODO
-    // first save the website info(meta tags, title, text, etc.) in the database, and if it is successful (check!) then add it to solr
-    // (because the database should (eventually) have a unique constraint on url)
-    // if the website cannot be inserted in the database, throw an error
-
+    // first save the website info(meta tags, title, text, etc.) in the database, and only if it was added successfully, add it to solr
+        // (because the database should (eventually) have a unique constraint on url)
     let w = crate::db::DB::Website (website_to_insert);
     if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
         let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
@@ -154,6 +152,7 @@ fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, setting
         println!("{:?}", website.id);
         Ok(website.clone())
     }
+    // else if the website cannot be inserted in the database, throw an error
     else {
         throw_new!("Could not insert website in the database");
     }
