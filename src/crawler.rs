@@ -49,7 +49,10 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     website.title = "TEST".to_string();
 
     // for now updating the website info will remove the metadata and external links stored in solr
-    // update_website_info(website, &conn, &settings);
+    let mut metadata_to_update = meta.clone();
+    update_website_info(website, &conn, &settings);
+    metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
+    update_meta(&metadata_to_update, website_solr, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -217,6 +220,24 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
     }
 }
 
+fn update_meta(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
+    // TODO test
+    // TODO update external_links
+    let mut m;
+    let mut metadata_solr = Vec::new();
+    for metadata in metadata_vec {
+        m = crate::db::DB::Metadata(metadata.clone());
+        if let crate::db::DB::Metadata(meta) = crate::db::Database::update(&m, conn).unwrap() {
+            println!("meta id: {:?}", meta.id);
+            metadata_solr.push(meta);
+        }
+        else {
+            throw_new!("Could not update metadata entry in the database");
+        }
+    }
+    update_metadata(settings, &metadata_solr, website_to_update);
+    Ok(metadata_solr)
+}
 
 extern crate xmlrpc;
 use xmlrpc::{Request, Value};
