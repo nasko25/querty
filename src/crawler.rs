@@ -49,6 +49,9 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     website.title = "TEST".to_string();
 
     // for now updating the website info will remove the metadata and external links stored in solr
+    // maybe don't overwrite them to null?
+    // (or fetch the old metadata and external_links and include them when updating the website in
+    // solr
     update_website_info(website, &conn, &settings);
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
     update_meta(&metadata_to_update, website_solr, &conn, &settings);
