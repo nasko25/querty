@@ -31,7 +31,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let website_solr = website_solr_vec.get(0).unwrap();
 
-    save_metadata(&meta, website_solr, &conn, &settings);
+    let mut metadata_to_update = save_metadata(&meta, website_solr, &conn, &settings).unwrap();
     save_external_links(ext_links, website_solr, &conn, &settings);
 
     println!("url is {:?}", &url);
@@ -49,7 +49,6 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     website.title = "TEST".to_string();
 
     // for now updating the website info will remove the metadata and external links stored in solr
-    let mut metadata_to_update = meta.clone();
     update_website_info(website, &conn, &settings);
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
     update_meta(&metadata_to_update, website_solr, &conn, &settings);
