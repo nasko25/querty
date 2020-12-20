@@ -28,10 +28,14 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     let website_id = website.id;
     let meta = extract_metadata_info(&body, website_id);
     let ext_links = extract_external_links(&body, website_id);
-    let website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
-    let website_solr = website_solr_vec.get(0).unwrap();
+    let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    let mut website_solr = website_solr_vec.get(0).unwrap();
 
     let mut metadata_to_update = save_metadata(&meta, website_solr, &conn, &settings).unwrap();
+    // need to fetch the updated website from solr before updating the external_links,
+    // otherwise it would set the metadata that was just updated to null
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
     save_external_links(ext_links, website_solr, &conn, &settings);
 
     println!("url is {:?}", &url);
