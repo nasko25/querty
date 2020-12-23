@@ -36,7 +36,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     // otherwise it would set the metadata that was just updated to null
     website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     website_solr = website_solr_vec.get(0).unwrap();
-    save_external_links(ext_links, website_solr, &conn, &settings);
+    let mut external_links_to_update = save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
 
     println!("url is {:?}", &url);
     // println!("Website classification type: {:?}", website_genre(&body, &meta_copy, &url));
@@ -59,6 +59,14 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     update_website_info(website, &conn, &settings);
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
     update_meta(&metadata_to_update, website_solr, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+
+    external_links_to_update[0].0.url = "CHANGED URL".to_string();
+    update_external_links(external_links_to_update, website_solr, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -227,7 +235,6 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 }
 
 fn update_meta(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
-    // TODO test
     // TODO update external_links
     let mut m;
     let mut metadata_solr = Vec::new();
@@ -243,6 +250,33 @@ fn update_meta(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, co
     }
     update_metadata(settings, &metadata_solr, website_to_update);
     Ok(metadata_solr)
+}
+
+// TODO probably prefix the update (and possibly the save functions) in this file with something like
+// "crawler_" to differentiate them from the solr.rs functions with the same names
+fn update_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
+    let mut el;
+    let mut web_el;
+    let mut external_links_solr = Vec::new();
+    for mut external_link in external_links {
+        el = crate::db::DB::ExternalLink(external_link.0);
+        if let crate::db::DB::ExternalLink(ext_link) = crate::db::Database::update(&el, conn).unwrap() {
+            external_link.1.ext_link_id = ext_link.id;
+            web_el = crate::db::DB::WebsiteRefExtLink(external_link.1);
+            if let crate::db::DB::WebsiteRefExtLink(webref_ext_link) = crate::db::Database::update(&web_el, conn).unwrap() {
+                println!("updated external_link id: {:?}; updated website ref external link id: {:?}; website ref external link link id (should be = to external link id): {:?}", ext_link.id, webref_ext_link.id, webref_ext_link.ext_link_id);
+                external_links_solr.push( (ext_link, webref_ext_link) );
+            }
+            else {
+                throw_new!("Could not update website ref external link in the database.");
+            }
+        }
+        else {
+            throw_new!("Could not update external link in the database.");
+        }
+    }
+    update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
+    Ok(external_links_solr)
 }
 
 extern crate xmlrpc;
