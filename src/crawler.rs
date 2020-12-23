@@ -16,6 +16,7 @@ use crate::settings::Settings;
 
 use pyo3::prelude::*;
 use url::Url;
+use publicsuffix::List;
 
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     let body = fetch_url(url).unwrap();
@@ -145,7 +146,8 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("a").unwrap();
 
-    // TODO check if the links are internal or external and only save the links to external domains
+    let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
+
     let mut ext_links = Vec::new();
     let mut href;
     for element in fragment.select(&selector) {
@@ -154,14 +156,15 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
             Some(l) => {
                                                                                                                 // TODO change ext_link_id when the ExternalLink is inserted in the database
                 let parsed_link = Url::parse(l);
-                let parsed_url = Url::parse(url).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
+                let parsed_url = list.parse_domain(Url::parse(url).unwrap().host_str().unwrap()).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
                 match parsed_link {
                     Ok(val) => {
-                        if val.host() == parsed_url.host() {
+                        if list.parse_domain(val.host_str().unwrap()).unwrap().root() != parsed_url.root() {
+                            // TODO maybe only save the domains, not the whole url
                             ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
                         }
                         else {
-                            println!("Urls are not equal: {:?} != {:?}", val.host_str(), parsed_url.host_str())
+                            println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root())
                         }
                     },
                     Err(err) => { println!("Error when parsing the url {:?}: {:?}", l, err); }
