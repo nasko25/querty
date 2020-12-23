@@ -15,6 +15,7 @@ use crate::db::WebsiteRefExtLink;
 use crate::settings::Settings;
 
 use pyo3::prelude::*;
+use url::Url;
 
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     let body = fetch_url(url).unwrap();
@@ -27,7 +28,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     // should get the id from the save_website_info() function
     let website_id = website.id;
     let meta = extract_metadata_info(&body, website_id);
-    let ext_links = extract_external_links(&body, website_id);
+    let ext_links = extract_external_links(&body, website_id, &url);
     let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
 
@@ -140,7 +141,7 @@ fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
     metas
 }
 
-fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (ExternalLink, WebsiteRefExtLink) > {
+fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec< (ExternalLink, WebsiteRefExtLink) > {
     let fragment = Html::parse_document(body);
     let selector = Selector::parse("a").unwrap();
 
@@ -151,8 +152,20 @@ fn extract_external_links(body: &str, website_id: Option<u32>) -> Vec< (External
         href = element.value().attr("href");
         match href {
             Some(l) => {
-                                                                                                                // TODO change ext_link_id when the ExternalLink is inserter in the database
-                ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                                                                                                                // TODO change ext_link_id when the ExternalLink is inserted in the database
+                let parsed_link = Url::parse(l);
+                let parsed_url = Url::parse(url).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
+                match parsed_link {
+                    Ok(val) => {
+                        if val.host() == parsed_url.host() {
+                            ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                        }
+                        else {
+                            println!("Urls are not equal: {:?} != {:?}", val.host_str(), parsed_url.host_str())
+                        }
+                    },
+                    Err(err) => { println!("Error when parsing the url {:?}: {:?}", l, err); }
+                }
             },
             None => (),
         }
