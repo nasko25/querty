@@ -48,7 +48,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
         Err(err) => {
             println!("Encountered an error while trying to classify the website: {:?}", err);
             println!("Attempting offline classification.");
-            website.type_of_website = website_genre_offline_classification(&body, &meta);
+            website.type_of_website = website_genre_offline_classification(&website_solr.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
         }
     }
 
@@ -59,6 +59,13 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     // (or fetch the old metadata and external_links and include them when updating the website in
     // solr
     update_website_info(website, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+
+
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
     update_meta(&metadata_to_update, website_solr, &conn, &settings);
 
@@ -161,6 +168,7 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
                     Ok(val) => {
                         if list.parse_domain(val.host_str().unwrap()).unwrap().root() != parsed_url.root() {
                             // TODO maybe only save the domains, not the whole url
+                            // also, domains should probably be unique
                             ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
                         }
                         else {
@@ -251,7 +259,6 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
 }
 
 fn update_meta(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
-    // TODO update external_links
     let mut m;
     let mut metadata_solr = Vec::new();
     for metadata in metadata_vec {
@@ -312,9 +319,6 @@ use std::error::Error;
 //              -> this looks like a good source to use on web page classification
 //              -> it also contains some optimization options that can help speed up the web page analysis
 fn website_genre<'a>(url: &str) -> Result<String, Box<Error>> {
-	// TODO if it is not reachable, proceed with offline classification
-	// (meta tags and static ifs)
-	// and if nothing is found return an empty string
     let classify_request = Request::new("classify").arg(url);
     let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
     // println!("Result of classification: {:?}", classify_result.unwrap());
@@ -336,14 +340,23 @@ fn website_genre<'a>(url: &str) -> Result<String, Box<Error>> {
 
 fn website_genre_offline_classification<'a>(body: &str, meta: &'a Vec<Metadata>) -> String {
     let body_lc = body.to_lowercase();
-    // let mut meta_lc;
+    let mut meta_lc;
 
-    // for m in meta {
-    //     meta_lc = m.to_lowercase();
-    //     if meta_lc.contains("article") {
-    //         return "article";
-    //     }
-    // }
+    for m in meta {
+        meta_lc = m.metadata_text.to_lowercase();
+        if meta_lc.contains("og:article") {
+            return "article".to_string();
+        }
+        else if meta_lc.contains("og:book") {
+            return "product".to_string();
+        }
+        else if meta_lc.contains("og:website") {
+            return "website".to_string();
+        }
+        else if meta_lc.contains("og:profile") {
+            return "social".to_string(); // ?
+        }
+    }
     // TODO also check meta tags for website type
     /* TODO (if og:type meta tag is present, use its value as a website genre)
         Most web pages that have og:type set are articles, but keep in mind it is not always the case. og:type can also be "website"
@@ -361,11 +374,11 @@ fn website_genre_offline_classification<'a>(body: &str, meta: &'a Vec<Metadata>)
         // Ok(())
     // });
 
-    if (body_lc.contains("install") && body_lc.contains("version")) || body_lc.contains("maintained") || body_lc.contains("develop") {
+    if ((body_lc.contains("install") || body_lc.contains("get started")) && body_lc.contains("version")) || (body_lc.contains("maintained") && body_lc.contains("develop")) {
         // product websites's rank should be mainly determined by users's reviews, users's interactions with the website and how many other websites link to this domain
         return "product".to_string();
     }
-    else if body_lc.contains("author") || body_lc.contains("article") {
+    else if (body_lc.contains("author") && body_lc.contains("article")) || body_lc.contains("written by") || body_lc.contains("further reading") {
         // rank should additionally be determined by the quality of the article
         // (why was the article written -> are there too many ads and a short article
         //                              -> do reviewers downvote it a lot
