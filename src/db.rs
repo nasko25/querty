@@ -169,6 +169,19 @@ impl Database {
         Ok(return_code)
     }
 
+    // drop all tables in the database
+    // useful in development when chaning the db or solr
+    // that will create an inconsistent state
+    // TODO maybe add a function that deletes everyting from solr as well
+        // and call them both in a clear_databases() function; probably in main
+    pub fn drop_tabes(conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+        // TODO drop all tables
+        // TODO test
+        return sql_query("
+            DROP TABLE IF EXISTS website, users, metadata, external_links, website_ref_ext_links"
+        ).execute(conn);
+    }
+
     pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         println!("{:?}", website.order(website::id.desc()).first::<Website>(conn));
         match insert_into(website).values(w).execute(conn) {
