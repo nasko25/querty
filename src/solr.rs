@@ -138,3 +138,22 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
 }
 
 // TODO /dataimport
+
+
+// create and delete collections
+// useful in development and when reindexing
+//      NOTE: in order to reindex, you need to delete the collection, and create it again
+//      of course this will delete everything that solr stored, so it needs to be reinserted again
+//      from the relational db (using solr's data import functionality)
+#[tokio::main]
+pub async fn create_collection(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+    // TODO
+    // https://doc.rust-lang.org/std/process/struct.Command.html
+    return Ok(());
+}
+
+#[tokio::main]
+pub async fn delete_collection(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+    // TODO
+    Ok(())
+}
