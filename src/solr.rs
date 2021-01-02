@@ -4,6 +4,8 @@ use crate::db::from_str;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
 
+use std::process::Command;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
     #[serde(rename = "responseHeader")]
@@ -146,10 +148,34 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
 //      of course this will delete everything that solr stored, so it needs to be reinserted again
 //      from the relational db (using solr's data import functionality)
 #[tokio::main]
-pub async fn create_collection(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+pub async fn create_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
     // TODO
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    return Ok(());
+    let out = if cfg!(target_os = "windows") {
+        // TODO not tested for windows
+        Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
+            .args(&["\\c", "querty", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "p", "8983"])
+            .output()
+            .expect("Failed to create a new solr collection")
+    } else {
+        // TODO not tested
+        Command::new("~/solr-8.6.2/bin/solr")
+            .arg("-c")
+            .arg("querty")
+            .arg("-s")
+            .arg("2")
+            .arg("-rf")
+            .arg("2")
+            .arg("-d")
+            .arg("~/Documents/querty/config/solr")
+            .arg("-p")
+            .arg("8983")
+            .output()
+            .expect("Failed to create a new solr collection")
+    };
+
+    println!("Output after creating a collection: {:?}", out.stdout);
+    return Ok(out);
 }
 
 #[tokio::main]
