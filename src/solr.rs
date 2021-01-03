@@ -151,13 +151,12 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
 //      from the relational db (using solr's data import functionality)
 #[tokio::main]
 pub async fn create_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
-    // TODO
     // https://doc.rust-lang.org/std/process/struct.Command.html
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
         // shellexpand?
         Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
-            .args(&["create", "\\c", "querty2", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "p", "8983"])
+            .args(&["create", "\\c", "querty2", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "\\p", "8983"])
             .output()
             .expect("Failed to create a new solr collection")
     } else {
@@ -175,10 +174,6 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .arg("8983")
             .output()
             .expect("Failed to create a new solr collection")
-
-            //Command::new("ls")
-            //    .arg(shellexpand::tilde("~").as_ref())
-            //.output().expect("ls failed")
     };
 
     println!("Output after creating a collection: {:}", std::str::from_utf8(&out.stdout).unwrap());
@@ -186,7 +181,25 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
 }
 
 #[tokio::main]
-pub async fn delete_collection(settings: &settings::Settings) -> Result<(), reqwest::Error> {
-    // TODO
-    Ok(())
+pub async fn delete_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
+    let out = if cfg!(target_os = "windows") {
+        // TODO not tested for windows
+        // shellexpand?
+        Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
+            .args(&["delete", "\\c", "querty2", "\\p", "8983"])
+            .output()
+            .expect("Failed to delete the solr collection")
+    } else {
+        Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
+            .arg("delete")
+            .arg("-c")
+            .arg("querty2")
+            .arg("-p")
+            .arg("8983")
+            .output()
+            .expect("Failed to delete the solr collection")
+    };
+
+    println!("Output after deleting a collection: {:}", std::str::from_utf8(&out.stdout).unwrap());
+    return Ok(out);
 }

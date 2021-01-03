@@ -37,5 +37,6 @@ fn main() {
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
     // TODO save_website_info(...)
     // get rank from analyse_website
-    solr::create_collection(&settings);
+    //solr::create_collection(&settings);
+    solr::delete_collection(&settings);
 }
