@@ -6,6 +6,8 @@ use crate::db::ExternalLink;
 
 use std::process::Command;
 
+extern crate shellexpand;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
     #[serde(rename = "responseHeader")]
@@ -154,27 +156,32 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
         Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
-            .args(&["\\c", "querty", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "p", "8983"])
+            .args(&["create", "\\c", "querty2", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "p", "8983"])
             .output()
             .expect("Failed to create a new solr collection")
     } else {
         // TODO not tested
-        Command::new("~/solr-8.6.2/bin/solr")
-            .arg("-c")
-            .arg("querty")
-            .arg("-s")
-            .arg("2")
-            .arg("-rf")
-            .arg("2")
-            .arg("-d")
-            .arg("~/Documents/querty/config/solr")
-            .arg("-p")
-            .arg("8983")
-            .output()
-            .expect("Failed to create a new solr collection")
+        //Command::new("~/solr-8.6.2/bin/solr")
+        //    .arg("create")
+        //    .arg("-c")
+        //    .arg("querty2")
+        //    .arg("-s")
+        //    .arg("2")
+        //    .arg("-rf")
+        //    .arg("2")
+        //    .arg("-d")
+        //    .arg("~/querty/config/solr")
+        //    .arg("-p")
+        //    .arg("8983")
+        //    .output()
+        //    .expect("Failed to create a new solr collection")
+
+            Command::new("ls")
+                .arg(shellexpand::tilde("~").as_ref())
+            .output().expect("ls failed")
     };
 
-    println!("Output after creating a collection: {:?}", out.stdout);
+    println!("Output after creating a collection: {:}", std::str::from_utf8(&out.stdout).unwrap());
     return Ok(out);
 }
 
