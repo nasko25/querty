@@ -155,30 +155,30 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
     // https://doc.rust-lang.org/std/process/struct.Command.html
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
+        // shellexpand?
         Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
             .args(&["create", "\\c", "querty2", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "p", "8983"])
             .output()
             .expect("Failed to create a new solr collection")
     } else {
-        // TODO not tested
-        //Command::new("~/solr-8.6.2/bin/solr")
-        //    .arg("create")
-        //    .arg("-c")
-        //    .arg("querty2")
-        //    .arg("-s")
-        //    .arg("2")
-        //    .arg("-rf")
-        //    .arg("2")
-        //    .arg("-d")
-        //    .arg("~/querty/config/solr")
-        //    .arg("-p")
-        //    .arg("8983")
-        //    .output()
-        //    .expect("Failed to create a new solr collection")
+        Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
+            .arg("create")
+            .arg("-c")
+            .arg("querty2")
+            .arg("-s")
+            .arg("2")
+            .arg("-rf")
+            .arg("2")
+            .arg("-d")
+            .arg(shellexpand::tilde("~/querty/config/solr").as_ref())
+            .arg("-p")
+            .arg("8983")
+            .output()
+            .expect("Failed to create a new solr collection")
 
-            Command::new("ls")
-                .arg(shellexpand::tilde("~").as_ref())
-            .output().expect("ls failed")
+            //Command::new("ls")
+            //    .arg(shellexpand::tilde("~").as_ref())
+            //.output().expect("ls failed")
     };
 
     println!("Output after creating a collection: {:}", std::str::from_utf8(&out.stdout).unwrap());
