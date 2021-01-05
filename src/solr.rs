@@ -141,8 +141,18 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
     update(settings, &website_mut)
 }
 
-// TODO /dataimport
+#[tokio::main]
+pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Error> {
+    let solr = &settings.solr;
+    let method = "dataimport";
+    let url = format!("http://{}:{}/solr/{}/{}?command=full-import&commit=true&clean=true", &solr.server, &solr.port, /*&solr.collection*/ "querty2".to_string(), &method);
+    reqwest::Client::new()
+        .post(&url)
+        .send()
+        .await?;
 
+    Ok(())
+}
 
 // create and delete collections
 // useful in development and when reindexing
@@ -160,6 +170,8 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .output()
             .expect("Failed to create a new solr collection")
     } else {
+        // TODO maybe don't hardcode the 2 paths?
+        // also get the name of the collection from settings
         Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
             .arg("create")
             .arg("-c")
