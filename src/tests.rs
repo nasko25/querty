@@ -1,5 +1,6 @@
 use crate::db;
 use crate::settings;
+use crate::solr;
 
 use crate::db::Website;
 use crate::db::User;
@@ -82,5 +83,22 @@ pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result
     let w_r_e_l_err = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(200), ext_link_id: Some(300)});
     println!("WebsiteRefExtLink insert should throw a foreign key violation: {:?}", db::Database::insert(&w_r_e_l_err, conn));
 
+    Ok(())
+}
+
+pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
+    // delete the databases
+    solr::delete_collection(settings)?;
+    db::Database::drop_tables(conn)?;
+
+    // create the solr collection and db tables
+    solr::create_collection(settings)?;
+    db::Database::create_tables(conn)?;
+
+    // import data from the database
+    // right now this will do nothing, because the db was just created,
+    // but if at some point we need to reindex solr, or reset only solr,
+    // the dataimport function will import everything from the db to solr.
+    solr::dataimport(settings)?;
     Ok(())
 }
