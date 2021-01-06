@@ -145,7 +145,7 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
 pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Error> {
     let solr = &settings.solr;
     let method = "dataimport";
-    let url = format!("http://{}:{}/solr/{}/{}?command=full-import&commit=true&clean=true", &solr.server, &solr.port, /*&solr.collection*/ "querty2".to_string(), &method);
+    let url = format!("http://{}:{}/solr/{}/{}?command=full-import&commit=true&clean=true", &solr.server, &solr.port, &solr.collection, &method);
     reqwest::Client::new()
         .post(&url)
         .send()
@@ -162,20 +162,21 @@ pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Er
 #[tokio::main]
 pub async fn create_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
     // https://doc.rust-lang.org/std/process/struct.Command.html
+    let solr = &settings.solr;
+
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
         // shellexpand?
         Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
-            .args(&["create", "\\c", "querty2", "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "\\p", "8983"])
+            .args(&["create", "\\c", &solr.collection, "\\s", "2", "\\rf", "2", "\\d", "\"%HOMEDRIVE%%HOMEPATH%\"\\querty\\config\\solr", "\\p", "8983"])
             .output()
             .expect("Failed to create a new solr collection")
     } else {
         // TODO maybe don't hardcode the 2 paths?
-        // also get the name of the collection from settings
         Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
             .arg("create")
             .arg("-c")
-            .arg("querty2")
+            .arg(&solr.collection)
             .arg("-s")
             .arg("2")
             .arg("-rf")
@@ -194,18 +195,19 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
 
 #[tokio::main]
 pub async fn delete_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
+    let solr = &settings.solr;
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
         // shellexpand?
         Command::new("\"%HOMEDRIVE%%HOMEPATH%\"\\solr-8.6.2\\bin\\solr")
-            .args(&["delete", "\\c", "querty2", "\\p", "8983"])
+            .args(&["delete", "\\c", &solr.collection, "\\p", "8983"])
             .output()
             .expect("Failed to delete the solr collection")
     } else {
         Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
             .arg("delete")
             .arg("-c")
-            .arg("querty2")
+            .arg(&solr.collection)
             .arg("-p")
             .arg("8983")
             .output()

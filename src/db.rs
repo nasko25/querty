@@ -170,7 +170,7 @@ impl Database {
     }
 
     // drop all tables in the database
-    // useful in development when chaning the db or solr
+    // useful in development when changing the db or solr
     // that will create an inconsistent state
     // TODO maybe add a function that deletes everyting from solr as well
         // and call them both in a clear_databases() function; probably in main
