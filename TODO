@@ -1,0 +1,7 @@
+This list looks relevant: https://backlinko.com/google-ranking-factors
+
+
+Also, you can sort in solr by term frequency:
+
+termfreq(text, 'install'), termfreq(metadata, 'image')      - in the fl field to show the actual calculated score
+or in the sort field followed by 'asc' or 'desc'
