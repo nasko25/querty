@@ -1,0 +1,21 @@
+Website's rank should depend on:
+    - users' votes
+    - how many external domains link to the given domain
+
+
+The users voting system should work something like:
+    Users should be able to upvote or downvote a website.
+    Websites start with rank = 0
+    Every upvote will add one point to the rank of the website.
+    Every downvote will subtract one point from the rank.
+
+Rank will range from -10 to +10 (when user base grows, so does the range: can be from -100 to 100; from -1000 to 1000, etc.)
+After rank has become -10, downvotes do nothing.
+After rank has become +10, upvotes do nothing.
+
+It takes 20 users to completely change the rank of a website from "very untrustworthy" to "very trustworthy", and the other way around.
+rank == 0 is neutral
+
+TODO: how will links from other domains affect website rank?
+    Maybe it will depend on the rank of the linking website. It can give rank*0.0001 if the rank > 0 (this constant should depend on how many trustworthy websites are saved in the database; if they are < 50,000 0.0001 is too low, because 20/0.001 = 20,000 so it would take 20 thousand websites with rank 10 to give a max score to any other website). Also take into account this score in the score above (the user-given score that is from -10 to 10). Negatively ranked websites should not give any points.
+    The amount of points that external domains can give should also be constrained to a given range (maybe -20 to 20?)

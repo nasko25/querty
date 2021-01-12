@@ -53,6 +53,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     }
 
     website.title = "TEST".to_string();
+    website.rank += 1_f64;
 
     // for now updating the website info will remove the metadata and external links stored in solr
     // maybe don't overwrite them to null?
@@ -124,7 +125,7 @@ fn extract_website_info(body: &str, url: &str) -> Website {
     }
     // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
-    Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 1.0, type_of_website: "default".to_string() }
+    Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 0.0, type_of_website: "default".to_string() }
 }
 
 fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
