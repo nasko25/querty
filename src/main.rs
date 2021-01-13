@@ -39,5 +39,5 @@ fn main() {
     // TODO save_website_info(...)
     // get rank from analyse_website
 
-    println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
+    // println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
 }

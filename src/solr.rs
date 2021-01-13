@@ -96,6 +96,7 @@ pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Res
 
 "text": "ok",
 "url": "test.com",
+"base_url": "test.com",
 "rank": 0.999,
 "type_of_website": "test", "metadata":[], "external_links":[]}
 '
