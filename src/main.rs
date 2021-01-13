@@ -28,10 +28,8 @@ fn main() {
 
     let conn = db::Database::establish_connection(&url);
 
-    // println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
-
     // reset the state of the db and solr
-    tests::reset_db_state(&conn, &settings);
+    // tests::reset_db_state(&conn, &settings);
 
     let url = "https://www.rust-lang.org";
     // load the website with this url from solr to see if it is in the database
@@ -40,4 +38,6 @@ fn main() {
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
     // TODO save_website_info(...)
     // get rank from analyse_website
+
+    println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
 }

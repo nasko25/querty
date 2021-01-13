@@ -23,7 +23,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
 
     // website_type(&body, meta);
 
-    // TODO temporary for testing; remove when done
+    // TODO temporary for testing; move to tests.rs
     let w = extract_website_info(&body, &url); // TODO could call this in the save_website_info function
     let mut website = save_website_info(w, &conn, &settings).unwrap();
     // should get the id from the save_website_info() function
@@ -54,6 +54,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
 
     website.title = "TEST".to_string();
     website.rank += 1_f64;
+    website.base_url = "new_base.com".to_string();
 
     // for now updating the website info will remove the metadata and external links stored in solr
     // maybe don't overwrite them to null?
@@ -85,6 +86,7 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     // else
         // select_w first to get a Website, and then db::update
         // also update metadata and external links connected to that website
+    extract_base_url(url);
     Ok(())
 }
 
@@ -98,6 +100,22 @@ async fn fetch_url(url: &str) -> Result<String, reqwest::Error> {
     let body = res.text().await?;
 
     Ok(body)
+}
+
+fn extract_base_url(url: &str) -> Result<String, publicsuffix::errors::Error> {
+    let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
+    let parsed_url = Url::parse(url)?;
+    let host = match parsed_url.host_str() {
+        Some(val) => val,
+        None => panic!("Problem parsing the url: {:}", url)
+    };
+    let parsed_domain = list.parse_domain(host)?;
+    let parsed_url = match parsed_domain.root() {
+        Some(parsed_url) => parsed_url,
+        None => panic!("Problem extracting the root of the parsed domain: {:}", parsed_domain)
+    };
+
+    Ok(parsed_url.to_string())
 }
 
 fn extract_website_info(body: &str, url: &str) -> Website {
@@ -125,7 +143,7 @@ fn extract_website_info(body: &str, url: &str) -> Website {
     }
     // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
-    Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), rank: 0.0, type_of_website: "default".to_string() }
+    Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), base_url: extract_base_url(url).unwrap(), rank: 0.0, type_of_website: "default".to_string() }
 }
 
 fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
@@ -192,7 +210,7 @@ fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, setting
         // (because the database should (eventually) have a unique constraint on url)
     let w = crate::db::DB::Website (website_to_insert);
     if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
-        let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
+        let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
         crate::solr::insert(settings, &w_solr);
         println!("{:?}", website.id);
         Ok(website.clone())
@@ -249,7 +267,7 @@ fn update_website_info(website_to_update: Website, conn: &MysqlConnection, setti
     // TODO update the db::Database::update method to work for metadata and external_links - to work like insert()
     // Then update this function
     if let DB::Website(website) = crate::db::Database::update(&DB::Website(website_to_update), conn).unwrap() {
-        let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
+        let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
         crate::solr::update(settings, &w_solr);
         println!("Updated website id: {:?}", website.id);
         Ok(website.clone())
