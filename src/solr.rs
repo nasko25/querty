@@ -43,6 +43,7 @@ pub struct WebsiteSolr {
     pub title: String,
     pub text: String,
     pub url: String,
+    pub base_url: String,
     pub rank: f64,
     pub type_of_website: String,
     // not in the db, but present in solr:

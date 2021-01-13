@@ -27,6 +27,7 @@ pub struct Website {
     pub title: String,
     pub text: String,
     pub url: String,
+    pub base_url: String,
     pub rank: f64,
     pub type_of_website: String
 }
@@ -308,6 +309,7 @@ impl Database {
                     ( crate::schema::website::title.eq(&w.title),
                     crate::schema::website::text.eq(&w.text),
                     crate::schema::website::url.eq(&w.url),
+                    crate::schema::website::base_url.eq(&w.base_url),
                     crate::schema::website::rank.eq(&w.rank),
                     crate::schema::website::type_of_website.eq(&w.type_of_website) )
                 ).execute(conn)?;
