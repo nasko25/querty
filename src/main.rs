@@ -31,7 +31,7 @@ fn main() {
     // println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
 
     // reset the state of the db and solr
-    // tests::reset_db_state(&conn, &settings);
+    tests::reset_db_state(&conn, &settings);
 
     let url = "https://www.rust-lang.org";
     // load the website with this url from solr to see if it is in the database

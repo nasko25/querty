@@ -109,7 +109,8 @@ impl Database {
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 title TEXT,
                 text TEXT,
-                url VARCHAR(100),
+                url VARCHAR(100) UNIQUE,
+                base_url VARCHAR(100),
                 rank DOUBLE,
                 type_of_website VARCHAR(50)
             )

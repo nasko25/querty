@@ -140,10 +140,11 @@
    <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="true" required="false" /> <!-- can it be required=false ? -->
    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
    <!-- TODO url should be unique -->
-   <!-- TODO add a "base_url" field that should contain only the base of the url
+   <!-- the "base_url" field contains only the base of the url
         while url contains the whole url (it includes the path)
    -->
    <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
+   <field name="base_url" type="text_general" indexed="true" stored="true" multiValued="false" />
    <field name="external_links" type="text_general" indexed="true" stored="true" multiValued="true" required="false"/>
    <field name="rank" type="pdouble" indexed="true" stored="true" multiValued="false" />
 
@@ -230,6 +231,7 @@
    <copyField source="metadata" dest="text_all"/>
    <copyField source="text" dest="text_all"/>
    <copyField source="url" dest="text_all"/>
+   <copyField source="base_url" dest="text_all"/>
    <copyField source="external_links" dest="text_all"/>
    <copyField source="rank" dest="text_all"/>
    <copyField source="type_of_website" dest="text_all"/>
