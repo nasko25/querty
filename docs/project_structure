@@ -1,0 +1,8 @@
+The website crawler and website ranking system are implemented in Rust.
+Maybe an HTTP REST API can be used to change the ranks of websites (https://rocket.rs/).
+It should only be used internally when users upvote or downvote a website to crawl the website, change its rank, and update its information in solr and the database (only if the website has not been crawled in the last 30 minutes/1 hour/1 day (?))
+
+Website classification is in classifier/
+
+Use OAuth2 for authentication.
+Public REST API should be implemented in something robust and reliable (maybe Spring/Spring Boot or Nodejs with express)
