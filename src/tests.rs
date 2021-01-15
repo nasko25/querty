@@ -22,8 +22,9 @@ use diesel::prelude::*;
 // -------------------------------------------------
 
 pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
-    let creat_website = db::Database::create_tables(conn);
-    println!("table website created: {:?}", creat_website);
+    let create_website = db::Database::create_tables(conn);
+    println!("table website created: {:?}", create_website);
+    assert!(create_website.is_ok(), "Could not create tables in the db.");
 
     let w = DB::Website(Website { id: None, title: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), base_url: "".to_string(), rank: 3.0, type_of_website: "".to_string() });
     // let mut vals_inserted = db::Database::insert_w(&w, conn);
@@ -37,51 +38,81 @@ pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result
     if let DB::Website(mut website) = db::Database::insert(&w, conn).unwrap() {
         println!("{:?}", website.id);
         println!("Inserted website: {:?}", website);
+        // assert!(website.is_ok(), "Could not insert website with id {:?} in the database.", website.id);
         website.rank = 7.0;
-        println!("Website rank should be updated: {:?}", db::Database::update(&DB::Website(website.clone()), conn));
+        let updated_website = db::Database::update(&DB::Website(website.clone()), conn);
+        println!("Website rank should be updated: {:?}", updated_website);
+        assert!(updated_website.is_ok(), "Could not update website with id: {:?}", website.id);
         let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, base_url: website.base_url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None};
-        println!("Inserted in Solr: {:?}", insert(settings, &website_solr));
+        let solr_inserted = insert(settings, &website_solr);
+        println!("Inserted in Solr: {:?}", solr_inserted);
+        assert!(solr_inserted.is_ok(), "Could not insert website with id {:?} into solr.", website.id);
     }
     // println!("{:?}", db::Database::insert(&u, conn));
     // println!("{:?}", db::Database::insert(&w, conn));
 
-    println!("{:?}", req(settings, "*:*".to_string()));
+    let all_websites_solr = req(settings, "*:*".to_string());
+    println!("ALL WEBSITES FROM SOLR:\n\n{:?}", all_websites_solr);
+    assert!(all_websites_solr.is_ok(), "Could not fetch all websites from solr.");
 
     // let mut website_ids = crate::schema::website::dsl::website.filter(crate::schema::website::dsl::id.eq(110)).load::<Website>(conn).expect("Error loading website");
     let mut website_ids = db::Database::select_w(&Some(vec![ 2 ]), conn);
+    assert!(!website_ids.is_empty(), "No websites in the database with the given ids.");
     let md = db::Database::select_m(&Some(website_ids.clone()), conn);
     println!("Metadata: {:?}", &md);
+    assert!(md.is_empty(), "Vector with metadata of websites with ids: {:?} is not empty.", website_ids);
 
-    println!("All websites: {:?}", db::Database::select_w(&None, conn));
+    let all_websites = db::Database::select_w(&None, conn);
+    println!("All websites: {:?}", all_websites);
+    assert!(!all_websites.is_empty(), "No websites were retrieved from the database.");
 
     let mut website_solr_vec = req(settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
-    println!("\n\nUpdate metadata: {:?}", update_metadata(settings, &md, &website_solr));
+    let updated_metadata = update_metadata(settings, &md, &website_solr);
+    println!("\n\nUpdate metadata: {:?}", updated_metadata);
+    assert!(updated_metadata.is_ok(), "Could not update metadata of website with id: {:?}", website_ids.get(0));
 
     website_ids = db::Database::select_w(&Some(vec![ 1 ]), conn);
+    assert!(!website_ids.is_empty(), "No websites in the database with the given ids.");
 
     let ext_links = db::Database::select_el(&website_ids.get(0), conn);
     println!("External Links: {:?}", ext_links);
+    assert!(!ext_links.is_empty(), "Websites with ids: {:?} have no external links.", website_ids.get(0));
     website_solr_vec = req(settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     website_solr = website_solr_vec.get(0).unwrap();
-    println!("\nUpdate external links: {:?}", update_ext_links(settings, &ext_links, &website_solr));
+    let updated_ext_links = update_ext_links(settings, &ext_links, &website_solr);
+    println!("\nUpdate external links: {:?}", updated_ext_links);
+    assert!(updated_ext_links.is_ok(), "Could not update external links of website with id: {}", website_ids.get(0).unwrap().id.unwrap());
 
     // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
     // some insert tests
     let m = DB::Metadata(Metadata {id: None, metadata_text: "some metadata text".to_string(), website_id: website_ids.get(0).unwrap().id});
-    println!("Metadata should be inserted: {:?}", db::Database::insert(&m, conn));
+    let metadata_inserted = db::Database::insert(&m, conn);
+    println!("Metadata should be inserted: {:?}", metadata_inserted);
+    assert!(metadata_inserted.is_ok(), "Metadata of website with id {:?} was not inserted.", website_ids.get(0).unwrap().id);
 
     let m_err = DB::Metadata(Metadata {id: None, metadata_text: "some metadata text".to_string(), website_id: Some(200)});
-    println!("Metadata insert should trow a foreign key violation: {:?}", db::Database::insert(&m_err, conn));
+    let metadata_inserted_err = db::Database::insert(&m_err, conn);
+    println!("Metadata insert should trow a foreign key violation: {:?}", metadata_inserted_err);
+    assert!(metadata_inserted_err.is_err(), "Metadata of website with non-existent id did not throw a foreign key violation.");
 
     let e_l = DB::ExternalLink(ExternalLink {id: None, url: "http://example.com/asdf/@usr/$".to_string()});
-    println!("External Link should be inserted: {:?}", db::Database::insert(&e_l, conn));
+    let e_l_inserted = db::Database::insert(&e_l, conn);
+    println!("External Link should be inserted: {:?}", e_l_inserted);
+    assert!(e_l_inserted.is_ok(), "External links were not inserted in the database.");
 
     let w_r_e_l = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(2), ext_link_id: Some(2)});
-    println!("Website reference external link should be inserted: {:?}", db::Database::insert(&w_r_e_l, conn));
+    let w_r_e_l_inserted = db::Database::insert(&w_r_e_l, conn);
+    println!("Website reference external link should be inserted: {:?}", w_r_e_l_inserted);
+    match w_r_e_l {
+        DB::WebsiteRefExtLink(wrel) => assert!(w_r_e_l_inserted.is_ok(), "Website ref external link of website with id: {:?} and External links with id: {:?} was not inserted in the database.", wrel.website_id, wrel.ext_link_id),
+        _ => panic!("w_r_e_l has wrong enum type")
+    };
 
     let w_r_e_l_err = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(200), ext_link_id: Some(300)});
-    println!("WebsiteRefExtLink insert should throw a foreign key violation: {:?}", db::Database::insert(&w_r_e_l_err, conn));
+    let w_r_e_l_inserted_err = db::Database::insert(&w_r_e_l_err, conn);
+    println!("WebsiteRefExtLink insert should throw a foreign key violation: {:?}", w_r_e_l_inserted_err);
+    assert!(w_r_e_l_inserted_err.is_err(), "Website ref external link of a website with non-existent id and external link with non-existent id did not throw a foreign key violation.");
 
     Ok(())
 }
