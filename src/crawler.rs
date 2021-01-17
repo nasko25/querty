@@ -130,7 +130,7 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
                     Ok(val) => {
                         match val.host_str() {
                             Some(host_str) => {
-                                if list.parse_domain(val.host_str().unwrap()).unwrap().root() != parsed_url.root() {
+                                if list.parse_domain(host_str).unwrap().root() != parsed_url.root() {
                                     // TODO maybe only save the domains, not the whole url
                                     // also, domains should probably be unique
                                     ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
