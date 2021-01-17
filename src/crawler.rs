@@ -18,66 +18,9 @@ use pyo3::prelude::*;
 use url::Url;
 use publicsuffix::List;
 
+// TODO
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     let body = fetch_url(url).unwrap();
-
-    // website_type(&body, meta);
-
-    // TODO temporary for testing; move to tests.rs
-    let w = extract_website_info(&body, &url); // TODO could call this in the save_website_info function
-    let mut website = save_website_info(w, &conn, &settings).unwrap();
-    // should get the id from the save_website_info() function
-    let website_id = website.id;
-    let meta = extract_metadata_info(&body, website_id);
-    let ext_links = extract_external_links(&body, website_id, &url);
-    let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
-    let mut website_solr = website_solr_vec.get(0).unwrap();
-
-    let mut metadata_to_update = save_metadata(&meta, website_solr, &conn, &settings).unwrap();
-    // need to fetch the updated website from solr before updating the external_links,
-    // otherwise it would set the metadata that was just updated to null
-    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
-    website_solr = website_solr_vec.get(0).unwrap();
-    let mut external_links_to_update = save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
-
-    println!("url is {:?}", &url);
-    // println!("Website classification type: {:?}", website_genre(&body, &meta_copy, &url));
-
-    match website_genre(&url) {
-        Ok(genre) => website.type_of_website = genre,
-        Err(err) => {
-            println!("Encountered an error while trying to classify the website: {:?}", err);
-            println!("Attempting offline classification.");
-            website.type_of_website = website_genre_offline_classification(&website_solr.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
-        }
-    }
-
-    website.title = "TEST".to_string();
-    website.rank += 1_f64;
-    website.base_url = "new_base.com".to_string();
-
-    // for now updating the website info will remove the metadata and external links stored in solr
-    // maybe don't overwrite them to null?
-    // (or fetch the old metadata and external_links and include them when updating the website in
-    // solr
-    update_website_info(website, &conn, &settings);
-
-    // again need to fetch the updated website from solr before updating the external_links
-    // otherwise it would set the metadata to the old metadata (it is updated above)
-    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
-    website_solr = website_solr_vec.get(0).unwrap();
-
-
-    metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
-    update_meta(&metadata_to_update, website_solr, &conn, &settings);
-
-    // again need to fetch the updated website from solr before updating the external_links
-    // otherwise it would set the metadata to the old metadata (it is updated above)
-    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
-    website_solr = website_solr_vec.get(0).unwrap();
-
-    external_links_to_update[0].0.url = "CHANGED URL".to_string();
-    update_external_links(external_links_to_update, website_solr, &conn, &settings);
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -86,7 +29,6 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
     // else
         // select_w first to get a Website, and then db::update
         // also update metadata and external links connected to that website
-    extract_base_url(url);
     Ok(())
 }
 
@@ -170,6 +112,7 @@ fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
 
 fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec< (ExternalLink, WebsiteRefExtLink) > {
     let fragment = Html::parse_document(body);
+    // TODO check also <link> html tags
     let selector = Selector::parse("a").unwrap();
 
     let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
@@ -185,17 +128,23 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
                 let parsed_url = list.parse_domain(Url::parse(url).unwrap().host_str().unwrap()).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
                 match parsed_link {
                     Ok(val) => {
-                        if list.parse_domain(val.host_str().unwrap()).unwrap().root() != parsed_url.root() {
-                            // TODO maybe only save the domains, not the whole url
-                            // also, domains should probably be unique
-                            ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                        match val.host_str() {
+                            Some(host_str) => {
+                                if list.parse_domain(val.host_str().unwrap()).unwrap().root() != parsed_url.root() {
+                                    // TODO maybe only save the domains, not the whole url
+                                    // also, domains should probably be unique
+                                    ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                                }
+                                else {
+                                    println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root())
+                                }
+                            },
+                            None => println!("Eror: Url \"{}\" does not have a host string.", val),
                         }
-                        else {
-                            println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root())
-                        }
+
                     },
                     Err(err) => { println!("Error when parsing the url {:?}: {:?}", l, err); }
-                }
+                };
             },
             None => (),
         }
@@ -407,4 +356,73 @@ fn website_genre_offline_classification<'a>(body: &str, meta: &'a Vec<Metadata>)
     }
     // TODO else if...
     return "default".to_string();
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// TESTS
+
+// TODO add asserts
+pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
+    let body = fetch_url(url).unwrap();
+ 
+    // tests the functions implemented above
+    let w = extract_website_info(&body, &url); // TODO could call this in the save_website_info function
+    let mut website = save_website_info(w, &conn, &settings).unwrap();
+    // should get the id from the save_website_info() function
+    let website_id = website.id;
+    let meta = extract_metadata_info(&body, website_id);
+    let ext_links = extract_external_links(&body, website_id, &url);
+    let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    let mut website_solr = website_solr_vec.get(0).unwrap();
+
+    let mut metadata_to_update = save_metadata(&meta, website_solr, &conn, &settings).unwrap();
+    // need to fetch the updated website from solr before updating the external_links,
+    // otherwise it would set the metadata that was just updated to null
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+    let mut external_links_to_update = save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+
+    println!("url is {:?}", &url);
+    // println!("Website classification type: {:?}", website_genre(&body, &meta_copy, &url));
+
+    match website_genre(&url) {
+        Ok(genre) => website.type_of_website = genre,
+        Err(err) => {
+            println!("Encountered an error while trying to classify the website: {:?}", err);
+            println!("Attempting offline classification.");
+            website.type_of_website = website_genre_offline_classification(&website_solr.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+        }
+    }
+
+    website.title = "TEST".to_string();
+    website.rank += 1_f64;
+    website.base_url = "new_base.com".to_string();
+
+    // for now updating the website info will remove the metadata and external links stored in solr
+    // maybe don't overwrite them to null?
+    // (or fetch the old metadata and external_links and include them when updating the website in
+    // solr
+    update_website_info(website, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+
+
+    metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
+    update_meta(&metadata_to_update, website_solr, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+
+    external_links_to_update.get_mut(0).map(|link_to_update| link_to_update.0.url = "CHANGED URL".to_string());
+    update_external_links(external_links_to_update, website_solr, &conn, &settings);
+
+    assert_ne!(extract_base_url(url).unwrap(), url, "Extracting the base of the url returns url.");
+
+    Ok(())
 }

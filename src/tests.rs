@@ -2,6 +2,8 @@ use crate::db;
 use crate::settings;
 use crate::solr;
 
+use crate::crawler::test_crawler;
+
 use crate::db::Website;
 use crate::db::User;
 use crate::db::DB;
@@ -21,7 +23,12 @@ use std::error::Error;
 use diesel::prelude::*;
 // -------------------------------------------------
 
-pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
+pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
+    // reset the state of the database before executing the tests
+    reset_db_state(&conn, &settings);
+
+    test_crawler(url, conn, settings);
+
     let create_website = db::Database::create_tables(conn);
     println!("table website created: {:?}", create_website);
     assert!(create_website.is_ok(), "Could not create tables in the db.");
@@ -113,6 +120,9 @@ pub fn test_all(settings: &settings::Settings, conn: &MysqlConnection) -> Result
     let w_r_e_l_inserted_err = db::Database::insert(&w_r_e_l_err, conn);
     println!("WebsiteRefExtLink insert should throw a foreign key violation: {:?}", w_r_e_l_inserted_err);
     assert!(w_r_e_l_inserted_err.is_err(), "Website ref external link of a website with non-existent id and external link with non-existent id did not throw a foreign key violation.");
+
+    // reset the state of the db and solr after the tests are done
+    // reset_db_state(&conn, &settings);
 
     Ok(())
 }

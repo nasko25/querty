@@ -32,6 +32,11 @@ fn main() {
     // tests::reset_db_state(&conn, &settings);
 
     let url = "https://www.rust-lang.org";
+
+    // this url has a weird <a> href (it does not have a host_str()) that should not throw an exception when parsed
+    // it also does not have external links, so tests checking that will fail
+    // let url = "https://doc.rust-lang.org/std/macro.assert_ne.html"; 
+
     // load the website with this url from solr to see if it is in the database
     let websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
@@ -39,5 +44,5 @@ fn main() {
     // TODO save_website_info(...)
     // get rank from analyse_website
 
-    // println!("Tests should be Ok: {:?}", test_all(&settings, &conn));
+    println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
 }
