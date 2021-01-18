@@ -20,15 +20,20 @@ use publicsuffix::List;
 
 // TODO
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
-    let body = fetch_url(url).unwrap();
+    // let body = fetch_url(url).unwrap();
 
     // TODO if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
         // save_website_info(&body, &url, &conn, &settings);
+        save_website(&url, &conn, &settings);
     }
-    // else
+    else {
+        // TODO - update_website() like save_website
+        assert_eq!(websites_saved.len(), 1, "There are {} websites returned by req()", websites_saved.len());
         // select_w first to get a Website, and then db::update
         // also update metadata and external links connected to that website
+    }
+
     Ok(())
 }
 
@@ -152,6 +157,68 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
     ext_links
 }
 
+// this is a wrapper around the functions that extract and save website info, metadata, and
+// external links
+fn save_website(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
+    let body = fetch_url(url).unwrap();
+
+    let mut w = extract_website_info(&body, &url);
+    let mut meta = extract_metadata_info(&body, None); // website id should not matter here, because it is not needed for website_genre_offline_classification() and is later fetched again
+
+    match website_genre(&url) {
+        Ok(genre) => w.type_of_website = genre,
+        Err(err) => {
+            println!("Encountered an error while trying to classify the website: {:?}", err);
+            println!("Attempting offline classification.");
+            w.type_of_website = website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+        }
+    }
+
+    let mut website = save_website_info(w, &conn, &settings).unwrap();
+
+    // should get the id from the save_website_info() function
+    let website_id = website.id;
+
+    // meta = extract_metadata_info(&body, website_id);
+
+    // after saving the website, the db will generate an id,
+    // set this id to every metadata entry before saving it to the database and solr
+    // (because the metadata was already extracted above, but the website id was set to None,
+    // because it was not yet saved to the db, so it did not have an id)
+    meta.iter_mut().map(|m| m.website_id = website_id);
+    let ext_links = extract_external_links(&body, website_id, &url);
+    let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    let mut website_solr = website_solr_vec.get(0).unwrap();
+    /* let metadata = */ save_metadata(&meta, website_solr, &conn, &settings).unwrap();
+    // need to fetch the updated website from solr before updating the external_links,
+    // otherwise it would set the metadata that was just updated to null
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+    /* let external_links = */ save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+
+    // for now updating the website info will remove the metadata and external links stored in solr
+    // maybe don't overwrite them to null?
+    // (or fetch the old metadata and external_links and include them when updating the website in
+    // solr
+    // update_website_info(website, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    // website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    // website_solr = website_solr_vec.get(0).unwrap();
+
+    // update_meta(&metadata, website_solr, &conn, &settings);
+
+    // again need to fetch the updated website from solr before updating the external_links
+    // otherwise it would set the metadata to the old metadata (it is updated above)
+    // website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    // website_solr = website_solr_vec.get(0).unwrap();
+
+    // update_external_links(external_links, website_solr, &conn, &settings);
+
+    Ok(())
+}
+
 // returns the Website saved to the database
 // or returns an error if the website could not be saved to the database
 fn save_website_info(website_to_insert: Website, conn: &MysqlConnection, settings: &Settings) -> Result<Website, throw::Error<&'static str>> {
@@ -174,7 +241,7 @@ fn save_metadata(metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr, 
     let mut m;
     let mut metadata_solr = Vec::new();
     for metadata in metadata_vec {
-        m = crate::db::DB::Metadata (metadata.clone());
+        m = crate::db::DB::Metadata (metadata.clone()); // TODO maybe add a separate table - like for the external links, in order to reuse the already inserted metadatas, instead of inserting them multiple times for different websites.
         if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
             println!("meta id: {:?}", meta.id);
             metadata_solr.push(meta);
@@ -193,7 +260,7 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
     let mut external_links_solr = Vec::new();
     for mut external_link in external_links {
         el = crate::db::DB::ExternalLink (external_link.0);
-        if let crate::db::DB::ExternalLink (ext_link) = crate::db::Database::insert(&el, conn).unwrap() {
+        if let crate::db::DB::ExternalLink (ext_link) = crate::db::Database::insert(&el, conn).unwrap() { // TODO add a unique constraint on the ExternalLink in the database, and if you try to insert an already existing ExternalLink to the database, get its id (and use it for the WebsiteRefExtLink) instead of inserting it twice
             external_link.1.ext_link_id = ext_link.id;
             web_el = crate::db::DB::WebsiteRefExtLink (external_link.1);
             if let crate::db::DB::WebsiteRefExtLink (webref_ext_link) = crate::db::Database::insert(&web_el, conn).unwrap() {
