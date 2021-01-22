@@ -51,4 +51,9 @@ fn main() {
     println!("web saved: {:?}", websites_saved);
 
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
+
+    println!("Updating the website with url {}.", url);
+    websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+    println!("{:?}", websites_saved[0].id);
+    crawler::analyse_website(&url, &websites_saved, &conn, &settings);
 }

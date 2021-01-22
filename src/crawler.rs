@@ -8,6 +8,7 @@ use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
 use crate::solr::req;
 use crate::db::DB;
+use crate::db::Database;
 use crate::db::Website;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
@@ -28,10 +29,10 @@ pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &Mysq
         save_website(&url, &conn, &settings);
     }
     else {
-        // TODO - update_website() like save_website
         assert_eq!(websites_saved.len(), 1, "There are {} websites returned by req()", websites_saved.len());
         // select_w first to get a Website, and then db::update
         // also update metadata and external links connected to that website
+        update_website(websites_saved[0].id, &websites_saved[0].url, &conn, &settings);
     }
 
     Ok(())
@@ -185,7 +186,7 @@ fn save_website(url: &str, conn: &MysqlConnection, settings: &Settings) -> Resul
     // set this id to every metadata entry before saving it to the database and solr
     // (because the metadata was already extracted above, but the website id was set to None,
     // because it was not yet saved to the db, so it did not have an id)
-    meta.iter_mut().map(|m| m.website_id = website_id);
+    meta.iter_mut().for_each(|m| m.website_id = website_id);
     let ext_links = extract_external_links(&body, website_id, &url);
     let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
@@ -282,12 +283,15 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
 // wrapper around the functions that extract and update website info, metadata, and
 // external links
 // like save_website() but for updating
-fn update_website(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
+// TODO maybe pass a rank to update the current website's rank
+fn update_website(id: Option<u32>, url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
     // TODO too similar to save_website()
     // extract common code
     let body = fetch_url(url).unwrap();
 
+    let website_id = id;
     let mut w = extract_website_info(&body, &url);
+    w.id = website_id;
     let mut meta = extract_metadata_info(&body, None);
 
     match website_genre(&url) {
@@ -301,10 +305,32 @@ fn update_website(url: &str, conn: &MysqlConnection, settings: &Settings) -> Res
 
     let mut website = update_website_info(w, &conn, &settings).unwrap();
 
-    let website_id = website.id;
+    // TODO very ugly code
+    // refactor!
 
-    meta.iter_mut().map(|m| m.website_id = website_id);
-    let ext_links = extract_external_links(&body, website_id, &url);
+    let mut index = 0;
+    // need to get metadata's ids from the db in order to update them
+    let metas_from_db = Database::select_m(&Some(Database::select_w(&Some(vec![website_id.unwrap()]), &conn)), &conn);
+    // TODO for_each() vs for ... in ... {}
+    meta.iter_mut().for_each(|m| {
+        m.website_id = website_id;
+        m.id = metas_from_db[index].id;
+        index += 1;
+        println!("Meta id updated: {:?}", m.id);
+    });
+    let mut ext_links = extract_external_links(&body, website_id, &url);
+
+    index = 0;
+    // TODO should be able to get the external link's id from webref_from_db?
+    // webref_from_db.ext_link_id ?
+    let external_links_from_db = Database::select_el(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
+    let webref_from_db = Database::select_webref(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
+    ext_links.iter_mut().for_each( |e_l| {
+        e_l.0.id = external_links_from_db[index].id;
+        e_l.1.id = webref_from_db[index].id;
+        index += 1;
+    });
+
     let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
 
