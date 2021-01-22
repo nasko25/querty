@@ -23,16 +23,18 @@ use publicsuffix::List;
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     // let body = fetch_url(url).unwrap();
 
-    // TODO if it is not empty, update the website(s) in it
+    // if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
         // save_website_info(&body, &url, &conn, &settings);
         save_website(&url, &conn, &settings);
     }
     else {
+        // there should be only one website in the vector, because it should have been
+        // gotten from its url, and url should be unique
         assert_eq!(websites_saved.len(), 1, "There are {} websites returned by req()", websites_saved.len());
         // select_w first to get a Website, and then db::update
         // also update metadata and external links connected to that website
-        update_website(websites_saved[0].id, &websites_saved[0].url, &conn, &settings);
+        update_website(&websites_saved[0], &conn, &settings);
     }
 
     Ok(())
@@ -284,12 +286,13 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
 // external links
 // like save_website() but for updating
 // TODO maybe pass a rank to update the current website's rank
-fn update_website(id: Option<u32>, url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
+fn update_website(website: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
     // TODO too similar to save_website()
     // extract common code
-    let body = fetch_url(url).unwrap();
+    let url = &website.url;
+    let body = fetch_url(&url).unwrap();
 
-    let website_id = id;
+    let website_id = website.id;
     let mut w = extract_website_info(&body, &url);
     w.id = website_id;
     let mut meta = extract_metadata_info(&body, None);
