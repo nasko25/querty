@@ -279,6 +279,44 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
     Ok(external_links_solr)
 }
 
+// wrapper around the functions that extract and update website info, metadata, and
+// external links
+// like save_website() but for updating
+fn update_website(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
+    // TODO too similar to save_website()
+    // extract common code
+    let body = fetch_url(url).unwrap();
+
+    let mut w = extract_website_info(&body, &url);
+    let mut meta = extract_metadata_info(&body, None);
+
+    match website_genre(&url) {
+        Ok(genre) => w.type_of_website = genre,
+        Err(err) => {
+            println!("Encountered an error while trying to classify the website: {:?}", err);
+            println!("Attempting offline classification.");
+            w.type_of_website = website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+        }
+    }
+
+    let mut website = update_website_info(w, &conn, &settings).unwrap();
+
+    let website_id = website.id;
+
+    meta.iter_mut().map(|m| m.website_id = website_id);
+    let ext_links = extract_external_links(&body, website_id, &url);
+    let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    let mut website_solr = website_solr_vec.get(0).unwrap();
+
+    update_meta(&meta, website_solr, &conn, &settings).unwrap();
+
+    website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+    website_solr = website_solr_vec.get(0).unwrap();
+    update_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+
+    Ok(())
+}
+
 fn update_website_info(website_to_update: Website, conn: &MysqlConnection, settings: &Settings) -> Result<Website, throw::Error<&'static str>>  {
     // TODO update the db::Database::update method to work for metadata and external_links - to work like insert()
     // Then update this function
