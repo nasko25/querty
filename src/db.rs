@@ -248,6 +248,7 @@ impl Database {
     // TODO
     // external links and metadata as well
     // select website(s)
+    // TODO return Result<>
     pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Website> {
         let mut websites = Vec::<Website>::new();
         match ids {
@@ -298,6 +299,17 @@ impl Database {
             }
         }
         els
+    }
+
+    pub fn select_webref(website_opt: &Option<&Website>, conn: &MysqlConnection) -> Vec<WebsiteRefExtLink> {
+        let mut webrefs = Vec::<WebsiteRefExtLink>::new();
+        if website_opt.is_some() {
+            let link_ids = WebsiteRefExtLink::belonging_to(website_opt.unwrap()).load::<WebsiteRefExtLink>(conn).expect("Error loading external_link ids");
+            for link_id in link_ids {
+                    webrefs.push(link_id);
+            }
+        }
+       webrefs
     }
 
     // update the website_id_opt based on its id
