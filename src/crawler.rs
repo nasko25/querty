@@ -285,7 +285,6 @@ fn save_external_links(external_links: Vec< (ExternalLink, WebsiteRefExtLink) >,
 // wrapper around the functions that extract and update website info, metadata, and
 // external links
 // like save_website() but for updating
-// TODO maybe pass a rank to update the current website's rank
 fn update_website(website: &WebsiteSolr, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
     // TODO too similar to save_website()
     // extract common code
@@ -295,6 +294,7 @@ fn update_website(website: &WebsiteSolr, conn: &MysqlConnection, settings: &Sett
     let website_id = website.id;
     let mut w = extract_website_info(&body, &url);
     w.id = website_id;
+    w.rank = website.rank;
     let mut meta = extract_metadata_info(&body, None);
 
     match website_genre(&url) {

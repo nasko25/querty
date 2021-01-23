@@ -55,5 +55,6 @@ fn main() {
     println!("Updating the website with url {}.", url);
     websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("{:?}", websites_saved[0].id);
+    websites_saved[0].rank += 1.5;
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
 }
