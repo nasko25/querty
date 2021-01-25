@@ -324,12 +324,13 @@ fn update_website(website: &WebsiteSolr, conn: &MysqlConnection, settings: &Sett
     let mut ext_links = extract_external_links(&body, website_id, &url);
 
     index = 0;
-    // TODO should be able to get the external link's id from webref_from_db?
-    // webref_from_db.ext_link_id ?
-    let external_links_from_db = Database::select_el(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
+    // let external_links_from_db = Database::select_el(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
     let webref_from_db = Database::select_webref(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
     ext_links.iter_mut().for_each( |e_l| {
-        e_l.0.id = external_links_from_db[index].id;
+        // can get the id of this external_link from website_ref_ext_links
+        // that was fetched from the db
+        // no need to also fetch the external links from the db for the given website
+        e_l.0.id = webref_from_db[index].ext_link_id;
         e_l.1.id = webref_from_db[index].id;
         index += 1;
     });
