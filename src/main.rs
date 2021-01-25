@@ -25,10 +25,10 @@ fn main() {
     println!("{:?}", db);
     println!("{:?}", settings.get_serv());
 
-    let url = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
-    println!("{:?}", url);
+    let url_mysql = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
+    println!("{:?}", url_mysql);
 
-    let conn = db::Database::establish_connection(&url);
+    let conn = db::Database::establish_connection(&url_mysql);
 
     // reset the state of the db and solr
     // tests::reset_db_state(&conn, &settings);
@@ -57,7 +57,7 @@ fn main() {
 
     match updated_rank {
         Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
-        Err(err) => println!("There was an error: {}", err),
+        Err(err) => println!("Rank was not updated successfully: Err({})", err),
     }
 }
 
@@ -121,6 +121,6 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });
     }
-	Ok(websites_saved[0].rank)
+    Ok(websites_saved[0].rank)
     // TODO test errors
 }
