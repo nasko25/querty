@@ -15,6 +15,7 @@ mod crawler;
 use tests::test_all;
 use diesel::MysqlConnection;
 use std::fmt;
+use std::mem::discriminant;
 
 // TODO move all the tests from main to tests.rs
 // TODO add a testing database
@@ -66,7 +67,7 @@ fn main() {
 // for now all users reacts will change the website's rank with +/-1.0
 // later this could depend on user's ranks
 // TODO more sensible name than "val"
-#[derive(PartialEq)]
+// #[derive(PartialEq)]
 enum React {
     Upvote { val: f64 },
     Downvote { val: f64 },
@@ -100,9 +101,7 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     if websites_saved.is_empty() {}
     // since website ranks should be between -10 and 10 and user react FOR NOW will only update it
     // with +/-1, I can do this ugly check
-
-    // TODO shouldn't give val when checking if react_type matches React::Upvode/Downvote
-	else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && react_type == React::Upvote {val: 0.0}) || (websites_saved[0].rank >= -9.0 && react_type == React::Downvote {val: 0.0})) {
+	else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && discriminant(&react_type) == discriminant(&React::Upvote{ val: 0.0 })) || (websites_saved[0].rank >= -9.0 && discriminant(&react_type) == discriminant(&React::Downvote {val: 0.0}))) {
         println!("{:?}'s old rank: {}", websites_saved[0].id, websites_saved[0].rank);
         websites_saved[0].rank += match react_type {
             React::Upvote { val } => 1.0,
@@ -121,6 +120,6 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });
     }
+
     Ok(websites_saved[0].rank)
-    // TODO test errors
 }
