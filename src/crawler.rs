@@ -93,6 +93,11 @@ fn extract_website_info(body: &str, url: &str) -> Website {
     }
     // println!("\nWebsite body text trimmed: {:?}", trimmed_text.join(", "));
 
+    // TODO maybe always url encode the url and base_url to ensure that
+    // fetching "http://example.com/asd asd" and "http://example.com/asd%20asd" from solr will return
+    // the same website
+    // also what about urls in different languages: "example.com" and "ехампле.ком"
+    // should they be the same url ?
     Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), base_url: extract_base_url(url).unwrap(), rank: 0.0, type_of_website: "default".to_string() }
 }
 
@@ -421,6 +426,16 @@ use std::error::Error;
 //          - http://www.cse.lehigh.edu/~brian/pubs/2007/classification-survey/LU-CSE-07-010.pdf
 //              -> this looks like a good source to use on web page classification
 //              -> it also contains some optimization options that can help speed up the web page analysis
+
+// TODO add a list of the 50 most popular domains/urls and their types:
+//      example: google: "product" or "search" or "search engine" or "service"
+//      gmail: "product" or "service"
+//      facebook/twitter/...: "social media"
+//      github: "product" or "service"
+//      stackoverflow: "help" or "forum"
+//      scientificamerican: "article" (if it is a url of some article) or "news" or "articles" (if it is just the base url or contacts page, etc.)
+// and statically assign the type based on that
+// if the website is not from the most popular ones: classify it using the classifier or again statically
 fn website_genre<'a>(url: &str) -> Result<String, Box<Error>> {
     let classify_request = Request::new("classify").arg(url);
     let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
