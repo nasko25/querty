@@ -13,6 +13,7 @@ mod tests;
 mod crawler;
 
 use tests::test_all;
+use diesel::MysqlConnection;
 
 // TODO move all the tests from main to tests.rs
 // TODO add a testing database
@@ -51,10 +52,28 @@ fn main() {
     println!("web saved: {:?}", websites_saved);
 
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
+    user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
+}
 
-    println!("Updating the website with url {}.", url);
-    websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+// _________________________________________ TODO add new file?__________________________________________
+
+// for now all users reacts will change the website's rank with +/-1.0
+// later this could depend on user's ranks
+// TODO more sensible name than "val"
+enum React {
+    Upvote { val: f64 },
+    Downvote { val: f64 },
+}
+
+// TODO passing settings and MysqlConnection everywhere is probably not a good idea
+// refactor?
+fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn: &MysqlConnection) {
+    println!("Updating the website with url {} after user react.", url);
+    let mut websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("{:?}", websites_saved[0].id);
-    websites_saved[0].rank += 1.5;
+    websites_saved[0].rank += match react_type {
+        React::Upvote { val } => 1.0,
+		React::Downvote { val } => -1.0,
+    };
     crawler::analyse_website(&url, &websites_saved, &conn, &settings);
 }
