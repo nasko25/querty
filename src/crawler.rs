@@ -1,6 +1,8 @@
 use reqwest;
 use scraper::{Html, Selector};
 
+use std::collections::HashSet;
+
 use diesel::MysqlConnection;
 
 use crate::solr::WebsiteSolr;
@@ -66,8 +68,9 @@ fn rank_from_links(url: &str, settings: &Settings) -> Result<f64, Box<Error>> {
         Ok(websites) => websites,
         Err(err) => return Err(Box::new(err))
     };
-    println!("Should be empty: {:?}", websites);
+    println!("Should return only one website: {:?}", websites);
 
+    // retrun number of websites * a constant
     Ok(1.0)
 }
 
@@ -150,7 +153,8 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
     let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
 
     // TODO refactor
-    let mut ext_links = Vec::new();
+    // use a hashset to only save unique domains
+    let mut ext_links = HashSet::new();
     let mut href;
     for element in fragment.select(&selector) {
         href = element.value().attr("href");
@@ -164,12 +168,11 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
                         match val.host_str() {
                             Some(host_str) => {
                                 if list.parse_domain(host_str).unwrap().root() != parsed_url.root() {
-                                    // TODO domains should probably be unique
                                     // only save the base_url, no need to save the whole url
-                                    ext_links.push( (ExternalLink { id: None, url: list.parse_domain(host_str).unwrap().root().unwrap().to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                                    ext_links.insert( (ExternalLink { id: None, url: list.parse_domain(host_str).unwrap().root().unwrap().to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) );
                                 }
                                 else {
-                                    println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root())
+                                    println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root());
                                 }
                             },
                             None => println!("Eror: Url \"{}\" does not have a host string.", val),
@@ -182,7 +185,7 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
             None => (),
         }
     }
-    ext_links
+    ext_links.into_iter().collect()
 }
 
 // this is a wrapper around the functions that extract and save website info, metadata, and
