@@ -50,7 +50,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
         let updated_website = db::Database::update(&DB::Website(website.clone()), conn);
         println!("Website rank should be updated: {:?}", updated_website);
         assert!(updated_website.is_ok(), "Could not update website with id: {:?}", website.id);
-        let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, base_url: website.base_url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: None};
+        let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, base_url: website.base_url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: Some(vec!("spacex.com".to_string()))};
         let solr_inserted = insert(settings, &website_solr);
         println!("Inserted in Solr: {:?}", solr_inserted);
         assert!(solr_inserted.is_ok(), "Could not insert website with id {:?} into solr.", website.id);

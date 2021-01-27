@@ -22,6 +22,7 @@ use publicsuffix::List;
 // TODO
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     // let body = fetch_url(url).unwrap();
+    rank_from_links(url, settings);
 
     // if it is not empty, update the website(s) in it
     if websites_saved.is_empty() {
@@ -50,6 +51,24 @@ async fn fetch_url(url: &str) -> Result<String, reqwest::Error> {
     let body = res.text().await?;
 
     Ok(body)
+}
+
+// returns the rank calculated from all websites that link to the given url
+fn rank_from_links(url: &str, settings: &Settings) -> Result<f64, Box<Error>> {
+    let base_url = match extract_base_url(url) {
+        Ok(base_url) => base_url,
+        Err(err) => return Err(Box::new(err))
+    };
+
+    // get all websites that link to this and have rank >= 0
+    // TODO &rows=0 to not return the actual websites, but only get the numFound
+    let websites = match req(settings, format!("external_links:\"{}\" AND rank:[0.0 TO *]", base_url)) {
+        Ok(websites) => websites,
+        Err(err) => return Err(Box::new(err))
+    };
+    println!("Should be empty: {:?}", websites);
+
+    Ok(1.0)
 }
 
 fn extract_base_url(url: &str) -> Result<String, publicsuffix::errors::Error> {
@@ -130,6 +149,7 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
 
     let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
 
+    // TODO refactor
     let mut ext_links = Vec::new();
     let mut href;
     for element in fragment.select(&selector) {
@@ -144,9 +164,9 @@ fn extract_external_links(body: &str, website_id: Option<u32>, url: &str) -> Vec
                         match val.host_str() {
                             Some(host_str) => {
                                 if list.parse_domain(host_str).unwrap().root() != parsed_url.root() {
-                                    // TODO maybe only save the domains, not the whole url
-                                    // also, domains should probably be unique
-                                    ext_links.push( (ExternalLink { id: None, url: l.to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
+                                    // TODO domains should probably be unique
+                                    // only save the base_url, no need to save the whole url
+                                    ext_links.push( (ExternalLink { id: None, url: list.parse_domain(host_str).unwrap().root().unwrap().to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) )
                                 }
                                 else {
                                     println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root())
