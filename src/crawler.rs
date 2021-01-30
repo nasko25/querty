@@ -72,7 +72,7 @@ impl<'a> Crawler<'a> {
     // returns the rank calculated from all websites that link to the given url
     fn rank_from_links(&self, url: &str) -> Result<f64, Box<Error>> {
         let settings = self.settings;
-        let base_url = match extract_base_url(url) {
+        let base_url = match Crawler::<'a>::extract_base_url(url) {
             Ok(base_url) => base_url,
             Err(err) => return Err(Box::new(err))
         };
@@ -135,7 +135,7 @@ impl<'a> Crawler<'a> {
         // the same website
         // also what about urls in different languages: "example.com" and "ехампле.ком"
         // should they be the same url ?
-        Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), base_url: extract_base_url(url).unwrap(), rank: 0.0, type_of_website: "default".to_string() }
+        Website { id: None, title: title.to_string(), text: trimmed_text.join(", "), url: url.to_string(), base_url: Crawler::extract_base_url(url).unwrap(), rank: 0.0, type_of_website: "default".to_string() }
     }
 
     fn extract_metadata_info(body: &str, website_id: Option<u32>) -> Vec<Metadata> {
@@ -206,7 +206,7 @@ impl<'a> Crawler<'a> {
     // this is a wrapper around the functions that extract and save website info, metadata, and
     // external links
     fn save_website(&self, url: &str) -> Result<(), Box<dyn Error>> {
-        let body = fetch_url(url).unwrap();
+        let body = Crawler::fetch_url(url).unwrap();
         let conn = self.conn;
         let settings = self.settings;
 
@@ -218,7 +218,7 @@ impl<'a> Crawler<'a> {
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
-                w.type_of_website = website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+                w.type_of_website = Crawler::<'a>::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
 
@@ -234,15 +234,15 @@ impl<'a> Crawler<'a> {
         // (because the metadata was already extracted above, but the website id was set to None,
         // because it was not yet saved to the db, so it did not have an id)
         meta.iter_mut().for_each(|m| m.website_id = website_id);
-        let ext_links = extract_external_links(&body, website_id, &url);
+        let ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
         let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         let mut website_solr = website_solr_vec.get(0).unwrap();
-        /* let metadata = */ save_metadata(&meta, website_solr, &conn, &settings).unwrap();
+        /* let metadata = */ self.save_metadata(&meta, website_solr).unwrap();
         // need to fetch the updated website from solr before updating the external_links,
         // otherwise it would set the metadata that was just updated to null
         website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         website_solr = website_solr_vec.get(0).unwrap();
-        /* let external_links = */ save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+        /* let external_links = */ self.save_external_links(ext_links, website_solr).unwrap();
 
         // for now updating the website info will remove the metadata and external links stored in solr
         // maybe don't overwrite them to null?
@@ -302,7 +302,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert metadata in the database");
             }
         }
-        update_metadata(settings, &metadata_solr, website_to_update);
+        self.update_metadata(&metadata_solr, website_to_update);
         Ok(metadata_solr)
     }
 
@@ -329,7 +329,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert external link in the database.");
             }
         }
-        update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
+        self.update_ext_links(&external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
         Ok(external_links_solr)
     }
 
@@ -342,7 +342,7 @@ impl<'a> Crawler<'a> {
         // TODO too similar to save_website()
         // extract common code
         let url = &website.url;
-        let body = fetch_url(&url).unwrap();
+        let body = Crawler::<'a>::fetch_url(&url).unwrap();
 
         let website_id = website.id;
         let mut w = extract_website_info(&body, &url);
@@ -355,11 +355,11 @@ impl<'a> Crawler<'a> {
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
-                w.type_of_website = website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+                w.type_of_website = Crawler::<'a>::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
 
-        let mut website = update_website_info(w, &conn, &settings).unwrap();
+        let mut website = self.update_website_info(w).unwrap();
 
         // TODO very ugly code
         // refactor!
@@ -374,7 +374,7 @@ impl<'a> Crawler<'a> {
             index += 1;
             println!("Meta id updated: {:?}", m.id);
         });
-        let mut ext_links = extract_external_links(&body, website_id, &url);
+        let mut ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
 
         index = 0;
         // let external_links_from_db = Database::select_el(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
@@ -391,11 +391,11 @@ impl<'a> Crawler<'a> {
         let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         let mut website_solr = website_solr_vec.get(0).unwrap();
 
-        update_meta(&meta, website_solr, &conn, &settings).unwrap();
+        self.update_meta(&meta, website_solr).unwrap();
 
         website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         website_solr = website_solr_vec.get(0).unwrap();
-        update_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+        self.update_external_links(ext_links, website_solr).unwrap();
 
         Ok(())
     }
@@ -486,7 +486,7 @@ impl<'a> Crawler<'a> {
     //      scientificamerican: "article" (if it is a url of some article) or "news" or "articles" (if it is just the base url or contacts page, etc.)
     // and statically assign the type based on that
     // if the website is not from the most popular ones: classify it using the classifier or again statically
-    fn website_genre<'a>(url: &str) -> Result<String, Box<Error>> {
+    fn website_genre(url: &str) -> Result<String, Box<Error>> {
         let classify_request = Request::new("classify").arg(url);
         let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
         // println!("Result of classification: {:?}", classify_result.unwrap());
@@ -506,7 +506,7 @@ impl<'a> Crawler<'a> {
         }
     }
 
-    fn website_genre_offline_classification<'a>(body: &str, meta: &'a Vec<Metadata>) -> String {
+    fn website_genre_offline_classification(body: &str, meta: &'a Vec<Metadata>) -> String {
         let body_lc = body.to_lowercase();
         let mut meta_lc;
 
@@ -564,10 +564,10 @@ impl<'a> Crawler<'a> {
 
 // TODO add asserts
 pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> Result<(), Box<dyn Error>> {
-    let body = fetch_url(url).unwrap();
+    let body = Crawler::fetch_url(url).unwrap();
  
     // tests the functions implemented above
-    let w = extract_website_info(&body, &url); // TODO could call this in the save_website_info function
+    let w = Crawler::<'a>::extract_website_info(&body, &url); // TODO could call this in the save_website_info function
     let mut website = save_website_info(w, &conn, &settings).unwrap();
     // should get the id from the save_website_info() function
     let website_id = website.id;
