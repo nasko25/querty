@@ -21,6 +21,16 @@ use pyo3::prelude::*;
 use url::Url;
 use publicsuffix::List;
 
+// TODO make a struct Crawler and pass the MysqlConnection and Settings in the constructor to be used by all methods
+
+struct Crawler<'a> {
+    conn: &'a MysqlConnection,
+    settings: &'a Settings
+}
+
+impl<'a> Crawler<'a> {
+}
+
 // TODO
 pub fn analyse_website(url: &str, websites_saved: &Vec<WebsiteSolr>, conn: &MysqlConnection, settings: &Settings) -> Result<(), reqwest::Error> {
     // let body = fetch_url(url).unwrap();
