@@ -210,10 +210,10 @@ impl<'a> Crawler<'a> {
         let conn = self.conn;
         let settings = self.settings;
 
-        let mut w = extract_website_info(&body, &url);
-        let mut meta = extract_metadata_info(&body, None); // website id should not matter here, because it is not needed for website_genre_offline_classification() and is later fetched again
+        let mut w = Crawler::extract_website_info(&body, &url);
+        let mut meta = Crawler::extract_metadata_info(&body, None); // website id should not matter here, because it is not needed for website_genre_offline_classification() and is later fetched again
 
-        match website_genre(&url) {
+        match Crawler::<'a>::website_genre(&url) {
             Ok(genre) => w.type_of_website = genre,
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
@@ -222,12 +222,12 @@ impl<'a> Crawler<'a> {
             }
         }
 
-        let mut website = save_website_info(w, &conn, &settings).unwrap();
+        let mut website = self.save_website_info(w).unwrap();
 
         // should get the id from the save_website_info() function
         let website_id = website.id;
 
-        // meta = extract_metadata_info(&body, website_id);
+        // meta = self.extract_metadata_info(&body, website_id);
 
         // after saving the website, the db will generate an id,
         // set this id to every metadata entry before saving it to the database and solr
@@ -302,7 +302,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert metadata in the database");
             }
         }
-        self.update_metadata(&metadata_solr, website_to_update);
+        update_metadata(settings, &metadata_solr, website_to_update);
         Ok(metadata_solr)
     }
 
@@ -329,7 +329,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert external link in the database.");
             }
         }
-        self.update_ext_links(&external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
+        update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
         Ok(external_links_solr)
     }
 
@@ -345,16 +345,17 @@ impl<'a> Crawler<'a> {
         let body = Crawler::<'a>::fetch_url(&url).unwrap();
 
         let website_id = website.id;
-        let mut w = extract_website_info(&body, &url);
+        let mut w = Crawler::<'a>::extract_website_info(&body, &url);
         w.id = website_id;
         w.rank = website.rank;
-        let mut meta = extract_metadata_info(&body, None);
+        let mut meta = Crawler::<'a>::extract_metadata_info(&body, None);
 
-        match website_genre(&url) {
+        match Crawler::<'a>::website_genre(&url) {
             Ok(genre) => w.type_of_website = genre,
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
+                // TODO make meta a vector of String, not &str to be able to move it here
                 w.type_of_website = Crawler::<'a>::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
@@ -567,31 +568,34 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
     let body = Crawler::fetch_url(url).unwrap();
  
     // tests the functions implemented above
-    let w = Crawler::<'a>::extract_website_info(&body, &url); // TODO could call this in the save_website_info function
-    let mut website = save_website_info(w, &conn, &settings).unwrap();
+    let w = Crawler::extract_website_info(&body, &url); // TODO could call this in the save_website_info function
+    let crawler = Crawler {
+        conn, settings
+    };
+    let mut website = crawler.save_website_info(w).unwrap();
     // should get the id from the save_website_info() function
     let website_id = website.id;
-    let meta = extract_metadata_info(&body, website_id);
-    let ext_links = extract_external_links(&body, website_id, &url);
+    let meta = Crawler::extract_metadata_info(&body, website_id);
+    let ext_links = Crawler::extract_external_links(&body, website_id, &url);
     let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
 
-    let mut metadata_to_update = save_metadata(&meta, website_solr, &conn, &settings).unwrap();
+    let mut metadata_to_update = crawler.save_metadata(&meta, website_solr).unwrap();
     // need to fetch the updated website from solr before updating the external_links,
     // otherwise it would set the metadata that was just updated to null
     website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
     website_solr = website_solr_vec.get(0).unwrap();
-    let mut external_links_to_update = save_external_links(ext_links, website_solr, &conn, &settings).unwrap();
+    let mut external_links_to_update = crawler.save_external_links(ext_links, website_solr).unwrap();
 
     println!("url is {:?}", &url);
     // println!("Website classification type: {:?}", website_genre(&body, &meta_copy, &url));
 
-    match website_genre(&url) {
+    match Crawler::website_genre(&url) {
         Ok(genre) => website.type_of_website = genre,
         Err(err) => {
             println!("Encountered an error while trying to classify the website: {:?}", err);
             println!("Attempting offline classification.");
-            website.type_of_website = website_genre_offline_classification(&website_solr.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+            website.type_of_website = Crawler::website_genre_offline_classification(&website_solr.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
         }
     }
 
@@ -603,7 +607,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
     // maybe don't overwrite them to null?
     // (or fetch the old metadata and external_links and include them when updating the website in
     // solr
-    update_website_info(website, &conn, &settings);
+    crawler.update_website_info(website);
 
     // again need to fetch the updated website from solr before updating the external_links
     // otherwise it would set the metadata to the old metadata (it is updated above)
@@ -612,7 +616,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
 
 
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
-    update_meta(&metadata_to_update, website_solr, &conn, &settings);
+    crawler.update_meta(&metadata_to_update, website_solr);
 
     // again need to fetch the updated website from solr before updating the external_links
     // otherwise it would set the metadata to the old metadata (it is updated above)
@@ -620,9 +624,9 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
     website_solr = website_solr_vec.get(0).unwrap();
 
     external_links_to_update.get_mut(0).map(|link_to_update| link_to_update.0.url = "CHANGED URL".to_string());
-    update_external_links(external_links_to_update, website_solr, &conn, &settings);
+    crawler.update_external_links(external_links_to_update, website_solr);
 
-    assert_ne!(extract_base_url(url).unwrap(), url, "Extracting the base of the url returns url.");
+    assert_ne!(Crawler::extract_base_url(url).unwrap(), url, "Extracting the base of the url returns url.");
 
     Ok(())
 }
