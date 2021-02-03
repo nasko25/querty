@@ -218,7 +218,7 @@ impl<'a> Crawler<'a> {
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
-                w.type_of_website = Crawler::<'a>::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+                w.type_of_website = Crawler::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
 
@@ -234,7 +234,7 @@ impl<'a> Crawler<'a> {
         // (because the metadata was already extracted above, but the website id was set to None,
         // because it was not yet saved to the db, so it did not have an id)
         meta.iter_mut().for_each(|m| m.website_id = website_id);
-        let ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
+        let ext_links = Crawler::extract_external_links(&body, website_id, &url);
         let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         let mut website_solr = website_solr_vec.get(0).unwrap();
         /* let metadata = */ self.save_metadata(&meta, website_solr).unwrap();
@@ -355,8 +355,7 @@ impl<'a> Crawler<'a> {
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
-                // TODO make meta a vector of String, not &str to be able to move it here
-                w.type_of_website = Crawler::<'a>::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+                w.type_of_website = Crawler::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
 
