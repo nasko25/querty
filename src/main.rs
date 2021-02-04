@@ -53,7 +53,11 @@ fn main() {
     websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
 
-    // crawler::analyse_website(&url, &websites_saved, &conn, &settings);
+    let crawler = crawler::Crawler {
+        conn: &conn,
+        settings: &settings
+    };
+    crawler.analyse_website(&url, &websites_saved);
     let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
 
     match updated_rank {
@@ -115,7 +119,11 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     else {
         return Err(ReactError::GenericError);
     }
-    //crawler::analyse_website(&url, &websites_saved, &conn, &settings);
+    let crawler = crawler::Crawler {
+        conn,
+        settings
+    };
+    crawler.analyse_website(&url, &websites_saved);
 
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });

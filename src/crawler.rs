@@ -27,9 +27,9 @@ use publicsuffix::List;
 
 // TODO make a struct Crawler and pass the MysqlConnection and Settings in the constructor to be used by all methods
 
-struct Crawler<'a> {
-    conn: &'a MysqlConnection,
-    settings: &'a Settings
+pub struct Crawler<'a> {
+    pub conn: &'a MysqlConnection,
+    pub settings: &'a Settings
 }
 
 impl<'a> Crawler<'a> {
