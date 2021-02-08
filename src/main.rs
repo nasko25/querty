@@ -17,10 +17,7 @@ use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
 
-// TODO move all the tests from main to tests.rs
-// TODO add a testing database
 fn main() {
-    // TODO https://lucene.apache.org/solr instead of mysql
     let settings = settings::Settings::new(false).unwrap();
     let db = &settings.database;
     println!("{:?}", db);
@@ -43,8 +40,6 @@ fn main() {
     // load the website with this url from solr to see if it is in the database
     let mut websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
-    // TODO save_website_info(...)
-    // get rank from analyse_website
 
     println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
 

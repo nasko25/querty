@@ -25,8 +25,6 @@ use pyo3::prelude::*;
 use url::Url;
 use publicsuffix::List;
 
-// TODO make a struct Crawler and pass the MysqlConnection and Settings in the constructor to be used by all methods
-
 pub struct Crawler<'a> {
     pub conn: &'a MysqlConnection,
     pub settings: &'a Settings
@@ -167,7 +165,6 @@ impl<'a> Crawler<'a> {
 
         let list = List::fetch().unwrap();  // TODO get public suffix list from path https://docs.rs/publicsuffix/1.5.4/publicsuffix/
 
-        // TODO refactor
         // use a hashset to only save unique domains
         let mut ext_links = HashSet::new();
         let mut href;
@@ -175,7 +172,6 @@ impl<'a> Crawler<'a> {
             href = element.value().attr("href");
             match href {
                 Some(l) => {
-                                                                                                                    // TODO change ext_link_id when the ExternalLink is inserted in the database
                     let parsed_link = Url::parse(l);
                     let parsed_url = list.parse_domain(Url::parse(url).unwrap().host_str().unwrap()).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
                     match parsed_link {
@@ -363,6 +359,14 @@ impl<'a> Crawler<'a> {
 
         // TODO very ugly code
         // refactor!
+        // TODO delete the old meta and save the updated meta because number of meta tags in a
+        // website is not guaranteed to stay the same
+        // OR
+        // update from 0 to meta.len() and
+        // if meta.len() > metas_from_db.len() add new metas
+        // if meta.len() < metas_from_db.len() remove the last (metas_from_db.len() - meta.len())
+        // entries from the db and solr
+        // if meta.len() == metas_from_db.len() then don't do anything
 
         let mut index = 0;
         // need to get metadata's ids from the db in order to update them

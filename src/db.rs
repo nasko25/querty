@@ -246,8 +246,6 @@ impl Database {
         }
     }
 
-    // TODO
-    // external links and metadata as well
     // select website(s)
     // TODO return Result<>
     pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Website> {
