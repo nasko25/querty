@@ -124,6 +124,18 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // reset the state of the db and solr after the tests are done
     // reset_db_state(&conn, &settings);
 
+    // delete metatags from the database
+    let mut del_result = db::Database::delete_m(&vec![1, 2, 3], conn);
+    assert!(del_result.is_ok());
+    // 3 entries should be deleted from the database
+    assert_eq!(del_result.unwrap(), 3);
+    // TODO assert that the meta tags with ids 1, 2, 3 were deleted from the database
+    del_result = db::Database::delete_m(&vec![0, 1, 4], conn);
+    assert!(del_result.is_ok());
+    // only 1 entry should be deleted from the database
+    assert_eq!(del_result.unwrap(), 1);
+    // TODO assert that the meta tag with id 4 is not present in the database
+
     Ok(())
 }
 

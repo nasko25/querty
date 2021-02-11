@@ -175,8 +175,6 @@ impl Database {
     // drop all tables in the database
     // useful in development when changing the db or solr
     // that will create an inconsistent state
-    // TODO maybe add a function that deletes everyting from solr as well
-        // and call them both in a clear_databases() function; probably in main
     pub fn drop_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         return sql_query("
             DROP TABLE IF EXISTS users, metadata, website_ref_ext_links, external_links, website"
@@ -248,6 +246,9 @@ impl Database {
 
     // select website(s)
     // TODO return Result<>
+    // TODO making a query to the db for every website, instead of querying once for all websites
+    // seems suboptimal. There should be a way to get all websites by giving all their ids to
+    // website.filter(). Same for the functions below.
     pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Website> {
         let mut websites = Vec::<Website>::new();
         match ids {
@@ -366,5 +367,13 @@ impl Database {
                 Ok(DB::WebsiteRefExtLink(updated_row))
             }
         }
+    }
+
+    // delete meta tags from the database, given a vector of their ids
+    // the function returns a Result with the number of deleted meta tags, or an error if a diesel
+    // error occurs
+    pub fn delete_m(meta_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        let deleted_meta = diesel::delete(metadata.filter(metadata::id.eq_any(meta_ids))).execute(conn)?;
+        Ok(deleted_meta)
     }
 }
