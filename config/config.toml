@@ -9,3 +9,5 @@ pass = "asdf"
 server = "localhost"
 port = 8983
 collection = "querty"
+path_to_solr = ""       # TODO should also be able to use $SOLR_PATH
+path_to_solr_config = "~/querty/config/solr"        # TODO should also be able to use $SOLR_CONFIG_PATH
