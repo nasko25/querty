@@ -14,7 +14,9 @@ pub struct Database {
 pub struct Solr {
     pub server: String,
     pub port: u16,
-    pub collection: String
+    pub collection: String,
+    pub path_to_solr: String,
+    pub path_to_solr_config: String
 }
 
 #[derive(Debug, Deserialize)]

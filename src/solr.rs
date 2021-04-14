@@ -175,7 +175,7 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .expect("Failed to create a new solr collection")
     } else {
         // TODO maybe don't hardcode the 2 paths?
-        Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
+        Command::new(shellexpand::tilde(&solr.path_to_solr).as_ref())
             .arg("create")
             .arg("-c")
             .arg(&solr.collection)
@@ -184,7 +184,7 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .arg("-rf")
             .arg("2")
             .arg("-d")
-            .arg(shellexpand::tilde("~/querty/config/solr").as_ref())
+            .arg(shellexpand::tilde(&solr.path_to_solr_config).as_ref())
             .arg("-p")
             .arg("8983")
             .output()
@@ -206,7 +206,7 @@ pub async fn delete_collection(settings: &settings::Settings) -> Result<std::pro
             .output()
             .expect("Failed to delete the solr collection")
     } else {
-        Command::new(shellexpand::tilde("~/solr-8.6.2/bin/solr").as_ref())
+        Command::new(shellexpand::tilde(&solr.path_to_solr).as_ref())
             .arg("delete")
             .arg("-c")
             .arg(&solr.collection)
