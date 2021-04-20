@@ -5,6 +5,7 @@ use crate::db::Metadata;
 use crate::db::ExternalLink;
 
 use std::process::Command;
+use std::env;
 
 extern crate shellexpand;
 
@@ -174,8 +175,13 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .output()
             .expect("Failed to create a new solr collection")
     } else {
-        // TODO maybe don't hardcode the 2 paths?
-        Command::new(shellexpand::tilde(&solr.path_to_solr).as_ref())
+        Command::new(shellexpand::tilde(&env::var("SOLR_PATH").unwrap_or_else(|_| {
+                    // TODO should these prints be everywhere env::var is used?
+                    println!("SOLR_PATH environment variable not set.");
+                    println!("Using \"{}\" (from the config.toml) instead.\n", solr.path_to_solr);
+                    solr.path_to_solr.clone()
+                }
+            )).as_ref())
             .arg("create")
             .arg("-c")
             .arg(&solr.collection)
@@ -184,7 +190,7 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
             .arg("-rf")
             .arg("2")
             .arg("-d")
-            .arg(shellexpand::tilde(&solr.path_to_solr_config).as_ref())
+            .arg(shellexpand::tilde(&env::var("SOLR_CONFIG_PATH").unwrap_or_else(|_| solr.path_to_solr_config.clone())).as_ref())
             .arg("-p")
             .arg("8983")
             .output()
@@ -206,7 +212,7 @@ pub async fn delete_collection(settings: &settings::Settings) -> Result<std::pro
             .output()
             .expect("Failed to delete the solr collection")
     } else {
-        Command::new(shellexpand::tilde(&solr.path_to_solr).as_ref())
+        Command::new(shellexpand::tilde(&env::var("SOLR_PATH").unwrap_or_else(|_| solr.path_to_solr.clone())).as_ref())
             .arg("delete")
             .arg("-c")
             .arg(&solr.collection)
