@@ -37,3 +37,15 @@ to `/etc/mysql/my.cnf`
 ## Creating and Deleting collections
 The scripts for creating and deleting a collection can be found as a comment in solrconfig.xml
 More information can be found here: https://lucene.apache.org/solr/guide/8_6/solr-tutorial.html
+
+## How to run?
+Before running set the environment variables `SOLR_PATH` and `SOLR_CONFIG_PATH` to point to solr and the solr configuration files respectively. The solr configuration files are in `config/solr`, so set SOLR_CONFIG_PATH to something like `~/querty/config/solr` (tildas are supported).
+Another option is to set the `path_to_solr` and `path_to_solr_config` variables in `config/config.toml` (The environment variables are checked first and if they are not set, the config file variables are used).
+
+To test the rust code:
+```bash
+cargo run
+```
+(make sure the mysql database and solr are running and the configuration in `config/config.toml` is correct)
+
+To test or run the website classifier server check the README in `classifier/`
