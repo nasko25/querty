@@ -288,6 +288,26 @@ impl Database {
         md
     }
 
+    // select metadatas by id
+    pub fn select_m_by_id(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Metadata>{
+        let mut md = Vec::<Metadata>::new();
+        match ids {
+            Some(ids_ref) => {
+                for m_id in ids_ref {
+                    for m in metadata::table.filter(metadata::id.eq(m_id)).load::<Metadata>(conn).expect("Error loading metadata").iter() {
+                        md.push(m.clone());
+                    }
+                }
+            },
+            None => {
+                for m in metadata.load::<Metadata>(conn).expect("Error loading all metadata").iter() {
+                    md.push(m.clone());
+                }
+            }
+        }
+        md
+    }
+
     pub fn select_el(website_opt: &Option<&Website>, conn: &MysqlConnection) -> Vec<ExternalLink>{
         let mut els = Vec::<ExternalLink>::new();
         if website_opt.is_some() {
