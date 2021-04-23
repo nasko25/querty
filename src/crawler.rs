@@ -344,19 +344,40 @@ impl<'a> Crawler<'a> {
         let mut w = Crawler::<'a>::extract_website_info(&body, &url);
         w.id = website_id;
         w.rank = website.rank;
-        let mut meta = Crawler::<'a>::extract_metadata_info(&body, None);
+        let extracted_meta = Crawler::<'a>::extract_metadata_info(&body, None);
 
         match Crawler::<'a>::website_genre(&url) {
             Ok(genre) => w.type_of_website = genre,
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
                 println!("Attempting offline classification.");
-                w.type_of_website = Crawler::website_genre_offline_classification(&w.text, &meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
+                w.type_of_website = Crawler::website_genre_offline_classification(&w.text, &extracted_meta); // use the extracted text that is saved in solr and the db instead of the raw, unprocessed website body
             }
         }
 
         let mut website = self.update_website_info(w).unwrap();
 
+        let updated_meta = self.modify_meta(extracted_meta, website_id);
+        let mut extracted_ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
+
+        let updated_ext_links = self.modify_ext_links(extracted_ext_links, website_id);
+
+        let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+        let mut website_solr = website_solr_vec.get(0).unwrap();
+
+        self.update_meta(&updated_meta, website_solr).unwrap();
+
+        website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
+        website_solr = website_solr_vec.get(0).unwrap();
+        self.update_external_links(updated_ext_links, website_solr).unwrap();
+
+        Ok(())
+    }
+
+    // modify then return the given `meta` vector with updated metadata
+    fn modify_meta(&self, extracted_meta: Vec<Metadata>, website_id: Option<u32>) -> Vec<Metadata> {
+        let conn = self.conn;
+        let mut updated_meta = extracted_meta;
         // TODO very ugly code
         // refactor!
         // TODO delete the old meta and save the updated meta because number of meta tags in a
@@ -372,18 +393,25 @@ impl<'a> Crawler<'a> {
         // need to get metadata's ids from the db in order to update them
         let metas_from_db = Database::select_m(&Some(Database::select_w(&Some(vec![website_id.unwrap()]), &conn)), &conn);
         // TODO for_each() vs for ... in ... {}
-        meta.iter_mut().for_each(|m| {
+        // TODO use .map() instead of for_each() with mutable variable?
+        updated_meta.iter_mut().for_each(|m| {
             m.website_id = website_id;
             m.id = metas_from_db[index].id;
             index += 1;
             println!("Meta id updated: {:?}", m.id);
         });
-        let mut ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
+        updated_meta
+    }
 
-        index = 0;
+    fn modify_ext_links(&self, extracted_ext_links: Vec<(ExternalLink, WebsiteRefExtLink)>, website_id: Option<u32>) -> Vec<(ExternalLink, WebsiteRefExtLink)> {
+        let conn = self.conn;
+        let mut index = 0;
+        let mut updated_ext_links = extracted_ext_links;
         // let external_links_from_db = Database::select_el(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
         let webref_from_db = Database::select_webref(&Some(&Database::select_w(&Some(vec![website_id.unwrap()]), &conn)[0]), &conn);
-        ext_links.iter_mut().for_each( |e_l| {
+
+        // TODO use .map() instead of for_each() with mutable variable?
+        updated_ext_links.iter_mut().for_each( |e_l| {
             // can get the id of this external_link from website_ref_ext_links
             // that was fetched from the db
             // no need to also fetch the external links from the db for the given website
@@ -391,15 +419,37 @@ impl<'a> Crawler<'a> {
             e_l.1.id = webref_from_db[index].id;
             index += 1;
         });
+        updated_ext_links
+    }
 
+    // public wrapper funciton that is used for testing the method calls in the internal update_website() function
+    // it is temporary for now, as it is not really needed
+    pub fn test_website_update(&self, website: &WebsiteSolr) -> Result<(), Box<dyn Error>> {
+        // TODO
+        let settings = self.settings;
+        let website_id = website.id;
         let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         let mut website_solr = website_solr_vec.get(0).unwrap();
 
-        self.update_meta(&meta, website_solr).unwrap();
+        match &website.metadata {
+            None => self.update_meta(&self.modify_meta(Vec::new(), website.id), website_solr).unwrap(),
+            Some(meta) => {
+                self.update_meta(&self.modify_meta(meta.into_iter().map(|m| Metadata { id: None, metadata_text: m.to_string(), website_id: website_id }).collect(), website_id), website_solr).unwrap()
+            }
+        };
 
         website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
         website_solr = website_solr_vec.get(0).unwrap();
-        self.update_external_links(ext_links, website_solr).unwrap();
+
+        match &website.external_links {
+            None => self.update_external_links(self.modify_ext_links(Vec::new(), website_id), website_solr).unwrap(),
+            Some(ext_links) => self.update_external_links(self.modify_ext_links(ext_links.into_iter().map(|e_l| {
+                (
+                    ExternalLink {id: None, url: e_l.to_string()},
+                    WebsiteRefExtLink {id: None, website_id: website_id, ext_link_id: None}     // TODO ext_link_id: None?
+                 )
+            }).collect(), website_id), website_solr).unwrap()
+        };
 
         Ok(())
     }

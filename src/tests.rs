@@ -3,6 +3,7 @@ use crate::settings;
 use crate::solr;
 
 use crate::crawler::test_crawler;
+use crate::crawler::Crawler;
 
 use crate::db::Website;
 use crate::db::User;
@@ -23,6 +24,7 @@ use std::error::Error;
 use diesel::prelude::*;
 // -------------------------------------------------
 
+// TODO split the function into multiple smaller functions
 pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
     // reset the state of the database before executing the tests
     reset_db_state(&conn, &settings);
@@ -133,7 +135,6 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // assert that the meta tags with ids 1, 2, 3 were deleted from the database
     assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3 ]), conn).len(), 0);
     assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3, 4 ]), conn).len(), 1);
-    //std::process::exit(1);
 
     del_result = db::Database::delete_m(&vec![0, 1, 4], conn);
     assert!(del_result.is_ok());
@@ -142,6 +143,22 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // assert that the meta tag with id 4 is no longer present in the database
     assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3, 4 ]), conn).len(), 0);
 
+
+    // db::Database::select_w(&None, conn).get(0).unwrap().id       // it is = 1
+    // print!("{:?}", db::Database::select_m(&Some(vec![ Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ]), conn));
+
+    // TODO test update_website() with different metadata to illustrate the bug
+    // create a Crawler struct
+    let crawler = Crawler {
+        conn: &conn,
+        settings: &settings
+    };
+    print!("{:?}", 
+    crawler.test_website_update(&solr::WebsiteSolr { id: Some(1), base_url: "updated url".to_string(), external_links: Some(vec!["example.com".to_string(), "updated_url.asdf".to_string()]), metadata: Some(vec!["asdf".to_string(), "updated meta".to_string(), "asdfadsf".to_string()]), rank: -2.0_f64, text: "this is the updated website text".to_string(), title: "Updated title 2.0".to_string(), type_of_website: "updated".to_string(), url: "updated_url.new".to_string()})
+    // ...
+    );
+
+    std::process::exit(1);
     Ok(())
 }
 
