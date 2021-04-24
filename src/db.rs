@@ -389,10 +389,18 @@ impl Database {
         }
     }
 
+    // delete meta tags from the database, given the website they are linked to
+    // the function returns a Result with the number of deleted meta tags, or an error if a diesel
+    // error occurs
+    pub fn delete_m(website_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        let deleted_meta = diesel::delete(metadata.filter(metadata::website_id.eq_any(website_ids))).execute(conn)?;
+        Ok(deleted_meta)
+    }
+
     // delete meta tags from the database, given a vector of their ids
     // the function returns a Result with the number of deleted meta tags, or an error if a diesel
     // error occurs
-    pub fn delete_m(meta_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+    pub fn delete_m_by_id(meta_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
         let deleted_meta = diesel::delete(metadata.filter(metadata::id.eq_any(meta_ids))).execute(conn)?;
         Ok(deleted_meta)
     }

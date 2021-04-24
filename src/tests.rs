@@ -127,7 +127,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // reset_db_state(&conn, &settings);
 
     // delete metatags from the database
-    let mut del_result = db::Database::delete_m(&vec![1, 2, 3], conn);
+    let mut del_result = db::Database::delete_m_by_id(&vec![1, 2, 3], conn);
     assert!(del_result.is_ok());
     // 3 entries should be deleted from the database
     assert_eq!(del_result.unwrap(), 3);
@@ -136,7 +136,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3 ]), conn).len(), 0);
     assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3, 4 ]), conn).len(), 1);
 
-    del_result = db::Database::delete_m(&vec![0, 1, 4], conn);
+    del_result = db::Database::delete_m_by_id(&vec![0, 1, 4], conn);
     assert!(del_result.is_ok());
     // only 1 entry should be deleted from the database
     assert_eq!(del_result.unwrap(), 1);
@@ -161,7 +161,10 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // there should be only 2 external link entries after the update
     assert_eq!(db::Database::select_el(&Some( &Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ), conn).len(), 2, "Number of external link entries in the database is wrong after the update.");
 
+    // TODO remove
     std::process::exit(1);
+
+    // TODO test delete_m()
     Ok(())
 }
 
