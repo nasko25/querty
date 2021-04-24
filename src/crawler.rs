@@ -378,27 +378,10 @@ impl<'a> Crawler<'a> {
     fn modify_meta(&self, extracted_meta: Vec<Metadata>, website_id: Option<u32>) -> Vec<Metadata> {
         let conn = self.conn;
         let mut updated_meta = extracted_meta;
-        // TODO very ugly code
-        // refactor!
-        // TODO delete the old meta and save the updated meta because number of meta tags in a
-        // website is not guaranteed to stay the same
-        // OR
-        // update from 0 to meta.len() and
-        // if meta.len() > metas_from_db.len() add new metas
-        // if meta.len() < metas_from_db.len() remove the last (metas_from_db.len() - meta.len())
-        // entries from the db and solr
-        // if meta.len() == metas_from_db.len() then don't do anything
 
-        let mut index = 0;
-        // need to get metadata's ids from the db in order to update them
-        let metas_from_db = Database::select_m(&Some(Database::select_w(&Some(vec![website_id.unwrap()]), &conn)), &conn);
-        // TODO for_each() vs for ... in ... {}
-        // TODO use .map() instead of for_each() with mutable variable?
-        updated_meta.iter_mut().for_each(|m| {
-            m.website_id = website_id;
-            m.id = metas_from_db[index].id;
-            index += 1;
-            println!("Meta id updated: {:?}", m.id);
+        updated_meta.iter().map(|m| {
+            println!("Updating meta with id: {:?}", m.id);
+            Metadata {id: None, website_id: website_id, metadata_text: m.metadata_text.clone() }
         });
         updated_meta
     }
@@ -475,9 +458,12 @@ impl<'a> Crawler<'a> {
         let settings = self.settings;
         let mut m;
         let mut metadata_solr = Vec::new();
+        // first delete the metadata associated with the given website, so that after updating
+        // them, older metadata enties will not be kept in the database
+        crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ], conn);
         for metadata in metadata_vec {
             m = crate::db::DB::Metadata(metadata.clone());
-            if let crate::db::DB::Metadata(meta) = crate::db::Database::update(&m, conn).unwrap() {
+            if let crate::db::DB::Metadata(meta) = crate::db::Database::insert(&m, conn).unwrap() {
                 println!("meta id: {:?}", meta.id);
                 metadata_solr.push(meta);
             }
