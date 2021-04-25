@@ -168,8 +168,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     // there should be only 2 external link entries after the update
     assert_eq!(db::Database::select_el(&Some( &Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ), conn).len(), 2, "Number of external link entries in the database is wrong after the update.");
 
-    // TODO remove
-    std::process::exit(1);
+    //std::process::exit(1);
 
     // TODO test delete_m()
     Ok(())

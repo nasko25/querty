@@ -377,20 +377,17 @@ impl<'a> Crawler<'a> {
     // modify then return the given `meta` vector with updated metadata
     fn modify_meta(&self, extracted_meta: Vec<Metadata>, website_id: Option<u32>) -> Vec<Metadata> {
         let conn = self.conn;
-        let mut updated_meta = extracted_meta;
 
-        updated_meta.iter().map(|m| {
+        extracted_meta.iter().map(|m| {
             println!("Updating meta with id: {:?}", m.id);
             Metadata {id: None, website_id: website_id, metadata_text: m.metadata_text.clone() }
-        });
-        updated_meta
+        }).collect()
     }
 
     fn modify_ext_links(&self, extracted_ext_links: Vec<(ExternalLink, WebsiteRefExtLink)>, website_id: Option<u32>) -> Vec<(ExternalLink, WebsiteRefExtLink)> {
         let conn = self.conn;
-        let mut updated_ext_links = extracted_ext_links;
 
-        updated_ext_links.iter().map( |e_l| {
+        extracted_ext_links.iter().map( |e_l| {
             // can get the id of this external_link from website_ref_ext_links
             // that was fetched from the db
             // no need to also fetch the external links from the db for the given website
@@ -398,8 +395,7 @@ impl<'a> Crawler<'a> {
                 ExternalLink { id: e_l.0.id, url: e_l.0.url.clone() },
                 WebsiteRefExtLink { id: None, website_id: e_l.1.website_id, ext_link_id: e_l.1.ext_link_id }
             )
-        });
-        updated_ext_links
+        }).collect()
     }
 
     // public wrapper funciton that is used for testing the method calls in the internal update_website() function

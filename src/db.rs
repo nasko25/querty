@@ -138,7 +138,7 @@ impl Database {
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 metadata TEXT,
                 website_id INT UNSIGNED,
-                FOREIGN KEY (website_id) REFERENCES website(id)
+                FOREIGN KEY (website_id) REFERENCES website(id) ON DELETE CASCADE
             )
         ").execute(conn) {
             Ok(r_code)  => r_code,
