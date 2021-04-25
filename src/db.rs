@@ -404,4 +404,17 @@ impl Database {
         let deleted_meta = diesel::delete(metadata.filter(metadata::id.eq_any(meta_ids))).execute(conn)?;
         Ok(deleted_meta)
     }
+
+    // delete external links from the database, given the website they are linked to
+    // the function returns a Result with the number of deleted external links, or an error if a diesel
+    // error occurs
+    pub fn delete_el(website_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        // get the external links from the database
+        // let ext_links = diesel::select
+        diesel::delete(external_links.filter(external_links::id.eq_any(website_ref_ext_links.filter(website_ref_ext_links::website_id.eq_any(website_ids)).select(website_ref_ext_links::ext_link_id)))).execute(conn)?;
+
+        // TODO this maybe is not needed because default should be DELETE CASCADE?
+        let deleted_web_ref_el = diesel::delete(website_ref_ext_links.filter(website_ref_ext_links::website_id.eq_any(website_ids))).execute(conn)?;
+        Ok(deleted_web_ref_el)
+    }
 }
