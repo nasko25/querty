@@ -110,6 +110,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     println!("External Link should be inserted: {:?}", e_l_inserted);
     assert!(e_l_inserted.is_ok(), "External links were not inserted in the database.");
 
+    // TODO assert that ext_link_id should be 9 (it should be the id of e_l ^)
     let w_r_e_l = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(2), ext_link_id: Some(9)});
     let w_r_e_l_inserted = db::Database::insert(&w_r_e_l, conn);
     println!("Website reference external link should be inserted: {:?}", w_r_e_l_inserted);
