@@ -405,7 +405,6 @@ impl<'a> Crawler<'a> {
     // public wrapper funciton that is used for testing the method calls in the internal update_website() function
     // it is temporary for now, as it is not really needed
     pub fn test_website_update(&self, website: &WebsiteSolr) -> Result<(), Box<dyn Error>> {
-        // TODO
         let settings = self.settings;
         let website_id = website.id;
         let mut website_solr_vec = req(&settings, format!("id:\"{:?}\"", website_id.unwrap())).unwrap();
@@ -426,7 +425,7 @@ impl<'a> Crawler<'a> {
             Some(ext_links) => self.update_external_links(self.modify_ext_links(ext_links.into_iter().map(|e_l| {
                 (
                     ExternalLink {id: None, url: e_l.to_string()},
-                    WebsiteRefExtLink {id: None, website_id: website_id, ext_link_id: None}     // TODO ext_link_id: None?
+                    WebsiteRefExtLink {id: None, website_id: website_id, ext_link_id: None}
                  )
             }).collect(), website_id), website_solr).unwrap()
         };
@@ -453,24 +452,11 @@ impl<'a> Crawler<'a> {
     fn update_meta(&self, metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
         let conn = self.conn;
         let settings = self.settings;
-        //let mut m;
-        //let mut metadata_solr = Vec::new();
+
         // first delete the metadata associated with the given website, so that after updating
         // them, older metadata enties will not be kept in the database
         crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ], conn);
         self.save_metadata(metadata_vec, website_to_update)
-        //for metadata in metadata_vec {
-        //    m = crate::db::DB::Metadata(metadata.clone());
-        //    if let crate::db::DB::Metadata(meta) = crate::db::Database::insert(&m, conn).unwrap() {
-        //        println!("meta id: {:?}", meta.id);
-        //        metadata_solr.push(meta);
-        //    }
-        //    else {
-        //        throw_new!("Could not update metadata entry in the database");
-        //    }
-        //}
-        //update_metadata(settings, &metadata_solr, website_to_update);
-        //Ok(metadata_solr)
     }
 
     // TODO probably prefix the update (and possibly the save functions) in this file with something like
@@ -478,31 +464,10 @@ impl<'a> Crawler<'a> {
     fn update_external_links(&self, external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
         let conn = self.conn;
         let settings = self.settings;
-        //let mut el;
-        //let mut web_el;
-        //let mut external_links_solr = Vec::new();
-        // TODO delete and save external_links (like update_meta())
+
+        // delete and save external_links (like update_meta())
         crate::db::Database::delete_el(&vec![ website_to_update.id.unwrap() ], conn);
         self.save_external_links(external_links, website_to_update)
-        //for mut external_link in external_links {
-        //    el = crate::db::DB::ExternalLink(external_link.0);
-        //    if let crate::db::DB::ExternalLink(ext_link) = crate::db::Database::update(&el, conn).unwrap() {
-        //        external_link.1.ext_link_id = ext_link.id;
-        //        web_el = crate::db::DB::WebsiteRefExtLink(external_link.1);
-        //        if let crate::db::DB::WebsiteRefExtLink(webref_ext_link) = crate::db::Database::update(&web_el, conn).unwrap() {
-        //            println!("updated external_link id: {:?}; updated website ref external link id: {:?}; website ref external link link id (should be = to external link id): {:?}", ext_link.id, webref_ext_link.id, webref_ext_link.ext_link_id);
-        //            external_links_solr.push( (ext_link, webref_ext_link) );
-        //        }
-        //        else {
-        //            throw_new!("Could not update website ref external link in the database.");
-        //        }
-        //    }
-        //    else {
-        //        throw_new!("Could not update external link in the database.");
-        //    }
-        //}
-        //update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
-        //Ok(external_links_solr)
     }
 
     // TODO make async
