@@ -170,7 +170,25 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
 
     //std::process::exit(1);
 
-    // TODO test delete_m()
+    // test delete_m()
+    // first try to delete metadatas that are linked to website with id equal to 2 (there are no
+    // such meta tags in the database)
+    del_result = db::Database::delete_m(&vec![ 2 ], conn);
+    assert!(del_result.is_ok());
+    assert_eq!(del_result.unwrap(), 0, "There should be no metadata associated with the website with id = 2.");
+
+    // delete all metadatas linked to the website with id equal to 1
+    // first get them from the db to assert they were deleted:
+    let metadatas_in_db = db::Database::select_m(&Some(vec![ Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ]), conn);
+
+    // this is not necessarily true; it depends on the website with id 1;
+    // the meta tags for that website are updated somewhere above, so it should for now always have 3 meta tag entries
+    assert!(metadatas_in_db.len() > 0, "There should be some metadata associated with the website with id equal to 1.");
+    // actually delete them
+    del_result = db::Database::delete_m(&vec![ 1 ], conn);
+    assert!(del_result.is_ok());
+    assert_eq!(del_result.unwrap(), metadatas_in_db.len(), "The number of deleted metadata entries should be the same as the number of metadata entries that were associated with the website with id equal to 1 before.");
+
     Ok(())
 }
 
