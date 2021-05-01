@@ -3,6 +3,7 @@ use crate::settings;
 use crate::solr;
 
 use crate::crawler::test_crawler;
+use crate::crawler::Crawler;
 
 use crate::db::Website;
 use crate::db::User;
@@ -23,6 +24,7 @@ use std::error::Error;
 use diesel::prelude::*;
 // -------------------------------------------------
 
+// TODO split the function into multiple smaller functions
 pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
     // reset the state of the database before executing the tests
     reset_db_state(&conn, &settings);
@@ -108,7 +110,14 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     println!("External Link should be inserted: {:?}", e_l_inserted);
     assert!(e_l_inserted.is_ok(), "External links were not inserted in the database.");
 
-    let w_r_e_l = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(2), ext_link_id: Some(2)});
+    let e_l_id = match e_l_inserted {
+        Ok(DB::ExternalLink(el)) => el.id,
+        _ => panic!("e_l_inserted has an unexpected type")
+    };
+
+    assert_eq!(e_l_id.unwrap(), 9, "This was just for testing. There is no need the id of the inserted external link should be 9. This assertion can be safely removed.");
+
+    let w_r_e_l = DB::WebsiteRefExtLink(WebsiteRefExtLink {id: None, website_id: Some(2), ext_link_id: e_l_id});
     let w_r_e_l_inserted = db::Database::insert(&w_r_e_l, conn);
     println!("Website reference external link should be inserted: {:?}", w_r_e_l_inserted);
     match w_r_e_l {
@@ -123,6 +132,62 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
 
     // reset the state of the db and solr after the tests are done
     // reset_db_state(&conn, &settings);
+
+    // delete metatags from the database
+    let mut del_result = db::Database::delete_m_by_id(&vec![1, 2, 3], conn);
+    assert!(del_result.is_ok());
+    // 3 entries should be deleted from the database
+    assert_eq!(del_result.unwrap(), 3);
+
+    // assert that the meta tags with ids 1, 2, 3 were deleted from the database
+    assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3 ]), conn).len(), 0);
+    assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3, 4 ]), conn).len(), 1);
+
+    del_result = db::Database::delete_m_by_id(&vec![0, 1, 4], conn);
+    assert!(del_result.is_ok());
+    // only 1 entry should be deleted from the database
+    assert_eq!(del_result.unwrap(), 1);
+    // assert that the meta tag with id 4 is no longer present in the database
+    assert_eq!(db::Database::select_m_by_id(&Some(vec![ 1, 2, 3, 4 ]), conn).len(), 0);
+
+
+    // db::Database::select_w(&None, conn).get(0).unwrap().id       // it is = 1
+    // print!("{:?}", db::Database::select_m(&Some(vec![ Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ]), conn));
+
+    // create a Crawler struct
+    let crawler = Crawler {
+        conn: &conn,
+        settings: &settings
+    };
+    // test the update website functionality (update metadata and external links as well)
+    assert!(crawler.test_website_update(&solr::WebsiteSolr { id: Some(1), base_url: "updated url".to_string(), external_links: Some(vec!["example.com".to_string(), "updated_url.asdf".to_string()]), metadata: Some(vec!["asdf".to_string(), "updated meta".to_string(), "asdfadsf".to_string()]), rank: -2.0_f64, text: "this is the updated website text".to_string(), title: "Updated title 2.0".to_string(), type_of_website: "updated".to_string(), url: "updated_url.new".to_string()}).is_ok(), "crawler.test_website_update() for a website with a valid id should return Ok");
+
+    // there should be only 3 metadata entries after the update
+    assert_eq!(db::Database::select_m(&Some(vec![ Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ]), conn).len(), 3, "Number of metadata entries in the database is wrong after the update.");
+
+    // there should be only 2 external link entries after the update
+    assert_eq!(db::Database::select_el(&Some( &Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ), conn).len(), 2, "Number of external link entries in the database is wrong after the update.");
+
+    //std::process::exit(1);
+
+    // test delete_m()
+    // first try to delete metadatas that are linked to website with id equal to 2 (there are no
+    // such meta tags in the database)
+    del_result = db::Database::delete_m(&vec![ 2 ], conn);
+    assert!(del_result.is_ok());
+    assert_eq!(del_result.unwrap(), 0, "There should be no metadata associated with the website with id = 2.");
+
+    // delete all metadatas linked to the website with id equal to 1
+    // first get them from the db to assert they were deleted:
+    let metadatas_in_db = db::Database::select_m(&Some(vec![ Website{ id: Some(1), base_url: "".to_string(), rank: 0.0, text: "".to_string(), title: "".to_string(), type_of_website: "".to_string(), url: "".to_string() } ]), conn);
+
+    // this is not necessarily true; it depends on the website with id 1;
+    // the meta tags for that website are updated somewhere above, so it should for now always have 3 meta tag entries
+    assert!(metadatas_in_db.len() > 0, "There should be some metadata associated with the website with id equal to 1.");
+    // actually delete them
+    del_result = db::Database::delete_m(&vec![ 1 ], conn);
+    assert!(del_result.is_ok());
+    assert_eq!(del_result.unwrap(), metadatas_in_db.len(), "The number of deleted metadata entries should be the same as the number of metadata entries that were associated with the website with id equal to 1 before.");
 
     Ok(())
 }

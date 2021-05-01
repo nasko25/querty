@@ -138,7 +138,7 @@ impl Database {
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 metadata TEXT,
                 website_id INT UNSIGNED,
-                FOREIGN KEY (website_id) REFERENCES website(id)
+                FOREIGN KEY (website_id) REFERENCES website(id) ON DELETE CASCADE
             )
         ").execute(conn) {
             Ok(r_code)  => r_code,
@@ -175,8 +175,6 @@ impl Database {
     // drop all tables in the database
     // useful in development when changing the db or solr
     // that will create an inconsistent state
-    // TODO maybe add a function that deletes everyting from solr as well
-        // and call them both in a clear_databases() function; probably in main
     pub fn drop_tables(conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         return sql_query("
             DROP TABLE IF EXISTS users, metadata, website_ref_ext_links, external_links, website"
@@ -248,6 +246,9 @@ impl Database {
 
     // select website(s)
     // TODO return Result<>
+    // TODO making a query to the db for every website, instead of querying once for all websites
+    // seems suboptimal. There should be a way to get all websites by giving all their ids to
+    // website.filter(). Same for the functions below.
     pub fn select_w(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Website> {
         let mut websites = Vec::<Website>::new();
         match ids {
@@ -274,6 +275,26 @@ impl Database {
             Some(ws) => {
                 for w in ws {
                     for m in metadata::table.filter(metadata::website_id.eq(w.id)).load::<Metadata>(conn).expect("Error loading metadata").iter() {
+                        md.push(m.clone());
+                    }
+                }
+            },
+            None => {
+                for m in metadata.load::<Metadata>(conn).expect("Error loading all metadata").iter() {
+                    md.push(m.clone());
+                }
+            }
+        }
+        md
+    }
+
+    // select metadatas by id
+    pub fn select_m_by_id(ids: &Option<Vec<u32>>, conn: &MysqlConnection) -> Vec<Metadata>{
+        let mut md = Vec::<Metadata>::new();
+        match ids {
+            Some(ids_ref) => {
+                for m_id in ids_ref {
+                    for m in metadata::table.filter(metadata::id.eq(m_id)).load::<Metadata>(conn).expect("Error loading metadata").iter() {
                         md.push(m.clone());
                     }
                 }
@@ -366,5 +387,34 @@ impl Database {
                 Ok(DB::WebsiteRefExtLink(updated_row))
             }
         }
+    }
+
+    // delete meta tags from the database, given the website they are linked to
+    // the function returns a Result with the number of deleted meta tags, or an error if a diesel
+    // error occurs
+    pub fn delete_m(website_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        let deleted_meta = diesel::delete(metadata.filter(metadata::website_id.eq_any(website_ids))).execute(conn)?;
+        Ok(deleted_meta)
+    }
+
+    // delete meta tags from the database, given a vector of their ids
+    // the function returns a Result with the number of deleted meta tags, or an error if a diesel
+    // error occurs
+    pub fn delete_m_by_id(meta_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        let deleted_meta = diesel::delete(metadata.filter(metadata::id.eq_any(meta_ids))).execute(conn)?;
+        Ok(deleted_meta)
+    }
+
+    // delete external links from the database, given the website they are linked to
+    // the function returns a Result with the number of deleted external links, or an error if a diesel
+    // error occurs
+    pub fn delete_el(website_ids: &Vec<u32>, conn: &MysqlConnection) -> Result<usize, diesel::result::Error>{
+        // get the external links from the database
+        // let ext_links = diesel::select
+        diesel::delete(external_links.filter(external_links::id.eq_any(website_ref_ext_links.filter(website_ref_ext_links::website_id.eq_any(website_ids)).select(website_ref_ext_links::ext_link_id)))).execute(conn)?;
+
+        // TODO this maybe is not needed because default should be DELETE CASCADE?
+        let deleted_web_ref_el = diesel::delete(website_ref_ext_links.filter(website_ref_ext_links::website_id.eq_any(website_ids))).execute(conn)?;
+        Ok(deleted_web_ref_el)
     }
 }
