@@ -52,7 +52,7 @@ fn main() {
         conn: &conn,
         settings: &settings
     };
-    crawler.analyse_website(&url, &websites_saved);
+    crawler.analyse_website(&url, &websites_saved).unwrap();
     let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
 
     match updated_rank {
@@ -103,8 +103,14 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
 	else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && discriminant(&react_type) == discriminant(&React::Upvote{ val: 0.0 })) || (websites_saved[0].rank >= -9.0 && discriminant(&react_type) == discriminant(&React::Downvote {val: 0.0}))) {
         println!("{:?}'s old rank: {}", websites_saved[0].id, websites_saved[0].rank);
         websites_saved[0].rank += match react_type {
-            React::Upvote { val } => 1.0,
-            React::Downvote { val } => -1.0,
+            React::Upvote { val } => {
+                println!("Upvote val: {}", val);
+                1.0
+            },
+            React::Downvote { val } => {
+                println!("Downvote val: {}", val);
+                -1.0
+            },
         };
     }
     else if websites_saved.len() != 1 {
@@ -118,7 +124,7 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
         conn,
         settings
     };
-    crawler.analyse_website(&url, &websites_saved);
+    crawler.analyse_website(&url, &websites_saved).unwrap();
 
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });

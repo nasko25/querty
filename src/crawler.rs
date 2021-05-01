@@ -10,7 +10,6 @@ use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
 use crate::solr::req;
 use crate::db::DB;
-use crate::db::Database;
 use crate::db::Website;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
@@ -18,10 +17,9 @@ use crate::db::WebsiteRefExtLink;
 use crate::settings::Settings;
 
 extern crate xmlrpc;
-use xmlrpc::{Request, Value};
+use xmlrpc::Request;
 use std::error::Error;
 
-use pyo3::prelude::*;
 use url::Url;
 use publicsuffix::List;
 
@@ -34,14 +32,12 @@ impl<'a> Crawler<'a> {
 
     pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error> {
         // let body = fetch_url(url).unwrap();
-        let conn = self.conn;
-        let settings = self.settings;
-        self.rank_from_links(url);
+        self.rank_from_links(url).unwrap();
 
         // if it is not empty, update the website(s) in it
         if websites_saved.is_empty() {
             // save_website_info(&body, &url, &conn, &settings);
-            self.save_website(&url);
+            self.save_website(&url).unwrap();
         }
         else {
             // there should be only one website in the vector, because it should have been
@@ -49,7 +45,7 @@ impl<'a> Crawler<'a> {
             assert_eq!(websites_saved.len(), 1, "There are {} websites returned by req()", websites_saved.len());
             // select_w first to get a Website, and then db::update
             // also update metadata and external links connected to that website
-            self.update_website(&websites_saved[0]);
+            self.update_website(&websites_saved[0]).unwrap();
         }
 
         Ok(())
@@ -68,7 +64,7 @@ impl<'a> Crawler<'a> {
     }
 
     // returns the rank calculated from all websites that link to the given url
-    fn rank_from_links(&self, url: &str) -> Result<f64, Box<Error>> {
+    fn rank_from_links(&self, url: &str) -> Result<f64, Box<dyn Error>> {
         let settings = self.settings;
         let base_url = match Crawler::<'a>::extract_base_url(url) {
             Ok(base_url) => base_url,
@@ -203,7 +199,6 @@ impl<'a> Crawler<'a> {
     // external links
     fn save_website(&self, url: &str) -> Result<(), Box<dyn Error>> {
         let body = Crawler::fetch_url(url).unwrap();
-        let conn = self.conn;
         let settings = self.settings;
 
         let mut w = Crawler::extract_website_info(&body, &url);
@@ -218,7 +213,7 @@ impl<'a> Crawler<'a> {
             }
         }
 
-        let mut website = self.save_website_info(w).unwrap();
+        let website = self.save_website_info(w).unwrap();
 
         // should get the id from the save_website_info() function
         let website_id = website.id;
@@ -273,7 +268,7 @@ impl<'a> Crawler<'a> {
         let w = crate::db::DB::Website (website_to_insert);
         if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
             let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
-            crate::solr::insert(settings, &w_solr);
+            crate::solr::insert(settings, &w_solr).unwrap();
             println!("{:?}", website.id);
             Ok(website.clone())
         }
@@ -298,7 +293,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert metadata in the database");
             }
         }
-        update_metadata(settings, &metadata_solr, website_to_update);
+        update_metadata(settings, &metadata_solr, website_to_update).unwrap();
         Ok(metadata_solr)
     }
 
@@ -325,7 +320,7 @@ impl<'a> Crawler<'a> {
                 throw_new!("Could not insert external link in the database.");
             }
         }
-        update_ext_links(settings, &external_links_solr.iter().map(|(e_l, w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update);
+        update_ext_links(settings, &external_links_solr.iter().map(|(e_l, _w_ref_e_l)| e_l.clone()).collect::<Vec<ExternalLink>>(), website_to_update).unwrap();
         Ok(external_links_solr)
     }
 
@@ -333,7 +328,6 @@ impl<'a> Crawler<'a> {
     // external links
     // like save_website() but for updating
     fn update_website(&self, website: &WebsiteSolr) -> Result<(), Box<dyn Error>> {
-        let conn = self.conn;
         let settings = self.settings;
         // TODO too similar to save_website()
         // extract common code
@@ -355,10 +349,10 @@ impl<'a> Crawler<'a> {
             }
         }
 
-        let mut website = self.update_website_info(w).unwrap();
+        self.update_website_info(w).unwrap();
 
         let updated_meta = self.modify_meta(extracted_meta, website_id);
-        let mut extracted_ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
+        let extracted_ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
 
         let updated_ext_links = self.modify_ext_links(extracted_ext_links, website_id);
 
@@ -376,8 +370,6 @@ impl<'a> Crawler<'a> {
 
     // modify then return the given `meta` vector with updated metadata
     fn modify_meta(&self, extracted_meta: Vec<Metadata>, website_id: Option<u32>) -> Vec<Metadata> {
-        let conn = self.conn;
-
         extracted_meta.iter().map(|m| {
             println!("Updating meta with id: {:?}", m.id);
             Metadata {id: None, website_id: website_id, metadata_text: m.metadata_text.clone() }
@@ -385,20 +377,18 @@ impl<'a> Crawler<'a> {
     }
 
     fn modify_ext_links(&self, extracted_ext_links: Vec<(ExternalLink, WebsiteRefExtLink)>, website_id: Option<u32>) -> Vec<(ExternalLink, WebsiteRefExtLink)> {
-        let conn = self.conn;
-
         extracted_ext_links.iter().map( |e_l| {
             // can get the id of this external_link from website_ref_ext_links
             // that was fetched from the db
             // no need to also fetch the external links from the db for the given website
             (
                 ExternalLink { id: e_l.0.id, url: e_l.0.url.clone() },
-                WebsiteRefExtLink { id: None, website_id: e_l.1.website_id, ext_link_id: e_l.1.ext_link_id }
+                WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: e_l.1.ext_link_id }
             )
         }).collect()
     }
 
-    // public wrapper funciton that is used for testing the method calls in the internal update_website() function
+    // public wrapper function that is used for testing the method calls in the internal update_website() function
     // it is temporary for now, as it is not really needed
     pub fn test_website_update(&self, website: &WebsiteSolr) -> Result<(), Box<dyn Error>> {
         let settings = self.settings;
@@ -436,7 +426,7 @@ impl<'a> Crawler<'a> {
         // Then update this function
         if let DB::Website(website) = crate::db::Database::update(&DB::Website(website_to_update), conn).unwrap() {
             let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
-            crate::solr::update(settings, &w_solr);
+            crate::solr::update(settings, &w_solr).unwrap();
             println!("Updated website id: {:?}", website.id);
             Ok(website.clone())
         }
@@ -447,11 +437,10 @@ impl<'a> Crawler<'a> {
 
     fn update_meta(&self, metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
         let conn = self.conn;
-        let settings = self.settings;
 
         // first delete the metadata associated with the given website, so that after updating
         // them, older metadata enties will not be kept in the database
-        crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ], conn);
+        crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ], conn).unwrap();
         self.save_metadata(metadata_vec, website_to_update)
     }
 
@@ -459,10 +448,9 @@ impl<'a> Crawler<'a> {
     // "crawler_" to differentiate them from the solr.rs functions with the same names
     fn update_external_links(&self, external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
         let conn = self.conn;
-        let settings = self.settings;
 
         // delete and save external_links (like update_meta())
-        crate::db::Database::delete_el(&vec![ website_to_update.id.unwrap() ], conn);
+        crate::db::Database::delete_el(&vec![ website_to_update.id.unwrap() ], conn).unwrap();
         self.save_external_links(external_links, website_to_update)
     }
 
@@ -488,7 +476,7 @@ impl<'a> Crawler<'a> {
     //      scientificamerican: "article" (if it is a url of some article) or "news" or "articles" (if it is just the base url or contacts page, etc.)
     // and statically assign the type based on that
     // if the website is not from the most popular ones: classify it using the classifier or again statically
-    fn website_genre(url: &str) -> Result<String, Box<Error>> {
+    fn website_genre(url: &str) -> Result<String, Box<dyn Error>> {
         let classify_request = Request::new("classify").arg(url);
         let classify_result = classify_request.call_url("http://127.0.0.1:9999/classifier");
         // println!("Result of classification: {:?}", classify_result.unwrap());
@@ -608,7 +596,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
     // maybe don't overwrite them to null?
     // (or fetch the old metadata and external_links and include them when updating the website in
     // solr
-    crawler.update_website_info(website);
+    crawler.update_website_info(website).unwrap();
 
     // again need to fetch the updated website from solr before updating the external_links
     // otherwise it would set the metadata to the old metadata (it is updated above)
@@ -617,7 +605,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
 
 
     metadata_to_update[0].metadata_text = "CHANGED META TEST".to_string();
-    crawler.update_meta(&metadata_to_update, website_solr);
+    crawler.update_meta(&metadata_to_update, website_solr).unwrap();
 
     // again need to fetch the updated website from solr before updating the external_links
     // otherwise it would set the metadata to the old metadata (it is updated above)
@@ -625,7 +613,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
     website_solr = website_solr_vec.get(0).unwrap();
 
     external_links_to_update.get_mut(0).map(|link_to_update| link_to_update.0.url = "CHANGED URL".to_string());
-    crawler.update_external_links(external_links_to_update, website_solr);
+    crawler.update_external_links(external_links_to_update, website_solr).unwrap();
 
     assert_ne!(Crawler::extract_base_url(url).unwrap(), url, "Extracting the base of the url returns url.");
 

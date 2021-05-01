@@ -181,7 +181,8 @@ impl Database {
         ).execute(conn);
     }
 
-    pub fn insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+    // TODO are these functions useful?
+    pub fn _insert_w(w: &Website, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         println!("{:?}", website.order(website::id.desc()).first::<Website>(conn));
         match insert_into(website).values(w).execute(conn) {
             Ok(r_code) => return Ok(r_code),
@@ -189,7 +190,7 @@ impl Database {
         }
     }
 
-    pub fn insert_u(u: &User, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
+    pub fn _insert_u(u: &User, conn: &MysqlConnection) -> Result<usize, diesel::result::Error> {
         match insert_into(users).values(u).execute(conn) {
             Ok(r_code) => return Ok(r_code),
             Err(err) => return Err(err),
@@ -321,7 +322,7 @@ impl Database {
         els
     }
 
-    pub fn select_webref(website_opt: &Option<&Website>, conn: &MysqlConnection) -> Vec<WebsiteRefExtLink> {
+    pub fn _select_webref(website_opt: &Option<&Website>, conn: &MysqlConnection) -> Vec<WebsiteRefExtLink> {
         let mut webrefs = Vec::<WebsiteRefExtLink>::new();
         if website_opt.is_some() {
             let link_ids = WebsiteRefExtLink::belonging_to(website_opt.unwrap()).load::<WebsiteRefExtLink>(conn).expect("Error loading external_link ids");
@@ -371,7 +372,7 @@ impl Database {
             },
             DB::ExternalLink(ext_l) => {
                 diesel::update(external_links.filter(crate::schema::external_links::dsl::id.eq(ext_l.id))).set(
-                    ( crate::schema::external_links::url.eq(&ext_l.url) )
+                    crate::schema::external_links::url.eq(&ext_l.url)
                 ).execute(conn)?;
                 let updated_row_vec = crate::schema::external_links::dsl::external_links.filter(crate::schema::external_links::dsl::id.eq(ext_l.id)).load::<ExternalLink>(conn).expect("Error loading external links");
                 let updated_row = updated_row_vec.get(0).unwrap().clone();

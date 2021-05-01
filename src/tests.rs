@@ -27,9 +27,9 @@ use diesel::prelude::*;
 // TODO split the function into multiple smaller functions
 pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
     // reset the state of the database before executing the tests
-    reset_db_state(&conn, &settings);
+    assert!(reset_db_state(&conn, &settings).is_ok(), "The detabase cannot be reset. Try resetting it manually.");
 
-    test_crawler(url, conn, settings);
+    assert!(test_crawler(url, conn, settings).is_ok(), "The crawler tests failed.");
 
     let create_website = db::Database::create_tables(conn);
     println!("table website created: {:?}", create_website);
@@ -43,6 +43,9 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     let u = DB::User(User {id: None, username: "asdf".to_string(), rank: 1.123123, country_iso_a2: "EN".to_string()});
     // vals_inserted = db::Database::insert_u(&u, conn);
     // println!("user values inseted: {:?}", vals_inserted);
+    let user = db::Database::insert(&u, conn);
+    assert!(user.is_ok(), "User could not be inserted in the database.");
+    // TODO add a select_u() function in the database and ensure that the user is there.
 
     if let DB::Website(mut website) = db::Database::insert(&w, conn).unwrap() {
         println!("{:?}", website.id);
