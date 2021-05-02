@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <input class="search__input" type="text" placeholder="Search">
+    <input class="search_box" type="text" placeholder="Search">
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -55,5 +55,31 @@ li {
 }
 a {
   color: #42b983;
+}
+.search_box {
+  width: 20%;
+  padding: 12px 24px;
+  font-size: 14px;
+  line-height: 18px;
+  color: #d0d1d2;
+  background-color: transparent;
+  background-image: url("~@/assets/search-green.png");
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
+  background-position: 95% center;
+  border: 1px solid #d0d1d2;
+  border-radius: 50px;
+}
+.search_box::placeholder {
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+  color: rgba(208, 209, 210, 0.4);
+}
+.search_box:hover, .search_box:focus {
+  outline: none;
+  border-color: rgba(208, 209, 210, 0.5);
+}
+.search_box:focus {
+  border-color: transparent;
 }
 </style>
