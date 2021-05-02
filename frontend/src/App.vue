@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
+    <img alt="Q" id="Q" src="./assets/q.svg">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
   </div>
 </template>
@@ -27,5 +27,9 @@ export default {
   text-align: center;
   color: #d0d1d2;
   margin-top: 60px;
+}
+#Q {
+  height: 200px;
+  width: 200px;
 }
 </style>
