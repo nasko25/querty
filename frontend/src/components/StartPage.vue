@@ -58,7 +58,7 @@ a {
 }
 .search_box {
   width: 20%;
-  padding: 12px 24px;
+  padding: 12px 44px 12px 24px;
   font-size: 14px;
   line-height: 18px;
   color: #d0d1d2;
