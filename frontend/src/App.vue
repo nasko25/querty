@@ -1,17 +1,17 @@
 <template>
   <div id="app">
     <img alt="Q" id="Q" src="./assets/q.svg">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <SearchBox msg="Welcome to Your Vue.js App"/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import SearchBox from './components/StartPage.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    SearchBox
   }
 }
 </script>
