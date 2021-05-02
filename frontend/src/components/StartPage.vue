@@ -1,6 +1,6 @@
 <template>
-  <div class="hello">
-    <input class="search_box" type="text" placeholder="Search">
+  <div class="start_page">
+    <input class="search_box" type="text" placeholder="Search" autofocus>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -56,6 +56,9 @@ li {
 a {
   color: #42b983;
 }
+.start_page {
+  margin-top: 50px;
+}
 .search_box {
   width: 80%;
   max-width: 584px;
@@ -81,7 +84,7 @@ a {
   outline: none;
   border-color: rgba(208, 209, 210, 0.5);
 }
-.search_box:focus {
-  border-color: transparent;
+.search_box:hover {
+  box-shadow: 0 0 5px 0 rgba(255, 255, 255, 0.1);
 }
 </style>
