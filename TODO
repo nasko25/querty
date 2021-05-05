@@ -5,3 +5,5 @@ Also, you can sort in solr by term frequency:
 
 termfreq(text, 'install'), termfreq(metadata, 'image')      - in the fl field to show the actual calculated score
 or in the sort field followed by 'asc' or 'desc'
+
+setup solr suggester: https://solr.apache.org/guide/6_6/suggester.html (create a rust endpoint)
