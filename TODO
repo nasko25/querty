@@ -7,3 +7,6 @@ termfreq(text, 'install'), termfreq(metadata, 'image')      - in the fl field to
 or in the sort field followed by 'asc' or 'desc'
 
 setup solr suggester: https://solr.apache.org/guide/6_6/suggester.html (create a rust endpoint)
+(to test the suggester:
+curl http://localhost:8983/solr/querty/suggest\?suggest\=true\&suggest.build\=true\&suggest.dictionary\=mySuggester\&wt\=json\&suggest.q\=te
+)
