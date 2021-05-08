@@ -1158,6 +1158,15 @@
       </analyzer>
     </fieldType>
 
+    <!-- TODO this is not necessary (and it is not used) -->
+    <fieldType class="solr.TextField" name="text_suggest" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <!--<filter class="solr.StandardFilterFactory"/>-->
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
   <!-- Similarity is the scoring routine for each document vs. a query.
        A custom Similarity or SimilarityFactory may be specified here, but 
        the default is fine for most applications.  

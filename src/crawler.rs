@@ -588,7 +588,7 @@ pub fn test_crawler(url: &str, conn: &MysqlConnection, settings: &Settings) -> R
         }
     }
 
-    website.title = "TEST".to_string();
+    website.title = "TEST 1234".to_string();
     website.rank += 1_f64;
     website.base_url = "new_base.com".to_string();
 
