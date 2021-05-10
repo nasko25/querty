@@ -7,6 +7,8 @@ use crate::db::ExternalLink;
 use std::process::Command;
 use std::env;
 
+use std::collections::HashMap;
+
 extern crate shellexpand;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,6 +37,33 @@ struct ResponseBody {
     #[serde(rename = "numFoundExact")]
     num_found_exact: bool,
     docs: Vec<WebsiteSolr>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ResponseSuggester {
+    #[serde(rename = "responseHeader")]
+    response_header: Header,
+    suggest: HashMap<String, SimilarWords>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SimilarWords {
+    #[serde(flatten)]
+    suggestion: HashMap<String, Suggestions>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Suggestions {
+    #[serde(rename = "numFound")]
+    num_found: i32,
+    suggestions: Vec<Term>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Term {
+    term: String,
+    weight: i64,
+    payload: String
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -155,6 +184,26 @@ pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Er
         .await?;
 
     Ok(())
+}
+
+#[tokio::main]
+pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec<Term>, reqwest::Error> {
+    let solr = &settings.solr;
+    let method = "suggest";
+    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q={}", &solr.server, &solr.port, &solr.collection, &method, query);
+
+    println!("here");
+    let response: ResponseSuggester = reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    println!("response: {:?}", response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions);
+
+    // TODO match instead of unwrap()
+    Ok(response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions.clone())
 }
 
 // create and delete collections
