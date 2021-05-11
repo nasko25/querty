@@ -138,7 +138,7 @@
     <!-- text_en uses a stemmer; it would probably be best if I used a dynamic field that applies the text_en type -->
    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
    <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="true" required="false" /> <!-- can it be required=false ? -->
-   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+   <field name="text" type="text_suggest" indexed="true" stored="true" multiValued="false" />
    <!-- TODO url should be unique -->
    <!-- the "base_url" field contains only the base of the url
         while url contains the whole url (it includes the path)
@@ -1160,10 +1160,15 @@
 
     <!-- TODO this is not necessary (and it is not used) -->
     <fieldType class="solr.TextField" name="text_suggest" positionIncrementGap="100">
-      <analyzer>
+      <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
+        <!--tokenizer class="solr.WhitespaceTokenizerFactory"/-->
+        <!--tokenizer class="solr.KeywordTokenizerFactory"/-->
+        <charFilter class="solr.PatternReplaceCharFilterFactory" pattern="[^a-zA-Z0-9]" replacement=" " />
         <!--<filter class="solr.StandardFilterFactory"/>-->
         <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.LengthFilterFactory" min="2" max="255"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
       </analyzer>
     </fieldType>
 
