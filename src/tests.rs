@@ -198,11 +198,11 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
 pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
     // delete the databases
     solr::delete_collection(settings)?;
-    db::Database::drop_tables(conn)?;
+    //db::Database::drop_tables(conn)?;
 
     // create the solr collection and db tables
     solr::create_collection(settings)?;
-    db::Database::create_tables(conn)?;
+    //db::Database::create_tables(conn)?;
 
     // import data from the database
     // right now this will do nothing, because the db was just created,
