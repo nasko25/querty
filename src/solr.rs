@@ -201,6 +201,17 @@ impl fmt::Display for SuggesterUnexpectedParam {
 
 impl error::Error for SuggesterUnexpectedParam {}
 
+// Create an error struct that can be thrown if the JSON deserialized object is missing a field
+#[derive(Debug, Clone)]
+struct SuggesterJSONError(String);
+
+impl fmt::Display for SuggesterJSONError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "JSON object returned from solr has unexpected format; {}", self.0)
+    }
+}
+
+
 #[tokio::main]
 pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
@@ -223,8 +234,66 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Vec
 
     //println!("response: {:?}", response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions);
 
-    // TODO match instead of unwrap()
-    Ok(response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions.clone())
+    /*
+     *
+     * This is how a response JSON objevt looks like:
+        {
+            "responseHeader":{
+                "zkConnected":true,
+                "status":0,
+                "QTime":13
+            },
+            "command":"build",
+            "suggest":{
+                "mySuggester":{
+                    "an":{
+                        "numFound":4,
+                        "suggestions":[
+                            {
+                                "term":"and",
+                                "weight":398245770157805504,
+                                "payload":""
+                            },
+                            {
+                                "term":"and",
+                                "weight":72057594037927936,
+                                "payload":""
+                            },
+                            {
+                                "term":"an",
+                                "weight":63719323225248880,
+                                "payload":""
+                            },
+                            {
+                                "term":"antonio",
+                                "weight":15929830806312220,
+                                "payload":""
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+
+     * From this object the vector of terms should be extracted and returned.
+     *
+     * */
+
+    match response
+        .suggest            // get the first value from the suggest HashMap (which is the value corresponding to the "mySuggester" key above)
+        .values()
+        .next() {
+            Some(suggestion) => {
+                match suggestion
+                    .suggestion     // get the value from the SimilarWords suggestion HashMap (which is the value corresponding to the query string "an" key above)
+                    .values()
+                    .next() {
+                        Some(suggestions) => Ok(suggestions.suggestions.clone()),
+                        None => return Err(SuggesterUnexpectedParam("Cannot extract values from Suggestions".to_string()).into())
+                    }
+            },
+            None => return Err(SuggesterUnexpectedParam("Cannot extract values from ResponseSuggester".to_string()).into())
+        }
 }
 
 // create and delete collections
