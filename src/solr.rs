@@ -63,7 +63,7 @@ struct Suggestions {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Term {
-    term: String,
+    pub term: String,
     weight: i64,
     payload: String
 }
@@ -203,7 +203,7 @@ impl error::Error for SuggesterUnexpectedParam {}
 
 #[tokio::main]
 pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
-    if (query.chars().count() < 2 || query.chars().count() > 255) {
+    if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
         println!("{}", SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()));
@@ -214,7 +214,6 @@ pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec
     let method = "suggest";
     let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q={}", &solr.server, &solr.port, &solr.collection, &method, query);
 
-    println!("here");
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)
         .send()
@@ -222,7 +221,7 @@ pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec
         .json()
         .await.expect("Solr's response is not valid json");
 
-    println!("response: {:?}", response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions);
+    //println!("response: {:?}", response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions);
 
     // TODO match instead of unwrap()
     Ok(response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions.clone())

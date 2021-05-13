@@ -192,16 +192,22 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     assert!(del_result.is_ok());
     assert_eq!(del_result.unwrap(), metadatas_in_db.len(), "The number of deleted metadata entries should be the same as the number of metadata entries that were associated with the website with id equal to 1 before.");
 
+    assert!(test_suggester(&settings).is_ok(), "Suggester tests failed.");
+
     Ok(())
 }
 
 fn test_suggester(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
-    // TODO test the suggester
-    // TODO pattern match for an error, because it might return an error
-    let suggestion = solr::suggest(&settings, "an".to_string());
-    println!("suggest returns: {:?}", suggestion);
+    // TODO add more tests for the suggester
+    let suggestion = solr::suggest(&settings, "thin".to_string());
+
     match suggestion {
-        Ok(terms) => Ok(()),
+        Ok(terms) => {
+            // check if the term "things" is returned by the suggester when searching for "thin"
+            // this could fail if the test website is removed from solr
+            assert!(terms.iter().any(| term | term.term == "things"), "The term \"things\" is not returned as a suggestion. This could have happened if you have changed what websites have been saved to solr.");
+            Ok(())
+        },
         Err(err) => Err(err)
     }
 }
