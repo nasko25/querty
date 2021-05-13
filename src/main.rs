@@ -28,10 +28,6 @@ fn main() {
 
     let conn = db::Database::establish_connection(&url_mysql);
 
-    tests::reset_db_state(&conn, &settings);
-    //println!("suggest returns: {:?}", solr::suggest(&settings, "a".to_string()));
-    std::process::exit(1);
-
     // reset the state of the db and solr
     // tests::reset_db_state(&conn, &settings);
 
