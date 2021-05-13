@@ -195,10 +195,15 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     Ok(())
 }
 
-fn test_suggester() -> {
+fn test_suggester(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
     // TODO test the suggester
     // TODO pattern match for an error, because it might return an error
-    println!("suggest returns: {:?}", solr::suggest(&settings, "an".to_string()));
+    let suggestion = solr::suggest(&settings, "an".to_string());
+    println!("suggest returns: {:?}", suggestion);
+    match suggestion {
+        Ok(terms) => Ok(()),
+        Err(err) => Err(err)
+    }
 }
 
 pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
