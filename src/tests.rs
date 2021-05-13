@@ -198,8 +198,13 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
 }
 
 fn test_suggester(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
-    // TODO add more tests for the suggester
-    let suggestion = solr::suggest(&settings, "thin".to_string());
+    assert!(solr::suggest("a".to_string(), &settings).is_err(), "Letters should be longer than 2 characters");
+
+    match solr::suggest("random string word asdfsdfjkn 0".to_string(), &settings) {
+        Ok(terms) => assert!(terms.is_empty(), "There should be no suggestion for the random string above"),
+        Err(err) => return Err(err)
+    };
+    let suggestion = solr::suggest("thin".to_string(), &settings);
 
     match suggestion {
         Ok(terms) => {

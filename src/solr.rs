@@ -202,7 +202,7 @@ impl fmt::Display for SuggesterUnexpectedParam {
 impl error::Error for SuggesterUnexpectedParam {}
 
 #[tokio::main]
-pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
