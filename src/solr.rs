@@ -8,6 +8,8 @@ use std::process::Command;
 use std::env;
 
 use std::collections::HashMap;
+use std::fmt;
+use std::error;
 
 extern crate shellexpand;
 
@@ -186,8 +188,28 @@ pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Er
     Ok(())
 }
 
+// Create an error struct that can be thrown if the query argument passed to the suggester has a
+// wrong format
+#[derive(Debug, Clone)]
+struct SuggesterUnexpectedParam(String);
+
+impl fmt::Display for SuggesterUnexpectedParam {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "invalid parameter passed to suggest(): {}", self.0)
+    }
+}
+
+impl error::Error for SuggesterUnexpectedParam {}
+
 #[tokio::main]
-pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec<Term>, reqwest::Error> {
+pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+    if (query.chars().count() < 2 || query.chars().count() > 255) {
+        //throw_new!("query should be between 2 and 255 characters long");
+        //Err("asd")
+        println!("{}", SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()));
+        return Err(SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()).into());
+    }
+
     let solr = &settings.solr;
     let method = "suggest";
     let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q={}", &solr.server, &solr.port, &solr.collection, &method, query);
@@ -196,9 +218,9 @@ pub async fn suggest(settings: &settings::Settings, query: String) -> Result<Vec
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)
         .send()
-        .await?
+        .await.expect("Solr is not responding to the /suggest request")
         .json()
-        .await?;
+        .await.expect("Solr's response is not valid json");
 
     println!("response: {:?}", response.suggest.values().next().unwrap().suggestion.values().next().unwrap().suggestions);
 
