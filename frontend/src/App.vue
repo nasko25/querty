@@ -19,17 +19,18 @@ export default {
 <style>
 :root {
     --background-color: #123;
+    --foreground-color: #d0d1d2;
 }
 
 * {
-  background-color: #123;
+  background-color: var(--background-color);
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #d0d1d2;
+  color: var(--foreground-color);
   margin-top: 160px;
 }
 #Q {

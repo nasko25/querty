@@ -84,13 +84,13 @@ a {
   padding: 12px 44px 12px 24px;
   font-size: 14px;
   line-height: 18px;
-  color: #d0d1d2;
+  color: var(--foreground-color);
   background-color: var(--background-color);
   background-image: url("~@/assets/search-green.png");
   background-repeat: no-repeat;
   background-size: 18px 18px;
   background-position: 95% center;
-  border: 1px solid #d0d1d2;
+  border: 1px solid var(--foreground-color);
   border-radius: 50px;
   position: relative;
   z-index: 3;
