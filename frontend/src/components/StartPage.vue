@@ -1,7 +1,7 @@
 <template>
   <div class="start_page">
     <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" autofocus>
-    <SuggestionsBox :isSuggestHidden = "isSuggestHidden"> </SuggestionsBox>
+    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="['asdf', 'asdfg', 'asd', 'asdasd', '22', '44', 'asdasd']"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
