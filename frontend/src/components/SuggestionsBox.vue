@@ -1,7 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "suggestion in suggestions" :key = "suggestion">
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index">
                 {{ suggestion }}
             </li>
         </ul>
