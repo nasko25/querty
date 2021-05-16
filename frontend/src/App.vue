@@ -17,6 +17,10 @@ export default {
 </script>
 
 <style>
+:root {
+    --background-color: #123;
+}
+
 * {
   background-color: #123;
 }
@@ -31,5 +35,9 @@ export default {
 #Q {
   height: 200px;
   width: 200px;
+}
+
+.hidden {
+    display: none;
 }
 </style>

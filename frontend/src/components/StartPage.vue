@@ -1,6 +1,7 @@
 <template>
   <div class="start_page">
-    <input class="search_box" type="text" placeholder="Search" autofocus>
+    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" autofocus>
+    <div id = "suggestions" :class = "{hidden: isSuggestHidden}"> </div>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -32,11 +33,28 @@
 </template>
 
 <script>
+
 export default {
-  name: 'SearchBox',
-  props: {
-    msg: String
-  }
+    name: 'SearchBox',
+    props: {
+        msg: String
+    },
+    data() {
+        return {
+            query: "",
+            isSuggestHidden: true
+        };
+    },
+    methods: {
+        onChangeHandler: function() {
+            // show the suggestion box, only if the length of the query is > 2
+            if (this.query.length > 2) {
+                this.isSuggestHidden = false;
+            } else {
+                this.isSuggestHidden = true;
+            }
+        }
+    }
 }
 </script>
 
@@ -67,13 +85,15 @@ a {
   font-size: 14px;
   line-height: 18px;
   color: #d0d1d2;
-  background-color: transparent;
+  background-color: var(--background-color);
   background-image: url("~@/assets/search-green.png");
   background-repeat: no-repeat;
   background-size: 18px 18px;
   background-position: 95% center;
   border: 1px solid #d0d1d2;
   border-radius: 50px;
+  position: relative;
+  z-index: 3;
 }
 .search_box::placeholder {
   text-transform: uppercase;
@@ -86,5 +106,22 @@ a {
 }
 .search_box:hover {
   box-shadow: 0 0 5px 0 rgba(255, 255, 255, 0.1);
+}
+
+#suggestions {
+    height: 200px;
+    width: 80%;
+    max-width: 654px;
+    min-width: 380px;
+
+    background: #124;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    top: 435px;
+    z-index: 0;
+    border-radius: 0 0 20px 20px;
 }
 </style>
