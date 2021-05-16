@@ -1,7 +1,7 @@
 <template>
   <div class="start_page">
     <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" autofocus>
-    <div id = "suggestions" :class = "{hidden: isSuggestHidden}"> </div>
+    <SuggestionsBox :isSuggestHidden = "isSuggestHidden"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -33,11 +33,15 @@
 </template>
 
 <script>
+import SuggestionsBox from './SuggestionsBox.vue';
 
 export default {
     name: 'SearchBox',
     props: {
         msg: String
+    },
+    components: {
+        SuggestionsBox
     },
     data() {
         return {
@@ -55,7 +59,8 @@ export default {
             }
         }
     }
-}
+};
+
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -108,20 +113,4 @@ a {
   box-shadow: 0 0 5px 0 rgba(255, 255, 255, 0.1);
 }
 
-#suggestions {
-    height: 200px;
-    width: 80%;
-    max-width: 654px;
-    min-width: 380px;
-
-    background: #124;
-    position: absolute;
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-    top: 435px;
-    z-index: 0;
-    border-radius: 0 0 20px 20px;
-}
 </style>
