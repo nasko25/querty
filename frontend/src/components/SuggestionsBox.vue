@@ -24,7 +24,7 @@ export default {
 <style scoped>
 
 #suggestions {
-    height: 210px;
+    height: auto;
     width: 80%;
     max-width: 654px;
     min-width: 380px;
@@ -45,6 +45,7 @@ export default {
 #suggestions-list {
     background-color: var(--suggestions-background);
     margin-top: 1.5em;
+    margin-bottom: 0.7em;
     padding-left: 20px;
     border-radius: 0 0 20px 20px;
 }
