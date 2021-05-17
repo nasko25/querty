@@ -94,7 +94,7 @@ a {
   background-image: url("~@/assets/search-green.png");
   background-repeat: no-repeat;
   background-size: 18px 18px;
-  background-position: 95% center;
+  background-position: 97% center;
   border: 1px solid var(--foreground-color);
   border-radius: 50px;
   position: relative;
