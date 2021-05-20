@@ -10,6 +10,7 @@ extern crate serde;
 
 // used for a web API
 #[macro_use] extern crate rocket;
+use rocket::State;
 
 mod settings;
 mod schema;
@@ -71,7 +72,7 @@ fn main() {
     // TODO this can be async
     // TODO it can be a new function that mounts all necessary endpoints
     // mount the web API endpoints
-    rocket::ignite().mount("/", routes![suggest]).launch();
+    rocket::ignite().manage(settings).mount("/", routes![suggest]).launch();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
@@ -153,6 +154,8 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
 // TODO wouldn't post requests be better?
 // TODO take into account / and whitespace characters
 #[get("/suggest/<query>")]
-fn suggest(query: String) -> String {
-    format!("suggestion for {}", query)
+fn suggest(query: String, settings: State<settings::Settings>) -> String {
+    // TODO parse the suggestion
+    let suggestion = solr::suggest(query.clone(), &settings);
+    format!("suggestion for {}: {:?}", query, suggestion)
 }
