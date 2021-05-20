@@ -8,6 +8,9 @@ extern crate serde;
 #[macro_use] extern crate throw;
 #[macro_use] extern crate simple_error;
 
+// used for colorful output
+extern crate colour;
+
 // used for a web API
 #[macro_use] extern crate rocket;
 use rocket::State;
@@ -156,6 +159,11 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> String {
     // TODO parse the suggestion
-    let suggestion = solr::suggest(query.clone(), &settings);
-    format!("suggestion for {}: {:?}", query, suggestion)
+    let suggestions = solr::suggest(query.clone(), &settings);
+    if (suggestions.is_ok()) {
+        return format!("suggestions for {}: {:?}", query, suggestions.unwrap());
+    }
+    colour::red!("[ERR]"); println!(" suggest() returned an error!");
+    // if there is something wrong with the suggester just return an empty list as suggestions
+    format!("suggestions for {}: []", query)
 }
