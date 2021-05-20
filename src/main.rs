@@ -13,8 +13,10 @@ extern crate colour;
 
 // used for a web API
 #[macro_use] extern crate rocket;
+#[macro_use] extern crate rocket_contrib;
 use rocket::State;
-use rocket::response::content;
+use rocket_contrib::json::JsonValue;
+
 
 mod settings;
 mod schema;
@@ -157,18 +159,15 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
 
 // TODO wouldn't post requests be better?
 // TODO take into account / and whitespace characters
-// TODO implement the trait `Responder<'_>` for Vec<&String> in order to pass the vector to Json
-// directly:
-// content::Json<Vec<&String>>
 #[get("/suggest/<query>")]
-fn suggest(query: String, settings: State<settings::Settings>) -> content::Json<String> {
+fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
     // TODO parse the suggestion
     let suggestions = solr::suggest(query.clone(), &settings);
     println!("suggestions: {:?}", suggestions);
     if (suggestions.is_ok()) {
-        return content::Json(format!("{:?}", suggestions.unwrap().iter().map(|suggestion| &suggestion.term).collect::<Vec<&String>>()));
+        return json!(suggestions.unwrap().iter().map(|suggestion| &suggestion.term).collect::<Vec<&String>>());
     }
     colour::red!("[ERR]"); println!(" suggest() returned an error!");
     // if there is something wrong with the suggester just return an empty list as suggestions
-    content::Json("[]".to_string())
+    json!("[]")
 }
