@@ -1,9 +1,15 @@
+// necessary for rocket
+#![feature(proc_macro_hygiene, decl_macro)]
+
 extern crate config;
 extern crate serde;
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate throw;
 #[macro_use] extern crate simple_error;
+
+// used for a web API
+#[macro_use] extern crate rocket;
 
 mod settings;
 mod schema;
@@ -41,24 +47,31 @@ fn main() {
     let mut websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
 
-    println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
+    // run tests
+    //println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
 
     url = "https://www.spacex.com/";
 
     websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
 
-    let crawler = crawler::Crawler {
-        conn: &conn,
-        settings: &settings
-    };
-    crawler.analyse_website(&url, &websites_saved).unwrap();
-    let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
+    // analyse a website and update its rank
+    //let crawler = crawler::Crawler {
+    //    conn: &conn,
+    //    settings: &settings
+    //};
+    //crawler.analyse_website(&url, &websites_saved).unwrap();
+    //let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
 
-    match updated_rank {
-        Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
-        Err(err) => println!("Rank was not updated successfully: Err({})", err),
-    }
+    //match updated_rank {
+    //    Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
+    //    Err(err) => println!("Rank was not updated successfully: Err({})", err),
+    //}
+
+    // TODO this can be async
+    // TODO it can be a new function that mounts all necessary endpoints
+    // mount the web API endpoints
+    rocket::ignite().mount("/", routes![suggest]).launch();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
@@ -131,4 +144,15 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     }
 
     Ok(websites_saved[0].rank)
+}
+
+
+// _________________________________________ TODO add new file?__________________________________________
+//                                              Web API
+
+// TODO wouldn't post requests be better?
+// TODO take into account / and whitespace characters
+#[get("/suggest/<query>")]
+fn suggest(query: String) -> String {
+    format!("suggestion for {}", query)
 }
