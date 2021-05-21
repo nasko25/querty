@@ -113,7 +113,7 @@ impl Database {
                 text TEXT,
                 url VARCHAR(100) UNIQUE,
                 base_url VARCHAR(100),
-                rank DOUBLE,
+                `rank` DOUBLE,
                 type_of_website VARCHAR(50)
             )
         ").execute(conn) {
@@ -125,7 +125,7 @@ impl Database {
             CREATE TABLE IF NOT EXISTS users (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(25) UNIQUE,
-                rank DOUBLE NOT NULL,
+                `rank` DOUBLE NOT NULL,
                 CountryISO_A2 VARCHAR(3)
             )
         ").execute(conn) {
