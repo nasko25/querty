@@ -54,6 +54,18 @@ export default {
             // show the suggestion box, only if the length of the query is > 2
             if (this.query.length > 2) {
                 this.isSuggestHidden = false;
+                fetch(`http://localhost:8000/suggest/${this.query}`, {
+                    method: 'GET',
+                    headers: {
+                        "Access-Control-Allow-Origin": "*",
+                    }
+                })
+                    .then(response => {
+                        if (response.ok)
+                            console.log(response.json());
+                        else
+                            console.error("Suggest served responsed with an unexpected code: " + response.status)
+                    });
             } else {
                 this.isSuggestHidden = true;
             }

@@ -78,7 +78,7 @@ fn main() {
     // TODO this can be async
     // TODO it can be a new function that mounts all necessary endpoints
     // mount the web API endpoints
-    rocket::ignite().manage(settings).mount("/", routes![suggest]).launch();
+    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest]).launch();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
@@ -120,7 +120,7 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
     if websites_saved.is_empty() {}
     // since website ranks should be between -10 and 10 and user react FOR NOW will only update it
     // with +/-1, I can do this ugly check
-	else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && discriminant(&react_type) == discriminant(&React::Upvote{ val: 0.0 })) || (websites_saved[0].rank >= -9.0 && discriminant(&react_type) == discriminant(&React::Downvote {val: 0.0}))) {
+    else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && discriminant(&react_type) == discriminant(&React::Upvote{ val: 0.0 })) || (websites_saved[0].rank >= -9.0 && discriminant(&react_type) == discriminant(&React::Downvote {val: 0.0}))) {
         println!("{:?}'s old rank: {}", websites_saved[0].id, websites_saved[0].rank);
         websites_saved[0].rank += match react_type {
             React::Upvote { val } => {
@@ -159,6 +159,31 @@ fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn:
 
 // TODO wouldn't post requests be better?
 // TODO take into account / and whitespace characters
+
+use rocket::http::Header;
+use rocket::{Request, Response};
+use rocket::fairing::{Fairing, Info, Kind};
+
+pub struct CORS;
+
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "CORS headers",
+            kind: Kind::Response
+        }
+    }
+
+    fn on_response(&self, request: &Request, response: &mut Response) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "localhost:8080"));
+        response.set_header(Header::new("Access-Control-Allow-Methods", "GET, OPTIONS"));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
+// for some reason it does not work from the frontend
+// trying: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
     // TODO parse the suggestion
