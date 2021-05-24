@@ -54,7 +54,7 @@ export default {
     background-color: var(--suggestions-background);
     list-style: none;
     text-align: left;
-    padding-top: 0.4em;
+    padding-top: 0.6em;
     border-radius: 0 0 20px 20px;
 }
 
@@ -67,7 +67,7 @@ export default {
     background-size:contain;
     background-repeat:no-repeat;
     position: relative;
-    top: 3px;
+    top: 1.5px;
     padding-right: 10px;
 }
 </style>

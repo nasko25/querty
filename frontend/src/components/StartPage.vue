@@ -1,7 +1,7 @@
 <template>
   <div class="start_page">
     <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" autofocus>
-    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="['asdf', 'asdfg', 'asd', 'asdasd', '22', '44', 'asdasd']"> </SuggestionsBox>
+    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -46,23 +46,23 @@ export default {
     data() {
         return {
             query: "",
+            suggestions: [],
             isSuggestHidden: true
         };
     },
     methods: {
         onChangeHandler: function() {
             // show the suggestion box, only if the length of the query is > 2
-            if (this.query.length > 2) {
+            if (this.query.length >= 2) {
                 this.isSuggestHidden = false;
                 fetch(`http://localhost:8000/suggest/${this.query}`, {
-                    method: 'GET',
-                    headers: {
-                        "Access-Control-Allow-Origin": "*",
-                    }
+                    method: 'GET'
                 })
                     .then(response => {
                         if (response.ok)
-                            console.log(response.json());
+                            response.json()
+                                .then(response => this.suggestions = response)
+                                .catch(err => console.error(err));
                         else
                             console.error("Suggest served responsed with an unexpected code: " + response.status)
                     });
