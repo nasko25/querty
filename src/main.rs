@@ -16,6 +16,7 @@ extern crate colour;
 #[macro_use] extern crate rocket_contrib;
 use rocket::State;
 use rocket_contrib::json::JsonValue;
+use std::path::PathBuf;
 
 
 mod settings;
@@ -78,7 +79,7 @@ fn main() {
     // TODO this can be async
     // TODO it can be a new function that mounts all necessary endpoints
     // mount the web API endpoints
-    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest]).launch();
+    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest, options_handler]).launch();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
@@ -175,7 +176,7 @@ impl Fairing for CORS {
     }
 
     fn on_response(&self, request: &Request, response: &mut Response) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "localhost:8080"));
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
         response.set_header(Header::new("Access-Control-Allow-Methods", "GET, OPTIONS"));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
@@ -186,13 +187,22 @@ impl Fairing for CORS {
 // trying: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
-    // TODO parse the suggestion
     let suggestions = solr::suggest(query.clone(), &settings);
     println!("suggestions: {:?}", suggestions);
+    // parse the suggestion
     if (suggestions.is_ok()) {
         return json!(suggestions.unwrap().iter().map(|suggestion| &suggestion.term).collect::<Vec<&String>>());
     }
     colour::red!("[ERR]"); println!(" suggest() returned an error!");
     // if there is something wrong with the suggester just return an empty list as suggestions
-    json!("[]")
+    json!([])
+}
+
+#[options("/suggest/<path..>")]
+fn options_handler<'a>(path: PathBuf) -> Response<'a> {
+    Response::build()
+        //.raw_header("Access-Control-Allow-Origin", "http://localhost:8080")
+        //.raw_header("Access-Control-Allow-Methods", "OPTIONS, GET")
+        //.raw_header("Access-Control-Allow-Headers", "Content-Type")
+        .finalize()
 }
