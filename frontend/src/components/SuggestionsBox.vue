@@ -46,7 +46,7 @@ export default {
     background-color: var(--suggestions-background);
     margin-top: 1.5em;
     margin-bottom: 0.7em;
-    padding-left: 20px;
+    padding-left: 0;
     border-radius: 0 0 20px 20px;
 }
 
@@ -55,7 +55,19 @@ export default {
     list-style: none;
     text-align: left;
     padding-top: 0.6em;
+    padding-left: 20px;
     border-radius: 0 0 20px 20px;
+}
+
+.suggestion:hover {
+    background-color: #123;
+    background-color: #000;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.suggestion:hover:last-child {
+    border-radius: 0 0 5px 0;
 }
 
 .suggestion::before {
