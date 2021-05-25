@@ -1,6 +1,6 @@
 <template>
   <div class="start_page">
-    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" autofocus>
+    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();" autofocus>
     <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
@@ -47,13 +47,14 @@ export default {
         return {
             query: "",
             suggestions: [],
-            isSuggestHidden: true
+            isSuggestHidden: true,
+            inputSelected: false
         };
     },
     methods: {
         onChangeHandler: function() {
             // show the suggestion box, only if the length of the query is > 2
-            if (this.query.length >= 2) {
+            if (this.query.length >= 2 && this.inputSelected) {
                 this.isSuggestHidden = false;
                 fetch(`http://localhost:8000/suggest/${this.query}`, {
                     method: 'GET'
