@@ -15,7 +15,13 @@ export default {
     props: {
         suggestions: Array,
         isSuggestHidden: Boolean,
-        query: String
+        query: String,
+        focusSuggestion: Number
+    },
+    watch: {
+        'focusSuggestion': function(newFocusSuggestion) {
+            console.log("focus suggestion changed; new value: " + newFocusSuggestion);
+        }
     }
 };
 

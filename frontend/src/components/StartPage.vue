@@ -1,7 +1,7 @@
 <template>
   <div class="start_page">
-    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown="arrowKeyHandler" autofocus>
-    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query"> </SuggestionsBox>
+    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" autofocus>
+    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -72,19 +72,14 @@ export default {
                 this.isSuggestHidden = true;
             }
         },
-        arrowKeyHandler: function(event) {
+        arrowUpHandler: function(event) {
             console.log("key")
-            switch(event.keyCode) {
-                // up arrow
-                case 38:
-                    if (!this.isSuggestHidden) {
-                        console.log("focus " + this.focusSuggestion)
-                        this.focusSuggestion++;
-                    }
-                    break;
-                // down arrow
-                case 40:
-                    break;
+            // prevent up arrow to move the cursor
+            event.preventDefault();
+
+            if (!this.isSuggestHidden) {
+                this.focusSuggestion = (this.focusSuggestion) % 7 - 1;  // because there are maximum of 7 suggestions, and the variable should loop around
+                console.log("focus " + this.focusSuggestion)
             }
         }
     }
