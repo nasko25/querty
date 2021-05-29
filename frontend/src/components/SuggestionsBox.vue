@@ -2,7 +2,7 @@
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
             <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index">
-                {{ query }}<b>{{ suggestion }}</b>
+                {{ query }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : "" }}</b>
             </li>
         </ul>
     </div>
@@ -59,6 +59,10 @@ export default {
     padding-bottom: 0.3em;
     padding-left: 20px;
     border-radius: 0 0 20px 20px;
+}
+
+.suggestion b {
+    background: transparent;
 }
 
 .suggestion:hover {
