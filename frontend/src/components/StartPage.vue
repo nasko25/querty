@@ -1,6 +1,6 @@
 <template>
   <div class="start_page">
-    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();" autofocus>
+    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown="arrowKeyHandler" autofocus>
     <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
@@ -48,7 +48,8 @@ export default {
             query: "",
             suggestions: [],
             isSuggestHidden: true,
-            inputSelected: false
+            inputSelected: false,
+            focusSuggestion: 0      // which suggestion is focused (1-7 for the suggestions, 0 for none; it should loop around!)
         };
     },
     methods: {
@@ -69,6 +70,21 @@ export default {
                     });
             } else {
                 this.isSuggestHidden = true;
+            }
+        },
+        arrowKeyHandler: function(event) {
+            console.log("key")
+            switch(event.keyCode) {
+                // up arrow
+                case 38:
+                    if (!this.isSuggestHidden) {
+                        console.log("focus " + this.focusSuggestion)
+                        this.focusSuggestion++;
+                    }
+                    break;
+                // down arrow
+                case 40:
+                    break;
             }
         }
     }
