@@ -183,8 +183,7 @@ impl Fairing for CORS {
     }
 }
 
-// for some reason it does not work from the frontend
-// trying: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
+// Source for cors: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
     let suggestions = solr::suggest(query.clone(), &settings);
@@ -205,4 +204,14 @@ fn options_handler<'a>(path: PathBuf) -> Response<'a> {
         //.raw_header("Access-Control-Allow-Methods", "OPTIONS, GET")
         //.raw_header("Access-Control-Allow-Headers", "Content-Type")
         .finalize()
+}
+
+// TODO returning 404 might be better if solr has no response ?
+//  (although this is just an API, so an empty array should also be acceptable?)
+fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
+    // TODO maybe add an endpoint that only returns the important fields of the websites (title,
+    //  url and the relevant part of the text)
+    //  also sort by term frequency and sepup spellchecker (check the TODO file)
+    let matched_websites = req(&settings, format!("text_all:\"{:?}\"", query));
+    json!([])
 }
