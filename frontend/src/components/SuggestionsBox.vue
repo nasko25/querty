@@ -1,7 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : index === focusSuggestionNumber }" @mouseover="mouseOverSuggestion(index)">
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
                 {{ query }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : "" }}</b>
             </li>
         </ul>
@@ -31,10 +31,7 @@ export default {
     //},
     methods: {
         mouseOverSuggestion(index) {
-            this.focusSuggestionNumber = index;
-
             // notify the parent component that the focusSuggestionNumber variable should be changed
-            //this.$emit('focusSuggestionChange', this.focusSuggestionNumber);
             this.$emit('focusSuggestionChange', index);
         }
     }
@@ -86,14 +83,14 @@ export default {
     background: transparent;
 }
 
-.suggestion:hover, .onhover {
+.onhover {
     background-color: #123;
     background-color: #000;
     border-radius: 0;
     cursor: pointer;
 }
 
-.suggestion:hover:last-child, .onhover_last_child {
+.onhover_last_child {
     border-radius: 0 0 11px 11px;
 }
 
