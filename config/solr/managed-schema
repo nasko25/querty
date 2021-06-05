@@ -143,9 +143,9 @@
    <!-- the "base_url" field contains only the base of the url
         while url contains the whole url (it includes the path)
    -->
-   <field name="url" type="text_general" indexed="true" stored="true" multiValued="false" />
-   <field name="base_url" type="text_general" indexed="true" stored="true" multiValued="false" />
-   <field name="external_links" type="text_general" indexed="true" stored="true" multiValued="true" required="false"/>
+   <field name="url" type="link" indexed="true" stored="true" multiValued="false" />
+   <field name="base_url" type="link" indexed="true" stored="true" multiValued="false" />
+   <field name="external_links" type="link" indexed="true" stored="true" multiValued="true" required="false"/>
    <field name="rank" type="pdouble" indexed="true" stored="true" multiValued="false" />
 
    <!-- TODO what does type of website actually mean and is it useful ?
@@ -399,6 +399,16 @@
       </analyzer>
     </fieldType>
     
+    <!--
+      Field type for links. Split words by characters that are not letters, numbers, "_" and "-"".
+    -->>
+    <fieldType name="link" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.PatternTokenizerFactory" pattern="[A-Za-z0-9-_]+" group="0"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
     <!-- SortableTextField generaly functions exactly like TextField,
          except that it supports, and by default uses, docValues for sorting (or faceting)
          on the first 1024 characters of the original field values (which is configurable).
