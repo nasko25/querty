@@ -1,7 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : index === ((focusSuggestionNumber === null) ? null : Math.abs(focusSuggestionNumber)) }" @mouseover="mouseOverSuggestion(index)">
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : index === focusSuggestionNumber }" @mouseover="mouseOverSuggestion(index)">
                 {{ query }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : "" }}</b>
             </li>
         </ul>
@@ -18,23 +18,24 @@ export default {
         query: String,
         focusSuggestion: Number
     },
-    data() {
-        return {
-            focusSuggestionNumber: this.focusSuggestion
-        }
-    },
-    watch: {
-        'focusSuggestion': function(newFocusSuggestion) {
-            console.log("focus suggestion changed; new value: " + newFocusSuggestion);
-            this.focusSuggestionNumber = newFocusSuggestion;
-        }
-    },
+    //data() {
+    //    return {
+    //        focusSuggestionNumber: this.focusSuggestion
+    //    }
+    //},
+    //watch: {
+    //    'focusSuggestion': function(newFocusSuggestion) {
+    //        console.log("focus suggestion changed; new value: " + newFocusSuggestion);
+    //        this.focusSuggestionNumber = newFocusSuggestion;
+    //    }
+    //},
     methods: {
         mouseOverSuggestion(index) {
             this.focusSuggestionNumber = index;
 
             // notify the parent component that the focusSuggestionNumber variable should be changed
-            this.$emit('focusSuggestionChange', this.focusSuggestionNumber);
+            //this.$emit('focusSuggestionChange', this.focusSuggestionNumber);
+            this.$emit('focusSuggestionChange', index);
         }
     }
 };
