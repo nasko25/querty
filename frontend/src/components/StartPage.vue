@@ -1,7 +1,7 @@
 <template>
   <div class="start_page">
-    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" autofocus>
-    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion"> </SuggestionsBox>
+    <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" autofocus>
+    <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
     <h1>{{ msg }}</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
@@ -78,9 +78,23 @@ export default {
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
-                this.focusSuggestion = (this.focusSuggestion) % 7 - 1;  // because there are maximum of 7 suggestions, and the variable should loop around
-                console.log("focus " + this.focusSuggestion)
+                this.focusSuggestion = (this.focusSuggestion - 1) % this.suggestions.length;  // because there are maximum of 7 suggestions, and the variable should loop around
+                if (this.focusSuggestion === -1) this.focusSuggestion = this.suggestions.length - 1;
+                else if (this.focusSuggestion < 0) this.focusSuggestion = this.focusSuggestion * (-1);
+                console.log("focus " + this.focusSuggestion + " suggestions size (%) " + this.suggestions.length)
             }
+        },
+        arrowDownHandler: function(event) {
+            console.log("key down");
+            event.preventDefault();
+
+            if (!this.isSuggestHidden) {
+                this.focusSuggestion = (this.focusSuggestion + 1) % this.suggestions.length;
+                console.log("focus " + this.focusSuggestion);
+            }
+        },
+        onFocusSuggestionChange: function(newFocusSuggestion) {
+            this.focusSuggestion = newFocusSuggestion;
         }
     }
 };

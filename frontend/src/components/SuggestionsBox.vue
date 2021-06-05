@@ -1,7 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index">
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : index === ((focusSuggestionNumber === null) ? null : Math.abs(focusSuggestionNumber)) }" @mouseover="mouseOverSuggestion(index)">
                 {{ query }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : "" }}</b>
             </li>
         </ul>
@@ -18,9 +18,23 @@ export default {
         query: String,
         focusSuggestion: Number
     },
+    data() {
+        return {
+            focusSuggestionNumber: this.focusSuggestion
+        }
+    },
     watch: {
         'focusSuggestion': function(newFocusSuggestion) {
             console.log("focus suggestion changed; new value: " + newFocusSuggestion);
+            this.focusSuggestionNumber = newFocusSuggestion;
+        }
+    },
+    methods: {
+        mouseOverSuggestion(index) {
+            this.focusSuggestionNumber = index;
+
+            // notify the parent component that the focusSuggestionNumber variable should be changed
+            this.$emit('focusSuggestionChange', this.focusSuggestionNumber);
         }
     }
 };
@@ -71,14 +85,14 @@ export default {
     background: transparent;
 }
 
-.suggestion:hover {
+.suggestion:hover, .onhover {
     background-color: #123;
     background-color: #000;
     border-radius: 0;
     cursor: pointer;
 }
 
-.suggestion:hover:last-child {
+.suggestion:hover:last-child, .onhover_last_child {
     border-radius: 0 0 11px 11px;
 }
 
