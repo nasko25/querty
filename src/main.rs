@@ -79,7 +79,7 @@ fn main() {
     // TODO this can be async
     // TODO it can be a new function that mounts all necessary endpoints
     // mount the web API endpoints
-    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest, options_handler]).launch();
+    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest, options_handler, query]).launch();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
@@ -208,11 +208,18 @@ fn options_handler<'a>(path: PathBuf) -> Response<'a> {
 
 // TODO returning 404 might be better if solr has no response ?
 //  (although this is just an API, so an empty array should also be acceptable?)
+#[get("/query/<query>")]
 fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     // TODO maybe add an endpoint that only returns the important fields of the websites (title,
     //  url and the relevant part of the text)
     //  also sort by term frequency and setup spellchecker (check the TODO file)
     // TODO http://localhost:8983/solr/querty/select?q=text_all%3A%22falcon%22&sort=termfreq(text_all%2C%20%27asdf%27)%20desc
     let matched_websites = solr::req(&settings, format!("text_all:\"{:?}\"", query));
+
+    if matched_websites.is_ok() {
+        return json!(matched_websites.unwrap());
+    }
+    colour::red!("[ERR]"); println!(" query() returned an error!");
+    // if there is something wrong with the suggester just return an empty list as suggestions
     json!([])
 }
