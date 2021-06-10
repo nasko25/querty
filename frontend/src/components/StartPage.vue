@@ -57,7 +57,7 @@ export default {
             // show the suggestion box, only if the length of the query is > 2
             if (this.query.length >= 2 && this.inputSelected) {
                 this.isSuggestHidden = false;
-                fetch(`http://localhost:8000/suggest/${this.query}`, {
+                fetch(`http://${window.location.hostname}:8000/suggest/${encodeURI(this.query)}`, {
                     method: 'GET'
                 })
                     .then(response => {

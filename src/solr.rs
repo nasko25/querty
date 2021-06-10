@@ -11,6 +11,9 @@ use std::collections::HashMap;
 use std::fmt;
 use std::error;
 
+use url::{ Url };
+use urlencoding::encode;
+
 extern crate shellexpand;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -90,11 +93,11 @@ pub async fn req(settings: &settings::Settings, query: String) -> Result<Vec<Web
 
     let method = "select";
     // TODO more options
-    let url =  format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &query);
+    let url =  Url::parse(&format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query))).expect("The req() url cannot be parsed.");
 
-    println!("{}", reqwest::get(&url).await?.text().await?);
+    println!("{}", reqwest::get(url.clone()).await?.text().await?);
     let res: Response = reqwest::Client::new()
-        .get(&url)
+        .get(url)
         .send()
         .await?
         .json()

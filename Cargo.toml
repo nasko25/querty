@@ -28,3 +28,5 @@ rocket = "0.4.9"
 rocket_contrib = "0.4.9"
 
 colour = "0.6.0"
+
+urlencoding = "1.3.3"
