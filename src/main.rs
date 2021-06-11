@@ -30,6 +30,7 @@ use tests::test_all;
 use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
+use urlencoding::decode;
 
 fn main() {
     let settings = settings::Settings::new(false).unwrap();
@@ -186,7 +187,7 @@ impl Fairing for CORS {
 // Source for cors: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
-    let suggestions = solr::suggest(query.clone(), &settings);
+    let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query."), &settings);
     println!("suggestions: {:?}", suggestions);
     // parse the suggestion
     if (suggestions.is_ok()) {
@@ -214,7 +215,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  url and the relevant part of the text)
     //  also sort by term frequency and setup spellchecker (check the TODO file)
     // TODO http://localhost:8983/solr/querty/select?q=text_all%3A%22falcon%22&sort=termfreq(text_all%2C%20%27asdf%27)%20desc
-    let matched_websites = solr::req(&settings, format!("text_all:{}", query));
+    let matched_websites = solr::req(&settings, format!("text_all:{q}&sort=termfreq(text_all:{q}) desc", q = decode(&query).expect("Cannot url decode the query")));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());
