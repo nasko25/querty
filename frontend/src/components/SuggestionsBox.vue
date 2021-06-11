@@ -2,7 +2,7 @@
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
             <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
-                {{ query }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : "" }}</b>
+                {{ suggestion.startsWith(query) ? query : "" }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : suggestion }}</b>
             </li>
         </ul>
     </div>
