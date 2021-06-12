@@ -226,7 +226,7 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Vec
 
     let solr = &settings.solr;
     let method = "suggest";
-    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query));
+    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{}", &solr.server, &solr.port, &solr.collection, &method, encode(&query));
 
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)
