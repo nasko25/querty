@@ -46,6 +46,9 @@ fn main() {
     // reset the state of the db and solr
     // tests::reset_db_state(&conn, &settings);
 
+    // reindex solr
+    tests::reindex_solr(&settings);
+
     let mut url = "https://www.rust-lang.org";
 
     // this url has a weird <a> href (it does not have a host_str()) that should not throw an exception when parsed

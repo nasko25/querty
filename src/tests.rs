@@ -227,9 +227,18 @@ pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> 
     db::Database::create_tables(conn)?;
 
     // import data from the database
-    // right now this will do nothing, because the db was just created,
-    // but if at some point we need to reindex solr, or reset only solr,
-    // the dataimport function will import everything from the db to solr.
+    solr::dataimport(settings)?;
+    Ok(())
+}
+
+pub fn reindex_solr(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
+    // delete the querty collection
+    solr::delete_collection(settings)?;
+
+    // create a new solr collection
+    solr::create_collection(settings)?;
+
+    // import the data from the mysql database
     solr::dataimport(settings)?;
     Ok(())
 }

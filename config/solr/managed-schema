@@ -138,6 +138,9 @@
     <!-- text_en uses a stemmer; it would probably be best if I used a dynamic field that applies the text_en type -->
    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
    <field name="metadata" type="text_en" indexed="true" stored="true" multiValued="true" required="false" /> <!-- can it be required=false ? -->
+   <!-- TODO it would be better to make `text` a `text_en` or `text_general` type and add a new field that will just
+        copy everything from `text` (with <copyField>) but will have a `text_suggest` type
+   -->
    <field name="text" type="text_suggest" indexed="true" stored="true" multiValued="false" />
    <!-- TODO url should be unique -->
    <!-- the "base_url" field contains only the base of the url
@@ -1190,6 +1193,8 @@
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.LengthFilterFactory" min="2" max="255"/>
         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true"
+                      words="stopwords.txt" format="wordset"/>
       </analyzer>
     </fieldType>
 
