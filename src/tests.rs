@@ -226,8 +226,6 @@ pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> 
     solr::create_collection(settings)?;
     db::Database::create_tables(conn)?;
 
-    // import data from the database
-    solr::dataimport(settings)?;
     Ok(())
 }
 
