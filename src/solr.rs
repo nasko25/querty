@@ -7,7 +7,8 @@ use crate::db::ExternalLink;
 use std::process::Command;
 use std::env;
 
-use std::collections::HashMap;
+use std::collections::{ HashMap, HashSet };
+use std::hash::{ Hash, Hasher };
 use std::fmt;
 use std::error;
 
@@ -61,7 +62,7 @@ struct SimilarWords {
 struct Suggestions {
     #[serde(rename = "numFound")]
     num_found: i32,
-    suggestions: Vec<Term>
+    suggestions: HashSet<Term>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -70,6 +71,21 @@ pub struct Term {
     weight: i64,
     payload: String
 }
+
+// term will need a Hash and Eq traits to create a HashSet with Terms
+impl Hash for Term {
+    fn hash<H: Hasher> (&self, state: &mut H) {
+        self.term.hash(state);
+    }
+}
+
+impl PartialEq for Term {
+    fn eq(&self, other: &Self) -> bool {
+        self.term.eq(&other.term)
+    }
+}
+
+impl Eq for Term {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WebsiteSolr {
@@ -216,11 +232,11 @@ impl fmt::Display for SuggesterJSONError {
 
 
 #[tokio::main]
-pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Vec<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+pub async fn suggest(query: String, settings: &settings::Settings) -> Result<HashSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
-        println!("{}", SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()));
+        //println!("{}", SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()));
         return Err(SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()).into());
     }
 
