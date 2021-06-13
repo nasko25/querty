@@ -190,6 +190,7 @@ impl Fairing for CORS {
 // Source for cors: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
+    // TODO sort by term frequency
     let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query."), &settings);
     println!("suggestions: {:?}", suggestions);
     // parse the suggestion
