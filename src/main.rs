@@ -47,7 +47,7 @@ fn main() {
     // tests::reset_db_state(&conn, &settings);
 
     // reindex solr
-    tests::reindex_solr(&settings);
+    // tests::reindex_solr(&settings);
 
     let mut url = "https://www.rust-lang.org";
 

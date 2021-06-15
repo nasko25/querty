@@ -8,6 +8,7 @@ use std::process::Command;
 use std::env;
 
 use std::collections::{ HashMap, HashSet };
+use linked_hash_set::LinkedHashSet;
 use std::hash::{ Hash, Hasher };
 use std::fmt;
 use std::error;
@@ -62,7 +63,7 @@ struct SimilarWords {
 struct Suggestions {
     #[serde(rename = "numFound")]
     num_found: i32,
-    suggestions: HashSet<Term>
+    suggestions: LinkedHashSet<Term>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -232,7 +233,7 @@ impl fmt::Display for SuggesterJSONError {
 
 
 #[tokio::main]
-pub async fn suggest(query: String, settings: &settings::Settings) -> Result<HashSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+pub async fn suggest(query: String, settings: &settings::Settings) -> Result<LinkedHashSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
@@ -242,7 +243,7 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Has
 
     let solr = &settings.solr;
     let method = "suggest";
-    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{}", &solr.server, &solr.port, &solr.collection, &method, encode(&query));
+    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{q}&sort=termfreq%28text%3A{q}%29 desc", &solr.server, &solr.port, &solr.collection, &method, q = encode(&query));
 
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)
