@@ -8,7 +8,7 @@ use std::process::Command;
 use std::env;
 
 use std::collections::{ HashMap, HashSet };
-use linked_hash_set::LinkedHashSet;
+use indexmap::IndexSet;
 use std::hash::{ Hash, Hasher };
 use std::fmt;
 use std::error;
@@ -63,7 +63,7 @@ struct SimilarWords {
 struct Suggestions {
     #[serde(rename = "numFound")]
     num_found: i32,
-    suggestions: LinkedHashSet<Term>
+    suggestions: IndexSet<Term>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -233,7 +233,7 @@ impl fmt::Display for SuggesterJSONError {
 
 
 #[tokio::main]
-pub async fn suggest(query: String, settings: &settings::Settings) -> Result<LinkedHashSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+pub async fn suggest(query: String, settings: &settings::Settings) -> Result<IndexSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
