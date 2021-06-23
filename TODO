@@ -13,4 +13,4 @@ curl http://localhost:8983/solr/querty/suggest\?suggest\=true\&suggest.build\=tr
 Don't forget to build the index! (you build it by making a request with .../?suggest.build=true) You don't have to build it every time you query the suggester, but it should always be ran initially at least once.
 Also right now the suggester fails for words with length < 2. It is probably because the suggester has a LengthFilterFactory that limits the length of words between 2 and 255.
 
-spellchecker
+spellchecker (firts try /suggest and if it does not return anything (or returns too few items) try /spell)

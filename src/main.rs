@@ -47,13 +47,13 @@ fn main() {
     // tests::reset_db_state(&conn, &settings);
 
     // reindex solr
-    tests::reindex_solr(&settings);
+    // tests::reindex_solr(&settings);
 
     let mut url = "https://www.rust-lang.org";
 
     // this url has a weird <a> href (it does not have a host_str()) that should not throw an exception when parsed
     // it also does not have external links, so tests checking that will fail
-    // let url = "https://doc.rust-lang.org/std/macro.assert_ne.html"; 
+    // let url = "https://doc.rust-lang.org/std/macro.assert_ne.html";
 
     // load the website with this url from solr to see if it is in the database
     let mut websites_saved = crate::solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
