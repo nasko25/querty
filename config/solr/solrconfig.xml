@@ -1202,7 +1202,7 @@
                   startup="lazy" >
     <lst name="defaults">
       <str name="suggest">true</str>
-      <str name="suggest.count">10</str>
+      <str name="suggest.count">50</str>
       <str name="suggest.dictionary">mySuggester</str>
     </lst>
     <arr name="components">
