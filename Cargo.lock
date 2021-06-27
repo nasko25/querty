@@ -879,6 +879,7 @@ checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
 dependencies = [
  "autocfg",
  "hashbrown",
+ "serde 1.0.126",
 ]
 
 [[package]]
@@ -1678,6 +1679,7 @@ dependencies = [
  "colour",
  "config",
  "diesel",
+ "indexmap",
  "publicsuffix",
  "pyo3",
  "reqwest",
