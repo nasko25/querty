@@ -1,18 +1,13 @@
 <template>
   <div id="app">
-    <img alt="Q" id="Q" src="./assets/q.svg">
-    <SearchBox msg="Welcome to Your Vue.js App"/>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import SearchBox from './components/StartPage.vue'
 
 export default {
   name: 'App',
-  components: {
-    SearchBox
-  }
 }
 </script>
 
