@@ -3,7 +3,9 @@
     results
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
-            {{result}}
+            <!-- TODO &hellip; should only be added if the text was truncated -->
+            <p> {{ result.title === undefined || result.title === "" ? truncate(result.text, 2) + "&hellip;" : result.title }} </p>
+            <p> {{ result }} </p>
         </li>
     </ul>
 </div>
@@ -42,6 +44,9 @@ export default  {
                             console.error("Suggest served responsed with an unexpected code: " + response.status)
             });
             return [];
+        },
+        truncate(str, max_len) {
+            return (str.length > max_len) ? str.substr(0, max_len - 1) : str;
         }
     },
     //beforeMount() {
@@ -51,4 +56,7 @@ export default  {
 </script>
 
 <style scoped>
+.result {
+    list-style: none;
+}
 </style>
