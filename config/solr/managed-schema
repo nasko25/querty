@@ -419,6 +419,9 @@
       <analyzer>
         <tokenizer class="solr.PatternTokenizerFactory" pattern="[A-Za-z0-9-_]+" group="0"/>
         <filter class="solr.LowerCaseFilterFactory"/>
+
+        <!-- Not sure if maxGramSize = 2000 is a good idea -->
+        <filter class="solr.EdgeNGramFilterFactory" minGramSize="2" maxGramSize="2000"/>
       </analyzer>
     </fieldType>
 

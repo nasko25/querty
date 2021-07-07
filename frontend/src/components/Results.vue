@@ -39,6 +39,7 @@ export default  {
             console.log("query:", query);
 
             // TODO if the search query is present in the url, the website should be higher up
+                // should be able to do this with termfreq(url,"query string") desc
             // TODO also sort by rank
             fetch(`http://${window.location.hostname}:8000/query/${encodeURIComponent(query)}`, {
                     method: 'GET'
