@@ -1,10 +1,11 @@
 <template>
 <div>
-    results
+    <!-- If there is an error, it will be displayed in this div -->
+    <div id = "error" :class = "{ hidden : err === null }"> {{ err }} </div>
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
-            <!-- TODO &hellip; should only be added if the text was truncated -->
-            <p> {{ result.title === undefined || result.title === "" ? truncate(result.text, 2) + "&hellip;" : result.title }} </p>
+            <!-- &hellip; is only added if the text was truncated -->
+            <p> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </p>
             <p> {{ result }} </p>
         </li>
     </ul>
@@ -12,25 +13,32 @@
 </template>
 
 <script>
-
 export default  {
     name: 'Results',
     data() {
         return {
-            results: this.fetchResults()
+            results: [],
+            err: null
         }
     },
+    beforeMount() {
+        this.fetchResults();
+    },
     methods: {
-        fetchResults() {
+        fetchResults: function() {
             const query = this.$route.query.q;
             if (query === undefined || query === "") {
                 console.error("Empty query.")
-                // TODO indicate error
-                return [];
+                // indicate error
+                this.err = "Empty query";
+                this.results = [];
+            }
+            else {
+                this.err = null;
             }
             console.log("query:", query);
 
-            // TODO if the query is present in the url, the website should be higher up
+            // TODO if the search query is present in the url, the website should be higher up
             // TODO also sort by rank
             fetch(`http://${window.location.hostname}:8000/query/${encodeURIComponent(query)}`, {
                     method: 'GET'
@@ -42,8 +50,10 @@ export default  {
                                 .catch(err => console.error(err));
                         else
                             console.error("Suggest served responsed with an unexpected code: " + response.status)
+                    }).catch(err => {
+                        this.err = "Failed to fetch the query. Try again later.";
+                        console.error(err);
             });
-            return [];
         },
         truncate(str, max_len) {
             return (str.length > max_len) ? str.substr(0, max_len - 1) : str;
@@ -56,6 +66,13 @@ export default  {
 </script>
 
 <style scoped>
+#error {
+    /* color: #e4b9c3; */
+    color: #a3c9ef;
+    font-size: 2em;
+    font-family: sans-serif, "Trebuchet MS";
+}
+
 .result {
     list-style: none;
 }
