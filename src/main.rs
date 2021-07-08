@@ -219,7 +219,16 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  url and the relevant part of the text)
     //  also sort by term frequency and setup spellchecker (check the TODO file)
 
-    let matched_websites = solr::req(&settings, format!("text_all%3A{q}&sort=termfreq%28text_all%2C%22{q}%22%29 desc", q = decode(&query).expect("Cannot url decode the query")));
+    // TODO for now sorting is done on the whole given phrase; pharses should be split by
+    // whitecharacters and sorted by the termfreq of each of the words
+    //  for example if the pharse is "example rust", the entries in solr will be sorted by how many
+    //  "example rust" phrases are present on the website, instead of sorting by the words "example" and "rust"
+    //  This has to be fixed by splitting the string query by white characters and sorting by each
+    //  word. TODO
+    //  NOTE this is only relevant for the sorting; the query itself does not have "" characters,
+    //  so it does not search for the phrase "example rust". So the words in the query should only
+    //  be split for the sorting
+    let matched_websites = solr::req(&settings, format!("text_all%3A{q}&sort=termfreq%28url%2C%22{q}%22%29%20desc%2Ctermfreq%28text_all%2C%22{q}%22%29%20desc", q = decode(&query).expect("Cannot url decode the query")));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());
