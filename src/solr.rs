@@ -39,8 +39,8 @@ struct ResponseBody {
     #[serde(rename = "numFound")]
     num_found: i64,
     start: i32,
-    #[serde(rename = "maxScore")]
-    max_score: f32,
+    //#[serde(rename = "maxScore")]
+    //max_score: f32,
     #[serde(rename = "numFoundExact")]
     num_found_exact: bool,
     docs: Vec<WebsiteSolr>
@@ -110,9 +110,14 @@ pub async fn req(settings: &settings::Settings, query: String) -> Result<Vec<Web
 
     let method = "select";
     // TODO more options
-    let url =  Url::parse(&format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query))).expect("The req() url cannot be parsed.");
+    // The query needs to already be url encoded. This is to allow url parameters. TODO In the future it
+    // would be better to pass the potentially multiple query strings to req(), where they would be
+    // encoded and passed as url parameters
+    //  For now, the query string needs to be url encoded externally, so that the '&' characters
+    //  would not be encoded if it is used to separate url parameters.
+    let url =  &format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &query);
 
-    println!("{}", reqwest::get(url.clone()).await?.text().await?);
+    println!("{}", reqwest::get(url).await?.text().await?);
     let res: Response = reqwest::Client::new()
         .get(url)
         .send()

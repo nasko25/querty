@@ -35,7 +35,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     println!("table website created: {:?}", create_website);
     assert!(create_website.is_ok(), "Could not create tables in the db.");
 
-    let w = DB::Website(Website { id: None, title: "".to_string(), text: "This is a website for some things".to_string(), url: "".to_string(), base_url: "".to_string(), rank: 3.0, type_of_website: "".to_string() });
+    let w = DB::Website(Website { id: None, title: "".to_string(), text: "This is a website for some things example example".to_string(), url: "".to_string(), base_url: "".to_string(), rank: 3.0, type_of_website: "".to_string() });
     // let mut vals_inserted = db::Database::insert_w(&w, conn);
     // println!("values inserted: {:?}", vals_inserted);
 
