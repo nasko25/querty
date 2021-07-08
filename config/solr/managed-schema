@@ -386,14 +386,11 @@
    also applies synonyms. -->
     <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
-        <!-- TODO which tokenizer to use
-            With the standard tokenizer a query "example rust" will show websites that contain either "example" OR "rust"
-            (but sorting by termfreq does not work becuase the phrase "example rust" is not present in neither website)
-
-            With the keyword tokenizer it appears that only the website that contains both words "example" and "rust" is returned
-            (the words are not necessarily next to each other)
-        -->
         <tokenizer class="solr.StandardTokenizerFactory"/>
+        <!--
+            The keyword tokenizer saves the whole field without performing any splitting or processing.
+            The standard tokenizer makes more sense for text_general fields.
+        -->
         <!--tokenizer class="solr.KeywordTokenizerFactory"/-->
         <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
         <!-- in this example, we will only use synonyms at query time
