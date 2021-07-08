@@ -219,7 +219,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  url and the relevant part of the text)
     //  also sort by term frequency and setup spellchecker (check the TODO file)
 
-    let matched_websites = solr::req(&settings, format!("text_all%3A{q}&sort=termfreq%28text_all%2C{q}%29 desc", q = decode(&query).expect("Cannot url decode the query")));
+    let matched_websites = solr::req(&settings, format!("text_all%3A{q}&sort=termfreq%28text_all%2C%22{q}%22%29 desc", q = decode(&query).expect("Cannot url decode the query")));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());
