@@ -228,6 +228,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  NOTE this is only relevant for the sorting; the query itself does not have "" characters,
     //  so it does not search for the phrase "example rust". So the words in the query should only
     //  be split for the sorting
+    let split_query = query.split_whitespace();
     let matched_websites = solr::req(&settings, format!("text_all%3A{q}&sort=termfreq%28url%2C%22{q}%22%29%20desc%2Ctermfreq%28text_all%2C%22{q}%22%29%20desc", q = decode(&query).expect("Cannot url decode the query")));
 
     if matched_websites.is_ok() {
@@ -236,4 +237,12 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     colour::red!("[ERR]"); println!(" query() returned an error!");
     // if there is something wrong with the suggester just return an empty list as suggestions
     json!([])
+}
+
+// helper function that will build a string given an array of strings extracted from the query that will be used in the solr select queries
+// for example if the query is "example rust", and this function is called with ["example", "rust"], it will return this string url encoded:
+//  sort=termfreq(url,example) desc,termfreq(url,rust) desc,termfreq(text_all,example) desc,termfreq(text_all,rust) desc
+fn build_sort_query(words: Vec<String>) -> String {
+    // TODO
+    return "".to_string();
 }
