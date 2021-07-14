@@ -222,10 +222,14 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     // when sorting pharses are split by whitespace characters and sorted by the termfreq of each of the words
     //  for example when the search query is "example rust", the results are first sorted by the
     //  term frequency of "example" and after that sorted by the term frequency of "rust"
+    // TODO `decode(query).expect("Cannot url decode the query")` instead of `query`?
+    // TODO sanitize `query`
+    //  right now http://localhost:8080/results?q=spacex%20rust-lang%26asdasd throws an error
+    //  and http://localhost:8080/results?q=* returns all rows in solr instead of searching for the
+    //  "*" character
+    //  (maybe try to add "" to the query; so `text_all:example` will become `text_all:"example"` ?)
     let split_query: Vec<&str> = query.split_whitespace().collect();
-    // TODO split the query field as well ( so that `text_all:example rust` will become
-    // `text_all:example text_all:rust`)
-    let matched_websites = solr::req(&settings, format!("text_all%3A{}&sort={}", decode(&query).expect("Cannot url decode the query"), build_sort_query(split_query)));
+    let matched_websites = solr::req(&settings, format!("{}&sort={}", build_search_query(&split_query), build_sort_query(split_query)));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());
@@ -237,7 +241,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
 
 // helper function that will build a string given an array of strings extracted from the query that will be used in the solr select queries
 // for example if the query is "example rust", and this function is called with ["example", "rust"], it will return this string url encoded:
-//  sort=termfreq(url,example) desc,termfreq(url,rust) desc,termfreq(text_all,example) desc,termfreq(text_all,rust) desc
+//  termfreq(url,example) desc,termfreq(url,rust) desc,termfreq(text_all,example) desc,termfreq(text_all,rust) desc
 fn build_sort_query(words: Vec<&str>) -> String {
     // construct two vectors of words; one sorting by url and the other by text_all
     let mut st1: Vec<&str> = Vec::new();
@@ -258,4 +262,25 @@ fn build_sort_query(words: Vec<&str>) -> String {
 
     st1.append(&mut st2);
     return st1.concat();
+}
+
+// helper function that builds a string given an array of strings extracted from the query that
+//  will be used in the solr select queries
+// it is similar to build_sort_query(), but it builds the main query (by splitting the original query string
+//  into words) by appending "text_all:" to each word in the original query string
+// for example if the query is "example rust", then this function will be called with
+//  ["example", "rust"], it will return this string url encoded:
+//  text_all:example text_all:rust
+fn build_search_query(words: &Vec<&str>) -> String {
+    // construct a vector of strings that will be concatinated in the end
+    //  and returned by this function
+    let mut query: Vec<&str> = Vec::new();
+    words.iter().for_each(|word| {
+        query.push("text_all%3A");
+        query.push(word);
+        query.push("%20");  // space
+    });
+    // remove the last <space> character
+    query.pop();
+    return query.concat();
 }
