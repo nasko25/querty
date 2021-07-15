@@ -254,7 +254,6 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
                                     .replace(";", "\\;")
                                     .replace("/", "\\/");
 
-    println!("q={} ; sq={}", query, sanitized_query);
     let split_query: Vec<&str> = sanitized_query.split_whitespace().collect();
     let matched_websites = solr::req(&settings, format!("{}&sort={}", build_search_query(&split_query), build_sort_query(split_query)));
 
@@ -274,14 +273,14 @@ fn build_sort_query(words: Vec<&str>) -> String {
     let mut st1: Vec<&str> = Vec::new();
     let mut st2: Vec<&str> = Vec::new();
     words.iter().for_each(|word| {
-        st1.push("termfreq%28url%2C%22");
+        st1.push("termfreq%28url%2C");
         st1.push(word);
-        st1.push("%22%29%20desc");
+        st1.push("%29%20desc");
         st1.push("%2C");
 
-        st2.push("termfreq%28text_all%2C%22");
+        st2.push("termfreq%28text_all%2C");
         st2.push(word);
-        st2.push("%22%29%20desc");
+        st2.push("%29%20desc");
         st2.push("%2C");
     });
     // remove the last %2C
@@ -303,9 +302,8 @@ fn build_search_query(words: &Vec<&str>) -> String {
     //  and returned by this function
     let mut query: Vec<&str> = Vec::new();
     words.iter().for_each(|word| {
-        query.push("text_all%3A%22");
+        query.push("text_all%3A");
         query.push(word);
-        query.push("%22");  // "
         query.push("%20");  // space
     });
     // remove the last <space> character
