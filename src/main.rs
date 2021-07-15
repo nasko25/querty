@@ -222,13 +222,40 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     // when sorting pharses are split by whitespace characters and sorted by the termfreq of each of the words
     //  for example when the search query is "example rust", the results are first sorted by the
     //  term frequency of "example" and after that sorted by the term frequency of "rust"
-    // TODO `decode(query).expect("Cannot url decode the query")` instead of `query`?
+    // TODO `decode(&query).expect("Cannot url decode the query")` instead of `query`? - it should
+    //  be decoded automatically
     // TODO sanitize `query`
     //  right now http://localhost:8080/results?q=spacex%20rust-lang%26asdasd throws an error
     //  and http://localhost:8080/results?q=* returns all rows in solr instead of searching for the
     //  "*" character
     //  (maybe try to add "" to the query; so `text_all:example` will become `text_all:"example"` ?)
-    let split_query: Vec<&str> = query.split_whitespace().collect();
+
+    // sanitize the query string
+    //  characters taken from:
+    //  https://github.com/apache/solr/blob/9903d00b0fb6216f836bb580f42d0081b7b41584/solr/solrj/src/java/org/apache/solr/client/solrj/util/ClientUtils.java#L159
+    let sanitized_query = query.replace("\\", "\\\\")
+                                    .replace("+", "\\+")
+                                    .replace("-", "\\-")
+                                    .replace("!", "\\!")
+                                    .replace("(", "\\(")
+                                    .replace(")", "\\)")
+                                    .replace(":", "\\:")
+                                    .replace("^", "\\^")
+                                    .replace("[", "\\[")
+                                    .replace("]", "\\]")
+                                    .replace("\"", "\\\"")
+                                    .replace("{", "\\{")
+                                    .replace("}", "\\}")
+                                    .replace("~", "\\~")
+                                    .replace("*", "\\*")
+                                    .replace("?", "\\?")
+                                    .replace("|", "\\|")
+                                    .replace("&", "\\&")
+                                    .replace(";", "\\;")
+                                    .replace("/", "\\/");
+
+    println!("q={} ; sq={}", query, sanitized_query);
+    let split_query: Vec<&str> = sanitized_query.split_whitespace().collect();
     let matched_websites = solr::req(&settings, format!("{}&sort={}", build_search_query(&split_query), build_sort_query(split_query)));
 
     if matched_websites.is_ok() {
@@ -276,8 +303,9 @@ fn build_search_query(words: &Vec<&str>) -> String {
     //  and returned by this function
     let mut query: Vec<&str> = Vec::new();
     words.iter().for_each(|word| {
-        query.push("text_all%3A");
+        query.push("text_all%3A%22");
         query.push(word);
+        query.push("%22");  // "
         query.push("%20");  // space
     });
     // remove the last <space> character
