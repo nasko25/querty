@@ -31,6 +31,7 @@ use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
 use urlencoding::decode;
+use regex::Regex;
 
 fn main() {
     let settings = settings::Settings::new(false).unwrap();
@@ -255,7 +256,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
                                     .replace("/", "\\/");
 
     let split_query: Vec<&str> = sanitized_query.split_whitespace().collect();
-    let matched_websites = solr::req(&settings, format!("{}&sort={}", build_search_query(&split_query), build_sort_query(split_query)));
+    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(Regex::new(r"[^a-zA-Z\d]").unwrap().split(&sanitized_query).collect::<Vec<&str>>().into_iter().filter(|word| word.to_string() != "").collect::<Vec<&str>>())));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());

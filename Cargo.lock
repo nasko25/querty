@@ -1682,6 +1682,7 @@ dependencies = [
  "indexmap",
  "publicsuffix",
  "pyo3",
+ "regex",
  "reqwest",
  "rocket",
  "rocket_contrib",
