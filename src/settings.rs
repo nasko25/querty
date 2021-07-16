@@ -1,7 +1,7 @@
 use config::{ConfigError};
 
 // TODO getters instead of pub?
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Database {
     pub server: String,
     pub port: u16,
@@ -10,7 +10,7 @@ pub struct Database {
     pub pass: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Solr {
     pub server: String,
     pub port: u16,
@@ -19,7 +19,7 @@ pub struct Solr {
     pub path_to_solr_config: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     debug: bool,
     pub database: Database,
