@@ -70,30 +70,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  for example when the search query is "example rust", the results are first sorted by the
     //  term frequency of "example" and after that sorted by the term frequency of "rust"
 
-    // sanitize the query string
-    //  characters taken from:
-    //  https://github.com/apache/solr/blob/9903d00b0fb6216f836bb580f42d0081b7b41584/solr/solrj/src/java/org/apache/solr/client/solrj/util/ClientUtils.java#L159
-    let sanitized_query = query.replace("\\", "\\\\")
-                                    .replace("+", "\\+")
-                                    .replace("-", "\\-")
-                                    .replace("!", "\\!")
-                                    .replace("(", "\\(")
-                                    .replace(")", "\\)")
-                                    .replace(":", "\\:")
-                                    .replace("^", "\\^")
-                                    .replace("[", "\\[")
-                                    .replace("]", "\\]")
-                                    .replace("\"", "\\\"")
-                                    .replace("{", "\\{")
-                                    .replace("}", "\\}")
-                                    .replace("~", "\\~")
-                                    .replace("*", "\\*")
-                                    .replace("?", "\\?")
-                                    .replace("|", "\\|")
-                                    .replace("&", "\\&")
-                                    .replace(";", "\\;")
-                                    .replace("/", "\\/");
-
+    let sanitized_query = sanitize_query(query);
     let split_query: Vec<&str> = sanitized_query.split_whitespace().collect();
     // the sort terms are split by non-alphanumeric characters, while the search query is only
     //  split by whitespace characters
@@ -107,6 +84,32 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     colour::red!("[ERR]"); println!(" query() returned an error!");
     // if there is something wrong with the suggester just return an empty list as suggestions
     json!([])
+}
+
+// helper function that sanitizes the query string
+//  characters taken from:
+//  https://github.com/apache/solr/blob/9903d00b0fb6216f836bb580f42d0081b7b41584/solr/solrj/src/java/org/apache/solr/client/solrj/util/ClientUtils.java#L159
+fn sanitize_query(query: String) -> String {
+    return query.replace("\\", "\\\\")
+                    .replace("+", "\\+")
+                    .replace("-", "\\-")
+                    .replace("!", "\\!")
+                    .replace("(", "\\(")
+                    .replace(")", "\\)")
+                    .replace(":", "\\:")
+                    .replace("^", "\\^")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                    .replace("\"", "\\\"")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace("~", "\\~")
+                    .replace("*", "\\*")
+                    .replace("?", "\\?")
+                    .replace("|", "\\|")
+                    .replace("&", "\\&")
+                    .replace(";", "\\;")
+                    .replace("/", "\\/");
 }
 
 // helper function that will build a string given an array of strings extracted from the query that will be used in the solr select queries
