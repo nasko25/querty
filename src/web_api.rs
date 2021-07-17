@@ -76,8 +76,6 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  split by whitespace characters
     //  (maybe add "" to the sort query; so `text_all:example` will become `text_all:"example"`;
     //  then maybe you don't have to split by non-alphanumeric characters ?)
-    // TODO encode(build_search_query(...))? because
-    //  http://localhost:8080/results?q=spacex%20rust-lang%26asdasd still throws an error
     let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query)));
 
     if matched_websites.is_ok() {

@@ -2,6 +2,11 @@
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
             <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
+                <!-- TODO deal with multiple words in a query. Maybe split the query string by non-alphanumeric characters and for each word check the condition below
+                    (to determine which part of the query to bold)
+                        Also, you can call methods in the {{}}
+                    Everything, except part of the last word in the search query, should not be bold.
+                -->
                 {{ suggestion.startsWith(query) ? query : "" }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : suggestion }}</b>
             </li>
         </ul>
