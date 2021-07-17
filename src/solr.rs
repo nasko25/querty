@@ -3,6 +3,7 @@ use crate::settings;
 use crate::db::from_str;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
+use crate::web_api;
 
 use std::process::Command;
 use std::env;
@@ -248,8 +249,10 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Ind
 
     let solr = &settings.solr;
     let method = "suggest";
-    // TODO split query by white characters when sorting; check main.rs:query() for more info
-    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{q}&sort=termfreq%28url%2C%22{q}%22%29%20desc%2Ctermfreq%28text%2C%22{q}%22%29%20desc", &solr.server, &solr.port, &solr.collection, &method, q = encode(&query));
+
+    // TODO maybe also split the words in the search query?
+    let sanitized_query = web_api::sanitize_query(&query);
+    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{}&sort={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query), web_api::build_sort_query(sanitized_query));
 
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)

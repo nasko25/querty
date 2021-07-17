@@ -70,13 +70,15 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  for example when the search query is "example rust", the results are first sorted by the
     //  term frequency of "example" and after that sorted by the term frequency of "rust"
 
-    let sanitized_query = sanitize_query(query);
+    let sanitized_query = sanitize_query(&query);
     let split_query: Vec<&str> = sanitized_query.split_whitespace().collect();
     // the sort terms are split by non-alphanumeric characters, while the search query is only
     //  split by whitespace characters
     //  (maybe add "" to the sort query; so `text_all:example` will become `text_all:"example"`;
     //  then maybe you don't have to split by non-alphanumeric characters ?)
-    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(Regex::new(r"[^a-zA-Z\d]").unwrap().split(&sanitized_query).collect::<Vec<&str>>().into_iter().filter(|word| word.to_string() != "").collect::<Vec<&str>>())));
+    // TODO encode(build_search_query(...))? because
+    //  http://localhost:8080/results?q=spacex%20rust-lang%26asdasd still throws an error
+    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query)));
 
     if matched_websites.is_ok() {
         return json!(matched_websites.unwrap());
@@ -89,7 +91,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
 // helper function that sanitizes the query string
 //  characters taken from:
 //  https://github.com/apache/solr/blob/9903d00b0fb6216f836bb580f42d0081b7b41584/solr/solrj/src/java/org/apache/solr/client/solrj/util/ClientUtils.java#L159
-fn sanitize_query(query: String) -> String {
+pub fn sanitize_query(query: &String) -> String {
     return query.replace("\\", "\\\\")
                     .replace("+", "\\+")
                     .replace("-", "\\-")
@@ -115,7 +117,8 @@ fn sanitize_query(query: String) -> String {
 // helper function that will build a string given an array of strings extracted from the query that will be used in the solr select queries
 // for example if the query is "example rust", and this function is called with ["example", "rust"], it will return this string url encoded:
 //  termfreq(url,example) desc,termfreq(url,rust) desc,termfreq(text_all,example) desc,termfreq(text_all,rust) desc
-fn build_sort_query(words: Vec<&str>) -> String {
+pub fn build_sort_query(sanitized_query: String) -> String {
+    let words = Regex::new(r"[^a-zA-Z\d]").unwrap().split(&sanitized_query).collect::<Vec<&str>>().into_iter().filter(|word| word.to_string() != "").collect::<Vec<&str>>();
     // construct two vectors of words; one sorting by url and the other by text_all
     let mut st1: Vec<&str> = Vec::new();
     let mut st2: Vec<&str> = Vec::new();
