@@ -7,7 +7,7 @@ use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
 
 use std::path::PathBuf;
-use urlencoding::decode;
+use urlencoding::{ encode, decode };
 
 use crate::settings;
 use crate::solr;
@@ -120,18 +120,19 @@ pub fn sanitize_query(query: &String) -> String {
 pub fn build_sort_query(sanitized_query: String) -> String {
     let words = Regex::new(r"[^a-zA-Z\d]").unwrap().split(&sanitized_query).collect::<Vec<&str>>().into_iter().filter(|word| word.to_string() != "").collect::<Vec<&str>>();
     // construct two vectors of words; one sorting by url and the other by text_all
-    let mut st1: Vec<&str> = Vec::new();
-    let mut st2: Vec<&str> = Vec::new();
+    let mut st1: Vec<String> = Vec::new();
+    let mut st2: Vec<String> = Vec::new();
     words.iter().for_each(|word| {
-        st1.push("termfreq%28url%2C");
-        st1.push(word);
-        st1.push("%29%20desc");
-        st1.push("%2C");
+        let encoded_word: String = encode(word);
+        st1.push("termfreq%28url%2C".to_string());
+        st1.push(encoded_word.clone());
+        st1.push("%29%20desc".to_string());
+        st1.push("%2C".to_string());
 
-        st2.push("termfreq%28text_all%2C");
-        st2.push(word);
-        st2.push("%29%20desc");
-        st2.push("%2C");
+        st2.push("termfreq%28text_all%2C".to_string());
+        st2.push(encoded_word);
+        st2.push("%29%20desc".to_string());
+        st2.push("%2C".to_string());
     });
     // remove the last %2C
     st2.pop();
@@ -150,11 +151,12 @@ pub fn build_sort_query(sanitized_query: String) -> String {
 fn build_search_query(words: &Vec<&str>) -> String {
     // construct a vector of strings that will be concatinated in the end
     //  and returned by this function
-    let mut query: Vec<&str> = Vec::new();
+    let mut query: Vec<String> = Vec::new();
     words.iter().for_each(|word| {
-        query.push("text_all%3A");
-        query.push(word);
-        query.push("%20");  // space
+        let encoded_word: String = encode(word);
+        query.push("text_all%3A".to_string());
+        query.push(encoded_word);
+        query.push("%20".to_string());  // space
     });
     // remove the last <space> character
     query.pop();
