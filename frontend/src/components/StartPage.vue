@@ -2,7 +2,7 @@
   <div>
     <img alt="Q" id="Q" src="../assets/q.svg">
     <div class="start_page">
-      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" autofocus>
+      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.enter="search" autofocus>
       <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
       <h1> Welcome to Your Vue.js App </h1>
       <p>
@@ -89,6 +89,7 @@ export default {
         },
         arrowDownHandler: function(event) {
             console.log("key down");
+            // prevent down arrow to move the cursor
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
@@ -98,6 +99,11 @@ export default {
         },
         onFocusSuggestionChange: function(newFocusSuggestion) {
             this.focusSuggestion = newFocusSuggestion;
+        },
+        search: function(event) {
+            event.preventDefault();
+            console.log("enter");
+            this.$router.push({ path: '/results', query: { q: this.query } })
         }
     }
 };
