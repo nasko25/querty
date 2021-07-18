@@ -5,7 +5,8 @@
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
             <!-- &hellip; is only added if the text was truncated -->
-            <p> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </p>
+            <a class = "result-title" :href="result.url"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a>
+            <br/>
             <p> {{ result }} </p>
         </li>
     </ul>
@@ -38,8 +39,6 @@ export default  {
             }
             console.log("query:", query);
 
-            // TODO if the search query is present in the url, the website should be higher up
-                // should be able to do this with termfreq(url,"query string") desc
             // TODO also sort by rank
             fetch(`http://${window.location.hostname}:8000/query/${encodeURIComponent(query)}`, {
                     method: 'GET'
@@ -76,5 +75,20 @@ export default  {
 
 .result {
     list-style: none;
+}
+
+.result-title {
+    float: left;
+    text-decoration: none;
+    /* color: #5a55aa; */
+    color: #5b5fe2;
+}
+
+.result-title:visited {
+    color: #aeb1f1;
+}
+
+.result-title:hover {
+    text-decoration: underline;
 }
 </style>
