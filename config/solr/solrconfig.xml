@@ -1192,6 +1192,7 @@
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">text</str>
       <str name="weightField">rank</str>
+      <!-- text_suggest ??? -->
       <str name="suggestAnalyzerFieldType">string</str>
       <str name="buildOnStartup">false</str>
       <str name="buildOnCommit">false</str>

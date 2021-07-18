@@ -7,7 +7,7 @@
                         Also, you can call methods in the {{}}
                     Everything, except part of the last word in the search query, should not be bold.
                 -->
-                {{ suggestion.startsWith(query) ? query : "" }}<b>{{ suggestion.startsWith(query) ? suggestion.replace(query, "") : suggestion }}</b>
+                {{ getNonBoldPartOfQuery(suggestion, query) }}<b>{{ getBoldPartOfQuery(suggestion, query) }}</b>
             </li>
         </ul>
     </div>
@@ -38,6 +38,14 @@ export default {
         mouseOverSuggestion(index) {
             // notify the parent component that the focusSuggestionNumber variable should be changed
             this.$emit('focusSuggestionChange', index);
+        },
+        getNonBoldPartOfQuery(suggestion, query) {
+            const split_query = query.split(/[^A-Za-z\d]/);
+            return suggestion.startsWith(split_query[split_query.length - 1]) ? query : "";
+        },
+        getBoldPartOfQuery(suggestion, query) {
+            const split_query = query.split(/[^A-Za-z\d]/);
+            return suggestion.startsWith(split_query[split_query.length - 1]) ? suggestion.replace(split_query[split_query.length - 1], "") : suggestion;
         }
     }
 };

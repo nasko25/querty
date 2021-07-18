@@ -67,6 +67,9 @@ export default {
                                 .catch(err => console.error(err));
                         else
                             console.error("Suggest served responsed with an unexpected code: " + response.status)
+                    })
+                    .catch(err => {
+                            console.error(err);
                     });
             } else {
                 this.isSuggestHidden = true;
