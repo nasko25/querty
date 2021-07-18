@@ -1,8 +1,8 @@
 <template>
   <div>
-    <img alt="Q" id="Q" src="../assets/q.svg">
+    <img alt="Q" id="Q" src="../assets/q.svg"/>
     <div class="start_page">
-      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.enter="search" autofocus>
+      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.enter="search"/>
       <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
       <h1> Welcome to Your Vue.js App </h1>
       <p>
@@ -105,6 +105,9 @@ export default {
             console.log("enter");
             this.$router.push({ path: '/results', query: { q: this.query } })
         }
+    },
+    mounted: function() {
+        document.getElementsByClassName("search_box")[0].focus();
     }
 };
 
