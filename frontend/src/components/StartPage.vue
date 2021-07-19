@@ -2,8 +2,8 @@
   <div>
     <img alt="Q" id="Q" src="../assets/q.svg"/>
     <div class="start_page">
-      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.enter="search"/>
-      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" :MAX_SUGGESTION_COUNT="MAX_SUGGESTION_COUNT" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
+      <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.right="arrowRightHandler" v-on:keydown.enter="search"/>
+      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" :MAX_SUGGESTION_COUNT="MAX_SUGGESTION_COUNT" @focusSuggestionChange="onFocusSuggestionChange" ref="suggestionsBoxRef"> </SuggestionsBox>
       <h1> Welcome to Your Vue.js App </h1>
       <p>
         For a guide and recipes on how to configure / customize this project,<br>
@@ -68,7 +68,8 @@ export default {
                                         this.suggestions = response;
                                         // add the query to the beginning of the suggestions list, so that it would appear in the
                                         //  suggestions box
-                                        if (!this.suggestions.slice(0, this.MAX_SUGGESTION_COUNT).includes(this.query))
+                                        const split_query = this.query.split(/[^A-Za-z\d]/);
+                                        if (!this.suggestions.slice(0, this.MAX_SUGGESTION_COUNT).includes(split_query[split_query.length - 1]))
                                             this.suggestions.unshift(this.query);
                                     })
                                 .catch(err => console.error(err));
@@ -102,6 +103,21 @@ export default {
             if (!this.isSuggestHidden) {
                 this.focusSuggestion = (this.focusSuggestion + 1) % Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length);
                 console.log("focus " + this.focusSuggestion);
+            }
+        },
+        arrowRightHandler: function(event) {
+            // prevent the right arrow to move the cursor
+            //  (TODO maybe do this only if the cursor is on the last character of the query?)
+            event.preventDefault();
+
+            console.log("key right");
+            if (!this.isSuggestHidden) {
+                const suggestionsBoxRef = this.$refs.suggestionsBoxRef;
+                // when clicking on the right arrow, replace the query with the suggestion
+                //  use the methods from the SuggestionsBox component to construct the new query
+                //  (the same way it is done in the SuggestionsBox component)
+                this.query = suggestionsBoxRef.getNonBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query) + suggestionsBoxRef.getBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query);
+                this.onChangeHandler();
             }
         },
         onFocusSuggestionChange: function(newFocusSuggestion) {
