@@ -1,12 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, 7)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
-                <!-- TODO deal with multiple words in a query. Maybe split the query string by non-alphanumeric characters and for each word check the condition below
-                    (to determine which part of the query to bold)
-                        Also, you can call methods in the {{}}
-                    Everything, except part of the last word in the search query, should not be bold.
-                -->
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, MAX_SUGGESTION_COUNT)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
                 {{ getNonBoldPartOfQuery(suggestion, query) }}<b>{{ getBoldPartOfQuery(suggestion, query) }}</b>
             </li>
         </ul>
@@ -21,7 +16,8 @@ export default {
         suggestions: Array,
         isSuggestHidden: Boolean,
         query: String,
-        focusSuggestion: Number
+        focusSuggestion: Number,
+        MAX_SUGGESTION_COUNT: Number
     },
     //data() {
     //    return {
@@ -40,7 +36,7 @@ export default {
             this.$emit('focusSuggestionChange', index);
         },
         getNonBoldPartOfQuery(suggestion, query) {
-            const split_query = query.split(/[^A-Za-z\d]/);
+            const split_query = query.split(/[^A-Za-z\d]/).filter(element => element !== "");
             return suggestion.startsWith(split_query[split_query.length - 1]) ? query : "";
         },
         getBoldPartOfQuery(suggestion, query) {

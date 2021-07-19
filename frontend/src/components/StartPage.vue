@@ -3,7 +3,7 @@
     <img alt="Q" id="Q" src="../assets/q.svg"/>
     <div class="start_page">
       <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.enter="search"/>
-      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
+      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" :MAX_SUGGESTION_COUNT="MAX_SUGGESTION_COUNT" @focusSuggestionChange="onFocusSuggestionChange"> </SuggestionsBox>
       <h1> Welcome to Your Vue.js App </h1>
       <p>
         For a guide and recipes on how to configure / customize this project,<br>
@@ -49,7 +49,8 @@ export default {
             suggestions: [],
             isSuggestHidden: true,
             inputSelected: false,
-            focusSuggestion: 0      // which suggestion is focused (1-7 for the suggestions, 0 for none; it should loop around!)
+            focusSuggestion: 0,      // which suggestion is focused (1-7 for the suggestions, 0 for none; it should loop around!)
+            MAX_SUGGESTION_COUNT: 7
         };
     },
     methods: {
@@ -63,7 +64,13 @@ export default {
                     .then(response => {
                         if (response.ok)
                             response.json()
-                                .then(response => this.suggestions = response)
+                                .then(response => {
+                                        this.suggestions = response;
+                                        // add the query to the beginning of the suggestions list, so that it would appear in the
+                                        //  suggestions box
+                                        if (!this.suggestions.slice(0, this.MAX_SUGGESTION_COUNT).includes(this.query))
+                                            this.suggestions.unshift(this.query);
+                                    })
                                 .catch(err => console.error(err));
                         else
                             console.error("Suggest served responsed with an unexpected code: " + response.status)
@@ -81,10 +88,10 @@ export default {
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
-                this.focusSuggestion = (this.focusSuggestion - 1) % this.suggestions.length;  // because there are maximum of 7 suggestions, and the variable should loop around
-                if (this.focusSuggestion === -1) this.focusSuggestion = this.suggestions.length - 1;
+                this.focusSuggestion = (this.focusSuggestion - 1) % Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length);  // because there are maximum of 7 suggestions, and the variable should loop around
+                if (this.focusSuggestion === -1) this.focusSuggestion = Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length) - 1;
                 else if (this.focusSuggestion < 0) this.focusSuggestion = this.focusSuggestion * (-1);
-                console.log("focus " + this.focusSuggestion + " suggestions size (%) " + this.suggestions.length)
+                console.log("focus " + this.focusSuggestion + " suggestions size (%) " + Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length));
             }
         },
         arrowDownHandler: function(event) {
@@ -93,7 +100,7 @@ export default {
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
-                this.focusSuggestion = (this.focusSuggestion + 1) % this.suggestions.length;
+                this.focusSuggestion = (this.focusSuggestion + 1) % Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length);
                 console.log("focus " + this.focusSuggestion);
             }
         },
