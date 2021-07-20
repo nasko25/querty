@@ -37,10 +37,14 @@ export default {
         },
         getNonBoldPartOfQuery(suggestion, query) {
             const split_query = query.split(/[^A-Za-z\d]/).filter(element => element !== "");
+            if (suggestion === query)
+                return query;
             return suggestion.startsWith(split_query[split_query.length - 1]) ? query : "";
         },
         getBoldPartOfQuery(suggestion, query) {
-            const split_query = query.split(/[^A-Za-z\d]/);
+            const split_query = query.split(/[^A-Za-z\d]/).filter(element => element !== "");
+            if (suggestion === query)
+                return "";
             return suggestion.startsWith(split_query[split_query.length - 1]) ? suggestion.replace(split_query[split_query.length - 1], "") : suggestion;
         }
     }

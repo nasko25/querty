@@ -83,6 +83,7 @@ export default {
                 this.isSuggestHidden = true;
             }
         },
+        // TODO when you click arrow up/down and then enter, search for the suggestion instead of for the query
         arrowUpHandler: function(event) {
             console.log("key")
             // prevent up arrow to move the cursor
@@ -106,14 +107,13 @@ export default {
             }
         },
         arrowRightHandler: function(event) {
-            console.log(document.getElementsByClassName("search_box")[0].selectionStart);
-            console.log(event.srcElement.selectionStart);
-
+            // get the cursor position
             const selectionStart = event.srcElement.selectionStart;
             const selectionEnd = event.srcElement.selectionEnd;
 
             // prevent the right arrow to move the cursor
             //  but only if the cursor is on the last character of the query
+            //      check if the start and end of the selection are equal and if the cursor is at the end of the query
             if (selectionStart === selectionEnd && selectionEnd === this.query.length) {
                 console.log("cursor at the end of the query");
                 event.preventDefault();
