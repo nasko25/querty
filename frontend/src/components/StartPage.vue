@@ -106,18 +106,28 @@ export default {
             }
         },
         arrowRightHandler: function(event) {
-            // prevent the right arrow to move the cursor
-            //  (TODO maybe do this only if the cursor is on the last character of the query?)
-            event.preventDefault();
+            console.log(document.getElementsByClassName("search_box")[0].selectionStart);
+            console.log(event.srcElement.selectionStart);
 
-            console.log("key right");
-            if (!this.isSuggestHidden) {
-                const suggestionsBoxRef = this.$refs.suggestionsBoxRef;
-                // when clicking on the right arrow, replace the query with the suggestion
-                //  use the methods from the SuggestionsBox component to construct the new query
-                //  (the same way it is done in the SuggestionsBox component)
-                this.query = suggestionsBoxRef.getNonBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query) + suggestionsBoxRef.getBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query);
-                this.onChangeHandler();
+            const selectionStart = event.srcElement.selectionStart;
+            const selectionEnd = event.srcElement.selectionEnd;
+
+            // prevent the right arrow to move the cursor
+            //  but only if the cursor is on the last character of the query
+            if (selectionStart === selectionEnd && selectionEnd === this.query.length) {
+                console.log("cursor at the end of the query");
+                event.preventDefault();
+
+                // auto complete the query with the focused suggestion
+                console.log("key right");
+                if (!this.isSuggestHidden) {
+                    const suggestionsBoxRef = this.$refs.suggestionsBoxRef;
+                    // when clicking on the right arrow, replace the query with the suggestion
+                    //  use the methods from the SuggestionsBox component to construct the new query
+                    //  (the same way it is done in the SuggestionsBox component)
+                    this.query = suggestionsBoxRef.getNonBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query) + suggestionsBoxRef.getBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query);
+                    this.onChangeHandler();
+                }
             }
         },
         onFocusSuggestionChange: function(newFocusSuggestion) {
