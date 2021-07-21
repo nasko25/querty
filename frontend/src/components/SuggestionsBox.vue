@@ -1,7 +1,7 @@
 <template>
     <div id = "suggestions" :class = "{hidden: isSuggestHidden}">
         <ul id = "suggestions-list">
-            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, MAX_SUGGESTION_COUNT)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)">
+            <li class = "suggestion" v-for = "(suggestion, index) in suggestions.slice(0, MAX_SUGGESTION_COUNT)" :key = "index" :class="{ 'onhover' : (index === focusSuggestion), 'onhover_last_child' : ((index === focusSuggestion) && (index === (suggestions.length - 1))) }" @mouseover="mouseOverSuggestion(index)" @mousedown="mouseSelectSuggestion(index)">
                 {{ getNonBoldPartOfQuery(suggestion, query) }}<b>{{ getBoldPartOfQuery(suggestion, query) }}</b>
             </li>
         </ul>
@@ -34,6 +34,9 @@ export default {
         mouseOverSuggestion(index) {
             // notify the parent component that the focusSuggestionNumber variable should be changed
             this.$emit('focusSuggestionChange', index);
+        },
+        mouseSelectSuggestion(index) {
+            this.$emit('searchSuggestion', index);
         },
         getNonBoldPartOfQuery(suggestion, query) {
             const split_query = query.split(/[^A-Za-z\d]/).filter(element => element !== "");

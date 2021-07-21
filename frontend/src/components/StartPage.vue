@@ -3,7 +3,7 @@
     <img alt="Q" id="Q" src="../assets/q.svg"/>
     <div class="start_page">
       <input class="search_box" type="text" placeholder="Search" @input="onChangeHandler" v-model="query" @focus="inputSelected = true; onChangeHandler();" @blur="inputSelected = false; onChangeHandler();"  v-on:keydown.up="arrowUpHandler" v-on:keydown.down="arrowDownHandler" v-on:keydown.right="arrowRightHandler" v-on:keydown.enter="search"/>
-      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" :MAX_SUGGESTION_COUNT="MAX_SUGGESTION_COUNT" @focusSuggestionChange="onFocusSuggestionChange" ref="suggestionsBoxRef"> </SuggestionsBox>
+      <SuggestionsBox :isSuggestHidden = "isSuggestHidden" :suggestions="suggestions" :query="query" :focusSuggestion="focusSuggestion" :MAX_SUGGESTION_COUNT="MAX_SUGGESTION_COUNT" @focusSuggestionChange="onFocusSuggestionChange" @searchSuggestion="onSearchSuggestion" ref="suggestionsBoxRef"> </SuggestionsBox>
       <h1> Welcome to Your Vue.js App </h1>
       <p>
         For a guide and recipes on how to configure / customize this project,<br>
@@ -138,6 +138,9 @@ export default {
         },
         onFocusSuggestionChange: function(newFocusSuggestion) {
             this.focusSuggestion = newFocusSuggestion;
+        },
+        onSearchSuggestion: function(suggestionToSearch) {
+            this.$router.push({ path: '/results', query: { q: this.suggestions[suggestionToSearch] } })
         },
         search: function(event) {
             event.preventDefault();
