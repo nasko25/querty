@@ -137,6 +137,7 @@ export default {
             }
         },
         onFocusSuggestionChange: function(newFocusSuggestion) {
+            this.SEARCH_SUGGESTION = true;
             this.focusSuggestion = newFocusSuggestion;
         },
         onSearchSuggestion: function(suggestionToSearch) {
