@@ -49,12 +49,17 @@ export default {
             suggestions: [],
             isSuggestHidden: true,
             inputSelected: false,
-            focusSuggestion: 0,      // which suggestion is focused (1-7 for the suggestions, 0 for none; it should loop around!)
-            MAX_SUGGESTION_COUNT: 7
+            focusSuggestion: 0,         // which suggestion is focused (1-7 for the suggestions, 0 for none; it should loop around!)
+            MAX_SUGGESTION_COUNT: 7,
+            SEARCH_SUGGESTION: false    // flag that controls whether pressing <enter> will search for the focused suggestion or the input query
+                                        //  by default pressing <enter> will search for the query, but if a user focuses a different selection, <enter> will search for that selection
         };
     },
     methods: {
         onChangeHandler: function() {
+            // whenever a new letter is typed, <enter> will search for the new query
+            this.SEARCH_SUGGESTION = false;
+
             // show the suggestion box, only if the length of the query is > 2
             if (this.query.length >= 2 && this.inputSelected) {
                 this.isSuggestHidden = false;
@@ -83,13 +88,13 @@ export default {
                 this.isSuggestHidden = true;
             }
         },
-        // TODO when you click arrow up/down and then enter, search for the suggestion instead of for the query
         arrowUpHandler: function(event) {
             console.log("key")
             // prevent up arrow to move the cursor
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
+                this.SEARCH_SUGGESTION = true;
                 this.focusSuggestion = (this.focusSuggestion - 1) % Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length);  // because there are maximum of 7 suggestions, and the variable should loop around
                 if (this.focusSuggestion === -1) this.focusSuggestion = Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length) - 1;
                 else if (this.focusSuggestion < 0) this.focusSuggestion = this.focusSuggestion * (-1);
@@ -102,6 +107,7 @@ export default {
             event.preventDefault();
 
             if (!this.isSuggestHidden) {
+                this.SEARCH_SUGGESTION = true;
                 this.focusSuggestion = (this.focusSuggestion + 1) % Math.min(this.MAX_SUGGESTION_COUNT, this.suggestions.length);
                 console.log("focus " + this.focusSuggestion);
             }
@@ -136,7 +142,7 @@ export default {
         search: function(event) {
             event.preventDefault();
             console.log("enter");
-            this.$router.push({ path: '/results', query: { q: this.query } })
+            this.$router.push({ path: '/results', query: { q: this.SEARCH_SUGGESTION ? this.suggestions[this.focusSuggestion] : this.query } })
         }
     },
     mounted: function() {
