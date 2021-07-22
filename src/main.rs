@@ -78,7 +78,6 @@ fn main() {
     //}
 
     // TODO this can be async
-    // TODO it can be a new function that mounts all necessary endpoints
     // mount the web API endpoints
     web_api::mount_web_api_endpoints(settings.clone());
 }
