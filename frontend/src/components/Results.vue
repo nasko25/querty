@@ -86,9 +86,13 @@ export default  {
     font-family: sans-serif, "Trebuchet MS";
 }
 
+#results-list {
+    margin-top: 60px;
+    display: inline-block;
+}
+
 .result {
     list-style: none;
-    display: inline-block;
 }
 
 .result-title {
@@ -109,7 +113,7 @@ export default  {
 #Q {
     width: 50px;
     height: 50px;
-    margin: 1.72em 0 0 1em;
+    margin: 2.2em 0 0 1em;
     float: left;
 }
 </style>
@@ -121,20 +125,17 @@ export default  {
         to the search bar component to display the "results" page version when on the results page
         and the "start" page version when on the start page.
 */
-
-/* TODO when you zoom into the search bar on the results page too much,
-    the search bar goes to a new line and the suggestions box is misplaced.
-        The search bar should not go to a new line (maybe make is position: absolute ?)
-*/
 #app {
     margin-top: 0;
 }
 .search_box {
     width: 70% !important;
     max-width: 500px !important;
-    margin: 2em 2em 6em 1em;
+    margin: 2.6em 2em 6em 1em;
     display: inline-block;
+    position: absolute !important;
     float: left;
+    left: 5.26em;
 }
 #suggestions {
     width: 70% !important;

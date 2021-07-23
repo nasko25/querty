@@ -27,7 +27,7 @@ export default {
     },
     methods: {
         onChangeHandler: function() {
-            // whenever a new letter is typed, <enter> will search for the new query
+            // whenever a new letter is typed, <enter> will search for the new query, instead for the selected suggestion
             this.SEARCH_SUGGESTION = false;
 
             // show the suggestion box, only if the length of the query is > 2
@@ -110,17 +110,36 @@ export default {
             this.SEARCH_SUGGESTION = true;
             this.focusSuggestion = newFocusSuggestion;
         },
+        redirectToResults: function(query) {
+            // this only matters if you search from the results page
+            // this.isSuggestHidden = true;
+            this.query = query;
+            // unfocus the input field and set its value to the query
+            document.getElementsByClassName("search_box")[0].blur();
+
+            // redirect to /results
+            this.$router.push({ path: '/results', query: { q: query } });
+        },
         onSearchSuggestion: function(suggestionToSearch) {
-            this.$router.push({ path: '/results', query: { q: this.suggestions[suggestionToSearch] } })
+            const query = this.suggestions[suggestionToSearch];
+            //this.$router.push({ path: '/results', query: { q: query } })
+            this.redirectToResults(query);
         },
         search: function(event) {
             event.preventDefault();
             console.log("enter");
-            this.$router.push({ path: '/results', query: { q: this.SEARCH_SUGGESTION ? this.suggestions[this.focusSuggestion] : this.query } })
+            const query = this.SEARCH_SUGGESTION ? this.suggestions[this.focusSuggestion] : this.query;
+            this.redirectToResults(query);
         }
     },
     mounted: function() {
-        document.getElementsByClassName("search_box")[0].focus();
+        if (this.$route.path === "/results") {
+            // if the search bar is mounted on the results page, set the query to the "q" url parameter
+            this.query = this.$route.query.q;
+        } else {
+            // otherwise focus the search input field, because the search bar was mounted on the start page
+            document.getElementsByClassName("search_box")[0].focus();
+        }
     }
 };
 </script>
