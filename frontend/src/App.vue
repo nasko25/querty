@@ -26,7 +26,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: var(--foreground-color);
-  margin-top: 160px;
 }
 #Q {
   height: 200px;

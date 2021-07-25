@@ -60,23 +60,29 @@ export default {
 
 #suggestions {
     height: auto;
-    width: 80%;
-    max-width: 654px;
+    width: 70%;
+    max-width: 571px;
     min-width: 380px;
 
  --suggestions-background: #124;
 
     background-color: var(--suggestions-background);
     position: absolute;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 5.43em;
+    top: 65px;
     left: 0;
     right: 0;
-    top: 435px;
     z-index: 0;
     border-radius: 0 0 20px 20px;
 }
-
+.start_page div #suggestions {
+    width: 80%;
+    max-width: 654px;
+    /* margin-left: 1.36em !important; - without the "Q" image */
+    margin-left: auto;
+    margin-right: auto;
+    top: 435px;
+}
 #suggestions-list {
     background-color: var(--suggestions-background);
     margin-top: 1.5em;

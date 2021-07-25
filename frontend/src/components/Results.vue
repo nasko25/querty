@@ -117,32 +117,3 @@ export default  {
     float: left;
 }
 </style>
-
-<style>
-/* SEARCH BAR */
-/* TODO just a temporary solution.
-    It would be better to have this css in SearchBar.vue and pass a variable
-        to the search bar component to display the "results" page version when on the results page
-        and the "start" page version when on the start page.
-*/
-#app {
-    margin-top: 0;
-}
-.search_box {
-    width: 70% !important;
-    max-width: 500px !important;
-    margin: 2.6em 2em 6em 1em;
-    display: inline-block;
-    position: absolute !important;
-    float: left;
-    left: 5.26em;
-}
-#suggestions {
-    width: 70% !important;
-    max-width: 571px !important;
-    position: absolute !important;
-    /* margin-left: 1.36em !important; - without the "Q" image */
-    margin-left: 5.43em !important;
-    top: 65px !important;
-}
-</style>

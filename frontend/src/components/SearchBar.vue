@@ -146,10 +146,11 @@ export default {
 
 <style scoped>
 .search_box {
-  width: 80%;
-  max-width: 584px;
+  width: 70%;
+  max-width: 500px;
   min-width: 380px;
   padding: 12px 44px 12px 24px;
+  margin: 2.6em 2em 6em 1em;
   font-size: 14px;
   line-height: 18px;
   color: var(--foreground-color);
@@ -160,7 +161,10 @@ export default {
   background-position: 97% center;
   border: 1px solid var(--foreground-color);
   border-radius: 50px;
-  position: relative;
+  position: absolute;
+  display: inline-block;
+  float: left;
+  left: 5.26em;
   z-index: 3;
 }
 .search_box::placeholder {
@@ -174,5 +178,13 @@ export default {
 }
 .search_box:hover {
   box-shadow: 0 0 5px 0 rgba(255, 255, 255, 0.1);
+}
+.start_page div ::v-deep(.search_box) {
+    width: 80%;
+    max-width: 584px;
+    margin: auto;
+    left: auto;
+    float: none;
+    position: relative;
 }
 </style>
