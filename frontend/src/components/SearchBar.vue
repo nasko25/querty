@@ -128,7 +128,8 @@ export default {
         search: function(event) {
             event.preventDefault();
             console.log("enter");
-            const query = this.SEARCH_SUGGESTION ? this.suggestions[this.focusSuggestion] : this.query;
+            const suggestionsBoxRef = this.$refs.suggestionsBoxRef;
+            const query = this.SEARCH_SUGGESTION ? suggestionsBoxRef.getNonBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query) + suggestionsBoxRef.getBoldPartOfQuery(this.suggestions[this.focusSuggestion], this.query) : this.query;
             this.redirectToResults(query);
         }
     },
