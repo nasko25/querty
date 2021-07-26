@@ -120,8 +120,10 @@ export default {
             // redirect to /results
             this.$router.push({ path: '/results', query: { q: query } });
         },
+        // TODO some code duplication for const query; can make a separate method
         onSearchSuggestion: function(suggestionToSearch) {
-            const query = this.suggestions[suggestionToSearch];
+            const suggestionsBoxRef = this.$refs.suggestionsBoxRef;
+            const query = this.SEARCH_SUGGESTION ? suggestionsBoxRef.getNonBoldPartOfQuery(this.suggestions[suggestionToSearch], this.query) + suggestionsBoxRef.getBoldPartOfQuery(this.suggestions[suggestionToSearch], this.query) : this.query;
             //this.$router.push({ path: '/results', query: { q: query } })
             this.redirectToResults(query);
         },
