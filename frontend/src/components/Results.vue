@@ -2,8 +2,6 @@
 <div>
     <img alt="Q" id="Q" src="../assets/q.svg"/>
     <SearchBar/>
-    <!-- If there is an error, it will be displayed in this div -->
-    <div id = "error" :class = "{ hidden : err === null }"> {{ err }} </div>
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
             <!-- &hellip; is only added if the text was truncated -->
@@ -12,6 +10,8 @@
             <p> {{ result }} </p>
         </li>
     </ul>
+    <!-- If there is an error, it will be displayed in this div -->
+    <div id = "error" :class = "{ hidden : err === null }"> <p> {{ err }} </p> </div>
 </div>
 </template>
 
@@ -84,6 +84,8 @@ export default  {
     color: #a3c9ef;
     font-size: 2em;
     font-family: sans-serif, "Trebuchet MS";
+    margin-top: 3em;
+    text-align: center;
 }
 
 #results-list {
