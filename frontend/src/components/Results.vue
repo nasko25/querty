@@ -1,6 +1,6 @@
 <template>
 <div>
-    <img alt="Q" id="Q" src="../assets/q.svg"/>
+    <a href="/"> <img alt="Q" id="Q" src="../assets/q.svg"/> </a>
     <SearchBar/>
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
