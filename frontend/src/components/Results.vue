@@ -5,7 +5,9 @@
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
             <!-- &hellip; is only added if the text was truncated -->
-            <a class = "result-title" :href="result.url"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a>
+            <a class = "result-title" :href="result.url" @mouseover="underline" @mouseleave="deunderline"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a>
+            <br/>
+            <a class = "result-url" :href="result.url" @mouseover="underlineTitle" @mouseleave="removeUnderline"> {{ result.url }} </a>
             <br/>
             <p> {{ result }} </p>
         </li>
@@ -64,6 +66,18 @@ export default  {
         },
         truncate(str, max_len) {
             return (str.length > max_len) ? str.substr(0, max_len - 1) : str;
+        },
+        underline(event) {
+            event.target.style.textDecoration = "underline";
+        },
+        deunderline(event) {
+            event.target.style.textDecoration = "none";
+        },
+        underlineTitle(event) {
+            event.target.previousSibling.previousSibling.style.textDecoration = "underline";
+        },
+        removeUnderline(event) {
+            event.target.previousSibling.previousSibling.style.textDecoration = "none";
         }
     },
     watch:{
@@ -108,8 +122,14 @@ export default  {
     color: #aeb1f1;
 }
 
-.result-title:hover {
-    text-decoration: underline;
+.result-url {
+    float: left;
+    padding-top: 0.1em;
+}
+
+.result-url, .result-url:hover, .result-url:visited, .result-url:active {
+    color: #cce;
+    text-decoration: none;
 }
 
 #Q {
