@@ -79,6 +79,11 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query)));
 
     if matched_websites.is_ok() {
+        //#[derive(Debug, Serialize, Deserialize)]
+        //struct QResult<'a> {
+        //    title: &'a str
+        //}
+        //return json!(matched_websites.unwrap().iter().map(|w| QResult { title: &w.title }).collect::<Vec<QResult>>());
         return json!(matched_websites.unwrap());
     }
     colour::red!("[ERR]"); println!(" query() returned an error!");

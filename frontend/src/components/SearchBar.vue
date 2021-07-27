@@ -117,8 +117,15 @@ export default {
             // unfocus the input field and set its value to the query
             document.getElementsByClassName("search_box")[0].blur();
 
-            // redirect to /results
-            this.$router.push({ path: '/results', query: { q: query } });
+            // if the query if equal to the "q" url parameter when searching,
+            //  refresh the page
+            if (this.$route.query.q === query) {
+                this.$router.go();
+            }
+            else {
+                // otherwise redirect to /results
+                this.$router.push({ path: '/results', query: { q: query } });
+            }
         },
         // TODO some code duplication for const query; can make a separate method
         onSearchSuggestion: function(suggestionToSearch) {
