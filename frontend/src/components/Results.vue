@@ -9,7 +9,7 @@
             <br/>
             <a class = "result-url" :href="result.url" @mouseover="underlineTitle" @mouseleave="removeUnderline"> {{ result.url }} </a>
             <br/>
-            <div class = "result-text"> <p> {{ /* TODO do that in the backend and limit how many symbols are shown */ (result.metadata && result.metadata.includes("description")) ? result.metadata[result.metadata.indexOf("description") + 1] : result.text }} </p> </div>
+            <div class = "result-text"> <p> {{ /* TODO do that in the backend and limit how many symbols are shown (and bold the first query word(s) in the result paragraph) */ (result.metadata && result.metadata.includes("description")) ? result.metadata[result.metadata.indexOf("description") + 1] : result.text }} </p> </div>
             <br/> <br/>
         </li>
     </ul>
