@@ -9,7 +9,8 @@
             <br/>
             <a class = "result-url" :href="result.url" @mouseover="underlineTitle" @mouseleave="removeUnderline"> {{ result.url }} </a>
             <br/>
-            <p> {{ result }} </p>
+            <div class = "result-text"> <p> {{ /* TODO do that in the backend and limit how many symbols are shown */ (result.metadata && result.metadata.includes("description")) ? result.metadata[result.metadata.indexOf("description") + 1] : result.text }} </p> </div>
+            <br/> <br/>
         </li>
     </ul>
     <!-- If there is an error, it will be displayed in this div -->
@@ -130,6 +131,11 @@ export default  {
 .result-url, .result-url:hover, .result-url:visited, .result-url:active {
     color: #cce;
     text-decoration: none;
+}
+
+.result-text {
+    clear: left;
+    text-align: left;
 }
 
 #Q {
