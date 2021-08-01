@@ -81,17 +81,22 @@ export default  {
             event.target.previousSibling.previousSibling.style.textDecoration = "none";
         },
         getText(result) {
-            /* TODO do that in the backend and limit how many symbols are shown (bold no matter the case of the letters in the word) */
+            /* TODO do that in the backend and limit how many symbols are shown */
             const split_query = this.$route.query.q.split(/[^A-Za-z\d]/);
-            console.log(result, split_query, this.$route.query.q);
             if (result.metadata && result.metadata.includes("description")) {
                 let description = result.metadata[result.metadata.indexOf("description") + 1];
-                split_query.forEach(query => description = description.replaceAll(query, `<b> ${query} </b>`));
+                split_query.forEach(query => {
+                    const query_regex = new RegExp(query, "ig"); // ignore case
+                    description = description.replaceAll(query_regex, match => `<b> ${match} </b>`);
+                });
                 return description;
             }
             else {
                 let result_text = result.text;
-                split_query.forEach(query => result_text = result_text.replaceAll(query, `<b> ${query} </b>`));
+                split_query.forEach(query => {
+                    const query_regex = new RegExp(query, "ig"); // ignore case
+                    result_text = result_text.replaceAll(query_regex, match => `<b> ${match} </b>`);
+                });
                 return result_text;
             }
         }
