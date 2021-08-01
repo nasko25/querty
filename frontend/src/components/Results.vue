@@ -98,17 +98,17 @@ export default  {
                     const query_regex = new RegExp(query, "ig"); // ignore case
                     if (result_text.search(query_regex) === -1)
                         return;
-                    // split by whitespace characters .split(/\s+/)
-                    const result_text_nohtml = result_text.replaceAll("<b>", "").replaceAll("</b>", "");
+                    // split by whitespace characters: .split(/\s+/)
 
                     // TODO add ... at the end of a cut word
                     //  cut word = word that contains an alphanumberic character after the last shown character
                                                                                                                                                 // TODO query.length might be too big
-                    result_text = result_text_nohtml.substr(Math.max(0, result_text_nohtml.indexOf(query) - 200), Math.min(result_text_nohtml.length, 200 + query.length + 200));
-                    console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
-                    // TODO right now bolded words that were found from a previous iteration are no longer bolded
-                    result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
+                    result_text = result_text.substr(Math.max(0, result_text.indexOf(query) - 200), Math.min(result_text.length, 200 + query.length + 200));
+                    //console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
                 });
+
+                const query_regex = new RegExp(split_query.join("|"), "ig");
+                result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
                 return result_text;
             }
         }
