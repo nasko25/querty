@@ -81,8 +81,19 @@ export default  {
             event.target.previousSibling.previousSibling.style.textDecoration = "none";
         },
         getText(result) {
-            /* TODO do that in the backend and limit how many symbols are shown (and bold the first query word(s) in the result paragraph) */
-            return (result.metadata && result.metadata.includes("description")) ? result.metadata[result.metadata.indexOf("description") + 1] : result.text;
+            /* TODO do that in the backend and limit how many symbols are shown (bold no matter the case of the letters in the word) */
+            const split_query = this.$route.query.q.split(/[^A-Za-z\d]/);
+            console.log(result, split_query, this.$route.query.q);
+            if (result.metadata && result.metadata.includes("description")) {
+                let description = result.metadata[result.metadata.indexOf("description") + 1];
+                split_query.forEach(query => description = description.replaceAll(query, `<b> ${query} </b>`));
+                return description;
+            }
+            else {
+                let result_text = result.text;
+                split_query.forEach(query => result_text = result_text.replaceAll(query, `<b> ${query} </b>`));
+                return result_text;
+            }
         }
     },
     watch:{
