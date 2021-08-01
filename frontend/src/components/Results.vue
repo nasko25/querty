@@ -81,13 +81,14 @@ export default  {
             event.target.previousSibling.previousSibling.style.textDecoration = "none";
         },
         getText(result) {
+            // TODO only cut last word if it makes the whole text > some limit (that is greater than the already established limit)
             /* TODO do that in the backend and limit how many symbols are shown */
-            const split_query = this.$route.query.q.split(/[^A-Za-z\d]/);
+            const split_query = this.$route.query.q.split(/[^A-Za-z\d]/).filter(entry => entry.trim() != '');
             if (result.metadata && result.metadata.includes("description")) {
                 let description = result.metadata[result.metadata.indexOf("description") + 1];
                 split_query.forEach(query => {
                     const query_regex = new RegExp(query, "ig"); // ignore case
-                    description = description.replaceAll(query_regex, match => `<b> ${match} </b>`);
+                    description = description.replaceAll(query_regex, match => `<b>${match}</b>`);
                 });
                 return description;
             }
@@ -95,7 +96,18 @@ export default  {
                 let result_text = result.text;
                 split_query.forEach(query => {
                     const query_regex = new RegExp(query, "ig"); // ignore case
-                    result_text = result_text.replaceAll(query_regex, match => `<b> ${match} </b>`);
+                    if (result_text.search(query_regex) === -1)
+                        return;
+                    // split by whitespace characters .split(/\s+/)
+                    const result_text_nohtml = result_text.replaceAll("<b>", "").replaceAll("</b>", "");
+
+                    // TODO add ... at the end of a cut word
+                    //  cut word = word that contains an alphanumberic character after the last shown character
+                                                                                                                                                // TODO query.length might be too big
+                    result_text = result_text_nohtml.substr(Math.max(0, result_text_nohtml.indexOf(query) - 200), Math.min(result_text_nohtml.length, 200 + query.length + 200));
+                    console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
+                    // TODO right now bolded words that were found from a previous iteration are no longer bolded
+                    result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
                 });
                 return result_text;
             }
@@ -126,6 +138,8 @@ export default  {
 #results-list {
     margin-top: 60px;
     display: inline-block;
+    float: left;
+    clear: both;
 }
 
 .result {
