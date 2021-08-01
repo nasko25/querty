@@ -21,6 +21,25 @@
 <script>
 import SearchBar from './SearchBar.vue';
 
+// helper function to get the length of the last word in the result's text field, so that the last word would not be cut (unless it is too long)
+function getEndOfText(initial_index, text) {
+    // the initial index is 200, so the last word ends after at least 200 characters
+    let index = initial_index + 200;
+    let char_at_index = text.charCodeAt(index);
+    while ( (
+                (char_at_index > 47 && char_at_index < 58) ||   // 0-9
+                (char_at_index > 64 && char_at_index < 91) ||   // A-Z
+                (char_at_index > 96 && char_at_index < 123)     // a-z
+            ) &&
+            // only cut last word if it makes the whole text > (200 + query.length + 490)
+            (index < initial_index + 490)
+    ) {
+        index++;
+        char_at_index = text.charCodeAt(index);
+    }
+    return index;
+}
+
 export default  {
     name: 'Results',
     components: {
@@ -81,10 +100,9 @@ export default  {
             event.target.previousSibling.previousSibling.style.textDecoration = "none";
         },
         getText(result) {
-            // TODO only cut last word if it makes the whole text > some limit (that is greater than the already established limit)
             /* TODO do that in the backend and limit how many symbols are shown */
             const split_query = this.$route.query.q.split(/[^A-Za-z\d]/).filter(entry => entry.trim() != '');
-            if (result.metadata && result.metadata.includes("description")) {
+            if (result.metadata && result.metadata.includes("description")) {   // TODO or og:description
                 let description = result.metadata[result.metadata.indexOf("description") + 1];
                 split_query.forEach(query => {
                     const query_regex = new RegExp(query, "ig"); // ignore case
@@ -95,19 +113,27 @@ export default  {
             else {
                 let result_text = result.text;
                 split_query.forEach(query => {
-                    const query_regex = new RegExp(query, "ig"); // ignore case
-                    if (result_text.search(query_regex) === -1)
-                        return;
+                    //const query_regex = new RegExp(query, "ig"); // ignore case
+                    //if (result_text.search(query_regex) === -1)
+                    //    return;
                     // split by whitespace characters: .split(/\s+/)
 
-                    // TODO add ... at the end of a cut word
-                    //  cut word = word that contains an alphanumberic character after the last shown character
-                                                                                                                                                // TODO query.length might be too big
-                    result_text = result_text.substr(Math.max(0, result_text.indexOf(query) - 200), Math.min(result_text.length, 200 + query.length + 200));
+                    // TODO maybe don't subtract 200 from the index of query in the result_text if the query is in the beginning of the sentence
+                    //  this 200 characters limit can be if the sentence is too long and there are more than 200 characters before the index of the search query
+                                                                                                                                          // TODO query.length might be too big
+                    result_text = result_text.substr(Math.max(0, result_text.indexOf(query) - 200), Math.min(result_text.length, getEndOfText(200 + query.length, result_text)));
                     //console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
                 });
 
                 const query_regex = new RegExp(split_query.join("|"), "ig");
+
+                // remove leading and trailing spaces
+                // result_text = result_text.trim();
+
+                // add "..." to the end of result_text if the text was cut
+                // TODO make the condition for adding the "..." better (result_text < result.text can be true and the end not necessarily cut - if for example only the beginning was cut)
+                if (result_text < result.text)
+                    result_text += "&hellip;";
                 result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
                 return result_text;
             }
