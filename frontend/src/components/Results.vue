@@ -112,6 +112,9 @@ export default  {
             }
             else {
                 let result_text = result.text;
+                // variables that keep track if the beginning and end of the result text are cut (in order to add "..." if the result text was cut)
+                let result_beginning_cut = false;
+                let result_end_cut = false;
                 split_query.forEach(query => {
                     //const query_regex = new RegExp(query, "ig"); // ignore case
                     //if (result_text.search(query_regex) === -1)
@@ -120,8 +123,30 @@ export default  {
 
                     // TODO maybe don't subtract 200 from the index of query in the result_text if the query is in the beginning of the sentence
                     //  this 200 characters limit can be if the sentence is too long and there are more than 200 characters before the index of the search query
-                                                                                                                                          // TODO query.length might be too big
-                    result_text = result_text.substr(Math.max(0, result_text.indexOf(query) - 200), Math.min(result_text.length, getEndOfText(200 + query.length, result_text)));
+                    // TODO also -200 might be a bit too much; -100 or evern -50 might be better
+                    let result_start = result_text.indexOf(query) - 200;
+                    // if there are less than 200 characters before the query, then the result text is not cut
+                    if (result_start <= 0) {
+                        result_start = 0;
+                    }
+                    // otherwise the beginning of the result text was cut
+                    else {
+                        result_beginning_cut = true;
+                    }
+
+                    // if the calculated end of text is longer than the actual length of result_text, then the text should be fully
+                    //  displayed and cannot be cut
+                                            // TODO query.length might be too big
+                    let result_end = getEndOfText(200 + query.length, result_text);
+                    if (result_text.length <= result_end) {
+                        result_end = result_text.length;
+                    }
+                    // otherwise the end of the result text was cut
+                    else {
+                        result_end_cut = true;
+                    }
+
+                    result_text = result_text.substr(result_start, result_end);
                     //console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
                 });
 
@@ -130,10 +155,12 @@ export default  {
                 // remove leading and trailing spaces
                 // result_text = result_text.trim();
 
-                // add "..." to the end of result_text if the text was cut
-                // TODO make the condition for adding the "..." better (result_text < result.text can be true and the end not necessarily cut - if for example only the beginning was cut)
-                if (result_text < result.text)
-                    result_text += "&hellip;";
+                // add "..." to the beginning and/or end of result_text if the text was cut
+                if (result_beginning_cut)
+                    result_text = "&hellip; " + result_text;
+                if (result_end_cut)
+                    result_text += " &hellip;";
+
                 result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
                 return result_text;
             }
