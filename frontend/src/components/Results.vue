@@ -100,7 +100,7 @@ export default  {
             event.target.previousSibling.previousSibling.style.textDecoration = "none";
         },
         getText(result) {
-            /* TODO do that in the backend and limit how many symbols are shown */
+            /* TODO do that in the backend */
             const split_query = this.$route.query.q.split(/[^A-Za-z\d]/).filter(entry => entry.trim() != '');
             if (result.metadata && result.metadata.includes("description")) {   // TODO or og:description
                 let description = result.metadata[result.metadata.indexOf("description") + 1];
@@ -136,8 +136,7 @@ export default  {
 
                     // if the calculated end of text is longer than the actual length of result_text, then the text should be fully
                     //  displayed and cannot be cut
-                                            // TODO query.length might be too big
-                    let result_end = getEndOfText(200 + query.length, result_text);
+                    let result_end = getEndOfText(200 + Math.max(query.length, 100), result_text);
                     if (result_text.length <= result_end) {
                         result_end = result_text.length;
                     }
