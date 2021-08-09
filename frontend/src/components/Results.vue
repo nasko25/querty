@@ -123,8 +123,8 @@ export default  {
 
                     // TODO maybe don't subtract 200 from the index of query in the result_text if the query is in the beginning of the sentence
                     //  this 200 characters limit can be if the sentence is too long and there are more than 200 characters before the index of the search query
-                    // TODO also -200 might be a bit too much; -100 or evern -50 might be better
-                    let result_start = result_text.indexOf(query) - 200;
+                    //  BUT how can you reliably determine the beginning of a sentence?
+                    let result_start = result_text.search(new RegExp(query, "ig")) - 50;
                     // if there are less than 200 characters before the query, then the result text is not cut
                     if (result_start <= 0) {
                         result_start = 0;
@@ -136,7 +136,7 @@ export default  {
 
                     // if the calculated end of text is longer than the actual length of result_text, then the text should be fully
                     //  displayed and cannot be cut
-                    let result_end = getEndOfText(200 + Math.max(query.length, 100), result_text);
+                    let result_end = getEndOfText(50 + result_start + Math.max(query.length, 100), result_text);
                     if (result_text.length <= result_end) {
                         result_end = result_text.length;
                     }
@@ -145,7 +145,7 @@ export default  {
                         result_end_cut = true;
                     }
 
-                    result_text = result_text.substr(result_start, result_end);
+                    result_text = result_text.substring(result_start, result_end);
                     //console.log(result_text.search(query_regex), query, result_text, result_text.substr(result_text.search(query_regex), query.length))
                 });
 
