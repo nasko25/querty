@@ -102,8 +102,12 @@ export default  {
         getText(result) {
             /* TODO do that in the backend */
             const split_query = this.$route.query.q.split(/[^A-Za-z\d]/).filter(entry => entry.trim() != '');
-            if (result.metadata && result.metadata.includes("description")) {   // TODO or og:description
-                let description = result.metadata[result.metadata.indexOf("description") + 1];
+            // initialize a variable that is assigned inside the if condition and keeps track whether result.metadata includes "description"
+            let RES_INCL_DESC;
+            if (result.metadata && ((RES_INCL_DESC = result.metadata.includes("description")) === true || result.metadata.includes("og:description"))) {
+                // get the value of "description" or "og:description" (depending on which is present on the website)
+                //  if both are present, use "description"
+                let description = result.metadata[RES_INCL_DESC ? result.metadata.indexOf("description") + 1 : result.metadata.indexOf("og:description") + 1];
                 split_query.forEach(query => {
                     const query_regex = new RegExp(query, "ig"); // ignore case
                     description = description.replaceAll(query_regex, match => `<b>${match}</b>`);
