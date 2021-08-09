@@ -68,7 +68,6 @@ export default  {
             }
             console.log("query:", query);
 
-            // TODO also sort by rank
             fetch(`http://${window.location.hostname}:8000/query/${encodeURIComponent(query)}`, {
                     method: 'GET'
                 })

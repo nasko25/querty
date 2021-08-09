@@ -137,6 +137,10 @@ pub fn build_sort_query(sanitized_query: String) -> String {
         st2.push("%29%20desc".to_string());
         st2.push("%2C".to_string());
     });
+    // TODO should suggestions be sorted by website rank?
+    // sort by rank after sorting by term frequency of the query strings in the url
+    st1.push("rank%20desc%2C".to_string());  // rank desc,
+
     // remove the last %2C
     st2.pop();
 
