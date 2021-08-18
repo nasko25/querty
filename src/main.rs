@@ -30,9 +30,9 @@ use std::fmt;
 use std::mem::discriminant;
 
 use futures::executor::block_on;
-use std::{thread, time};
+use futures;
 
-fn main() {
+async fn init(settings: &settings::Settings) {
     let settings = settings::Settings::new(false).unwrap();
     let db = &settings.database;
     println!("{:?}", db);
@@ -79,12 +79,21 @@ fn main() {
     //    Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
     //    Err(err) => println!("Rank was not updated successfully: Err({})", err),
     //}
+}
 
-    // TODO this can be async
+async fn async_main() {
+    let settings = settings::Settings::new(false).unwrap();
+
+    // run the crawler
+    let init_future = init(&settings);
     // mount the web API endpoints
     let web_api_future = web_api::mount_web_api_endpoints(settings.clone());
-    // if you need to block on multiple futures, use futures::join!(future1, future2, ...)
-    block_on(web_api_future);
+    // run and block on mount_web_api_endpoints() and init()
+    futures::join!(init_future, web_api_future);
+}
+
+fn main() {
+    block_on(async_main());
 }
 
 // _________________________________________ TODO add new file?__________________________________________
