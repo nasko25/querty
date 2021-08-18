@@ -29,6 +29,9 @@ use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
 
+use futures::executor::block_on;
+use std::{thread, time};
+
 fn main() {
     let settings = settings::Settings::new(false).unwrap();
     let db = &settings.database;
@@ -79,7 +82,9 @@ fn main() {
 
     // TODO this can be async
     // mount the web API endpoints
-    web_api::mount_web_api_endpoints(settings.clone());
+    let web_api_future = web_api::mount_web_api_endpoints(settings.clone());
+    // if you need to block on multiple futures, use futures::join!(future1, future2, ...)
+    block_on(web_api_future);
 }
 
 // _________________________________________ TODO add new file?__________________________________________

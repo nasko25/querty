@@ -30,7 +30,7 @@ impl Fairing for CORS {
     }
 }
 
-pub fn mount_web_api_endpoints(settings: settings::Settings) {
+pub async fn mount_web_api_endpoints(settings: settings::Settings) {
     rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest, options_handler, query]).launch();
 }
 
