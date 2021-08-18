@@ -251,7 +251,7 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Ind
     let method = "suggest";
 
     let sanitized_query = web_api::sanitize_query(&query);
-    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{}&sort={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query), web_api::build_sort_query(sanitized_query));
+    let url = format!("http://{}:{}/solr/{}/{}?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=text%3A{}&sort={}", &solr.server, &solr.port, &solr.collection, &method, encode(&query), web_api::build_sort_query(sanitized_query, &web_api::SortQueryType::SUGGEST));
 
     let response: ResponseSuggester = reqwest::Client::new()
         .get(&url)

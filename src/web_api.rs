@@ -76,7 +76,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  split by whitespace characters
     //  (maybe add "" to the sort query; so `text_all:example` will become `text_all:"example"`;
     //  then maybe you don't have to split by non-alphanumeric characters ?)
-    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query)));
+    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query, &SortQueryType::SEARCH)));
 
     if matched_websites.is_ok() {
         //#[derive(Debug, Serialize, Deserialize)]
@@ -117,10 +117,19 @@ pub fn sanitize_query(query: &String) -> String {
                     .replace("/", "\\/");
 }
 
+/*
+ * An enum representing the type of query (either suggest or search) that needs
+ * to be built by build_sort_query()
+ */
+pub enum SortQueryType {
+    SUGGEST,
+    SEARCH,
+}
+
 // helper function that will build a string given an array of strings extracted from the query that will be used in the solr select queries
 // for example if the query is "example rust", and this function is called with ["example", "rust"], it will return this string url encoded:
 //  termfreq(url,example) desc,termfreq(url,rust) desc,termfreq(text_all,example) desc,termfreq(text_all,rust) desc
-pub fn build_sort_query(sanitized_query: String) -> String {
+pub fn build_sort_query(sanitized_query: String, q_type: &SortQueryType) -> String {
     let words = Regex::new(r"[^a-zA-Z\d]").unwrap().split(&sanitized_query).collect::<Vec<&str>>().into_iter().filter(|word| word.to_string() != "").collect::<Vec<&str>>();
     // construct two vectors of words; one sorting by url and the other by text_all
     let mut st1: Vec<String> = Vec::new();
@@ -138,8 +147,14 @@ pub fn build_sort_query(sanitized_query: String) -> String {
         st2.push("%2C".to_string());
     });
     // TODO should suggestions be sorted by website rank?
-    // sort by rank after sorting by term frequency of the query strings in the url
-    st1.push("rank%20desc%2C".to_string());  // rank desc,
+    //  for now, don't sort suggestions by website rank
+    match q_type {
+        SortQueryType::SEARCH => {
+            // sort by rank after sorting by term frequency of the query strings in the url
+            st1.push("rank%20desc%2C".to_string());  // rank desc,
+        },
+        _ => { }
+    }
 
     // remove the last %2C
     st2.pop();
