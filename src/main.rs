@@ -30,9 +30,6 @@ use std::fmt;
 use std::mem::discriminant;
 use std::thread;
 
-// TODO fork main.rs (instead of using async)
-//  one fork should run the web server, the other should run the crawler
-//  (they should be independent)
 fn init(settings: settings::Settings) {
     let db = &settings.database;
     println!("{:?}", db);
