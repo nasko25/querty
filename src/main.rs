@@ -28,15 +28,12 @@ mod web_api;
 use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
-
-use futures::executor::block_on;
-use futures;
+use std::thread;
 
 // TODO fork main.rs (instead of using async)
 //  one fork should run the web server, the other should run the crawler
 //  (they should be independent)
-async fn init(settings: &settings::Settings) {
-    let settings = settings::Settings::new(false).unwrap();
+fn init(settings: settings::Settings) {
     let db = &settings.database;
     println!("{:?}", db);
     println!("{:?}", settings.get_serv());
@@ -84,20 +81,16 @@ async fn init(settings: &settings::Settings) {
     //}
 }
 
-async fn async_main() {
-    let settings = settings::Settings::new(false).unwrap();
-
-    // run the crawler
-    let init_future = init(&settings);
-    // mount the web API endpoints
-    //  NOTE it is thread blocking, so init() should be executed before mount_web_api_endpoints()
-    let web_api_future = web_api::mount_web_api_endpoints(settings.clone());
-    // run and block on mount_web_api_endpoints() and init()
-    futures::join!(init_future, web_api_future);
-}
-
 fn main() {
-    block_on(async_main());
+    let settings = settings::Settings::new(false).unwrap();
+    let settings_clone = settings.clone();
+    let init_thread_handle = thread::spawn(move || { init(settings_clone) });
+
+    // thread blocking!
+    web_api::mount_web_api_endpoints(settings);
+
+    // if mount_web_api_endpoints() fails for some reason, wait for init() to finish
+    init_thread_handle.join().unwrap();
 }
 
 // _________________________________________ TODO add new file?__________________________________________
