@@ -32,6 +32,9 @@ use std::mem::discriminant;
 use futures::executor::block_on;
 use futures;
 
+// TODO fork main.rs (instead of using async)
+//  one fork should run the web server, the other should run the crawler
+//  (they should be independent)
 async fn init(settings: &settings::Settings) {
     let settings = settings::Settings::new(false).unwrap();
     let db = &settings.database;
