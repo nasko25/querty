@@ -87,6 +87,7 @@ async fn async_main() {
     // run the crawler
     let init_future = init(&settings);
     // mount the web API endpoints
+    //  NOTE it is thread blocking, so init() should be executed before mount_web_api_endpoints()
     let web_api_future = web_api::mount_web_api_endpoints(settings.clone());
     // run and block on mount_web_api_endpoints() and init()
     futures::join!(init_future, web_api_future);
