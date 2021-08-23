@@ -35,3 +35,4 @@ indexmap = { version = "1.6.2", features = ["serde"] }
 regex = "1.5.4"
 
 futures = "0.3"
+dotenv = "0.15.0"

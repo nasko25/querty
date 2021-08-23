@@ -7,6 +7,7 @@ extern crate serde;
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate throw;
 #[macro_use] extern crate simple_error;
+extern crate dotenv;
 
 // used for colorful output
 extern crate colour;
@@ -24,13 +25,20 @@ mod tests;
 mod crawler;
 mod web_api;
 
+// used to load .env
+use dotenv::dotenv;
+
 //use tests::test_all;
 use diesel::MysqlConnection;
 use std::fmt;
 use std::mem::discriminant;
 use std::thread;
+use std::env;
 
 fn init(settings: settings::Settings) {
+    // load the environment variables from the .env file
+    dotenv().ok();
+
     let db = &settings.database;
     println!("{:?}", db);
     println!("{:?}", settings.get_serv());
@@ -56,25 +64,31 @@ fn init(settings: settings::Settings) {
     let mut websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
 
-    // run tests
-    //println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
+    match env::var("RUN_TESTS") {
+        Ok(ref var) if var == "True" => {
+            // run tests
+            //println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
 
-    url = "https://www.spacex.com/";
+            url = "https://www.spacex.com/";
 
-    websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
-    println!("web saved: {:?}", websites_saved);
+            websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+            println!("web saved: {:?}", websites_saved);
 
-    // analyse a website and update its rank
-    let crawler = crawler::Crawler {
-        conn: &conn,
-        settings: &settings
-    };
-    crawler.analyse_website(&url, &websites_saved).unwrap();
-    let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
+            // analyse a website and update its rank
+            let crawler = crawler::Crawler {
+                conn: &conn,
+                settings: &settings
+            };
+            crawler.analyse_website(&url, &websites_saved).unwrap();
+            let updated_rank = user_react(url, React::Upvote { val: 0.0 }, &settings, &conn);
 
-    match updated_rank {
-        Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
-        Err(err) => println!("Rank was not updated successfully: Err({})", err),
+            match updated_rank {
+                Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
+                Err(err) => println!("Rank was not updated successfully: Err({})", err),
+            }
+        },
+        Ok(_) => colour::yellow!("Set RUN_TESTS to \"True\" to run the tests."),
+        Err(err) => colour::red!("Environment variable RUN_TESTS is not set.")
     }
 }
 
