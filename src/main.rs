@@ -29,25 +29,36 @@ mod react;
 // used to load .env
 use dotenv::dotenv;
 
+// used to load global configuration variables
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+
 //use tests::test_all;
 use std::thread;
 use std::env;
+
+// TODO use these variables instead of passing conn and settings everywhere
+static SETTINGS: Lazy<settings::Settings> = Lazy::new (|| {
+    settings::Settings::new(false).unwrap()
+});
+
+static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
+    let db = &SETTINGS.database;
+    println!("{:?}", db);
+    println!("{:?}", SETTINGS.get_serv());
+
+    let url_mysql = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
+    println!("{:?}", url_mysql);
+
+    Mutex::new(db::Database::establish_connection(&url_mysql))
+});
 
 fn init(settings: settings::Settings) {
     // load the environment variables from the .env file
     dotenv().ok();
 
-    let db = &settings.database;
-    println!("{:?}", db);
-    println!("{:?}", settings.get_serv());
-
-    let url_mysql = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
-    println!("{:?}", url_mysql);
-
-    let conn = db::Database::establish_connection(&url_mysql);
-
     // reset the state of the db and solr
-    // tests::reset_db_state(&conn, &settings);
+    // tests::reset_db_state(&DB_CONN, &settings);
 
     // reindex solr
     // tests::reindex_solr(&settings);
@@ -65,7 +76,7 @@ fn init(settings: settings::Settings) {
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
             // run tests
-            //println!("Tests should be Ok: {:?}", test_all(url, &settings, &conn));
+            //println!("Tests should be Ok: {:?}", test_all(url, &settings, &DB_CONN));
 
             url = "https://www.spacex.com/";
 
@@ -74,11 +85,11 @@ fn init(settings: settings::Settings) {
 
             // analyse a website and update its rank
             let crawler = crawler::Crawler {
-                conn: &conn,
+                conn: &*DB_CONN.lock().unwrap(),
                 settings: &settings
             };
             crawler.analyse_website(&url, &websites_saved).unwrap();
-            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 }, &settings, &conn);
+            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 }, &settings, &*DB_CONN.lock().unwrap());
 
             match updated_rank {
                 Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
