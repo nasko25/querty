@@ -1,9 +1,10 @@
 use reqwest;
-use crate::settings;
 use crate::db::from_str;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
 use crate::web_api;
+
+use crate::settings::SETTINGS;
 
 use std::process::Command;
 use std::env;
@@ -105,8 +106,8 @@ pub struct WebsiteSolr {
 }
 
 #[tokio::main]
-pub async fn req(settings: &settings::Settings, query: String) -> Result<Vec<WebsiteSolr>, reqwest::Error> {
-    let solr = &settings.solr;
+pub async fn req(query: String) -> Result<Vec<WebsiteSolr>, reqwest::Error> {
+    let solr = &SETTINGS.solr;
     println!("Solr config: {:?}", solr);
 
     let method = "select";
@@ -132,8 +133,8 @@ pub async fn req(settings: &settings::Settings, query: String) -> Result<Vec<Web
 }
 
 #[tokio::main]
-pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
-    let solr = &settings.solr;
+pub async fn insert(website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+    let solr = &SETTINGS.solr;
 
     let method = "update";
 
@@ -162,8 +163,8 @@ pub async fn insert(settings: &settings::Settings, website: &WebsiteSolr) -> Res
 }
 
 #[tokio::main]
-pub async fn update(settings: &settings::Settings, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
-    let solr = &settings.solr;
+pub async fn update(website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+    let solr = &SETTINGS.solr;
     let method = "update";
     let url = format!("http://{}:{}/solr/{}/{}/json/docs?commit=true",  &solr.server, &solr.port, &solr.collection, &method);
     reqwest::Client::new()
@@ -176,7 +177,7 @@ pub async fn update(settings: &settings::Settings, website: &WebsiteSolr) -> Res
     Ok(())
 }
 
-pub fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+pub fn update_metadata(metadata: &Vec<Metadata>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let mut new_metadata = Vec::new();
     for m in metadata {
         new_metadata.push(m.metadata_text.clone());
@@ -185,11 +186,11 @@ pub fn update_metadata(settings: &settings::Settings, metadata: &Vec<Metadata>, 
     let mut website_mut = website.clone();
     website_mut.metadata = Some(new_metadata);
 
-    update(settings, &website_mut)
+    update(&website_mut)
 }
 
 // TODO code duplication?
-pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<ExternalLink>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
+pub fn update_ext_links(external_links: &Vec<ExternalLink>, website: &WebsiteSolr) -> Result<(), reqwest::Error> {
     let mut new_ext_links = Vec::new();
     for el in external_links {
         new_ext_links.push(el.url.clone());
@@ -198,12 +199,12 @@ pub fn update_ext_links(settings: &settings::Settings, external_links: &Vec<Exte
     let mut website_mut = website.clone();
     website_mut.external_links = Some(new_ext_links);
 
-    update(settings, &website_mut)
+    update(&website_mut)
 }
 
 #[tokio::main]
-pub async fn dataimport(settings: &settings::Settings) -> Result<(), reqwest::Error> {
-    let solr = &settings.solr;
+pub async fn dataimport() -> Result<(), reqwest::Error> {
+    let solr = &SETTINGS.solr;
     let method = "dataimport";
     let url = format!("http://{}:{}/solr/{}/{}?command=full-import&commit=true&clean=true", &solr.server, &solr.port, &solr.collection, &method);
     reqwest::Client::new()
@@ -239,7 +240,7 @@ impl fmt::Display for SuggesterJSONError {
 
 
 #[tokio::main]
-pub async fn suggest(query: String, settings: &settings::Settings) -> Result<IndexSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
+pub async fn suggest(query: String) -> Result<IndexSet<Term>, Box<dyn error::Error> /*reqwest::Error*/> {
     if query.chars().count() < 2 || query.chars().count() > 255 {
         //throw_new!("query should be between 2 and 255 characters long");
         //Err("asd")
@@ -247,7 +248,7 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Ind
         return Err(SuggesterUnexpectedParam("query string should be between 2 and 255 characters long".to_string()).into());
     }
 
-    let solr = &settings.solr;
+    let solr = &SETTINGS.solr;
     let method = "suggest";
 
     let sanitized_query = web_api::sanitize_query(&query);
@@ -330,9 +331,9 @@ pub async fn suggest(query: String, settings: &settings::Settings) -> Result<Ind
 //      of course this will delete everything that solr stored, so it needs to be reinserted again
 //      from the relational db (using solr's data import functionality)
 #[tokio::main]
-pub async fn create_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
+pub async fn create_collection() -> Result<std::process::Output, reqwest::Error> {
     // https://doc.rust-lang.org/std/process/struct.Command.html
-    let solr = &settings.solr;
+    let solr = &SETTINGS.solr;
 
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
@@ -369,8 +370,8 @@ pub async fn create_collection(settings: &settings::Settings) -> Result<std::pro
 }
 
 #[tokio::main]
-pub async fn delete_collection(settings: &settings::Settings) -> Result<std::process::Output, reqwest::Error> {
-    let solr = &settings.solr;
+pub async fn delete_collection() -> Result<std::process::Output, reqwest::Error> {
+    let solr = &SETTINGS.solr;
     let out = if cfg!(target_os = "windows") {
         // TODO not tested for windows
         // shellexpand?

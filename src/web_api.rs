@@ -9,7 +9,6 @@ use rocket::fairing::{Fairing, Info, Kind};
 use std::path::PathBuf;
 use urlencoding::{ encode, decode };
 
-use crate::settings;
 use crate::solr;
 
 pub struct CORS;
@@ -30,15 +29,15 @@ impl Fairing for CORS {
     }
 }
 
-pub fn mount_web_api_endpoints(settings: settings::Settings) {
-    rocket::ignite().attach(CORS).manage(settings).mount("/", routes![suggest, options_handler, query]).launch();
+pub fn mount_web_api_endpoints() {
+    rocket::ignite().attach(CORS).mount("/", routes![suggest, options_handler, query]).launch();
 }
 
 // TODO wouldn't post requests be better?
 // Source for cors: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
-fn suggest(query: String, settings: State<settings::Settings>) -> JsonValue {
-    let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query."), &settings);
+fn suggest(query: String) -> JsonValue {
+    let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query."));
     println!("suggestions: {:?}", suggestions);
     // parse the suggestion
     if (suggestions.is_ok()) {
@@ -61,7 +60,7 @@ fn options_handler<'a>(path: PathBuf) -> Response<'a> {
 // TODO returning 404 might be better if solr has no response ?
 //  (although this is just an API, so an empty array should also be acceptable?)
 #[get("/query/<query>")]
-fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
+fn query(query: String) -> JsonValue {
     // TODO maybe add an endpoint that only returns the important fields of the websites (title,
     //  url and the relevant part of the text)
     //  also sort by term frequency and setup spellchecker (check the TODO file)
@@ -76,7 +75,7 @@ fn query(query: String, settings: State<settings::Settings>) -> JsonValue {
     //  split by whitespace characters
     //  (maybe add "" to the sort query; so `text_all:example` will become `text_all:"example"`;
     //  then maybe you don't have to split by non-alphanumeric characters ?)
-    let matched_websites = solr::req(&settings, format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query, &SortQueryType::SEARCH)));
+    let matched_websites = solr::req(format!("{}&sort={}", &build_search_query(&split_query), &build_sort_query(sanitized_query, &SortQueryType::SEARCH)));
 
     if matched_websites.is_ok() {
         //#[derive(Debug, Serialize, Deserialize)]

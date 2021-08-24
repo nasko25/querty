@@ -1,5 +1,4 @@
 use crate::db;
-use crate::settings;
 use crate::solr;
 
 use crate::crawler::test_crawler;
@@ -19,17 +18,19 @@ use crate::solr::insert;
 use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
 
+use crate::settings::SETTINGS;
+
 use std::error::Error;
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 // -------------------------------------------------
 
 // TODO split the function into multiple smaller functions
-pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
+pub fn test_all(url: &str, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
     // reset the state of the database before executing the tests
-    assert!(reset_db_state(&conn, &settings).is_ok(), "The detabase cannot be reset. Try resetting it manually.");
+    assert!(reset_db_state(&conn).is_ok(), "The detabase cannot be reset. Try resetting it manually.");
 
-    assert!(test_crawler(url, conn, settings).is_ok(), "The crawler tests failed.");
+    assert!(test_crawler(url, conn).is_ok(), "The crawler tests failed.");
 
     let create_website = db::Database::create_tables(conn);
     println!("table website created: {:?}", create_website);
@@ -56,14 +57,14 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
         println!("Website rank should be updated: {:?}", updated_website);
         assert!(updated_website.is_ok(), "Could not update website with id: {:?}", website.id);
         let website_solr = WebsiteSolr {id: website.id, title: website.title, text: website.text, url: website.url, base_url: website.base_url, rank: website.rank, type_of_website: website.type_of_website, metadata: None, external_links: Some(vec!["spacex.com".to_string(), "rust-lang.org".to_string()])};
-        let solr_inserted = insert(settings, &website_solr);
+        let solr_inserted = insert(&website_solr);
         println!("Inserted in Solr: {:?}", solr_inserted);
         assert!(solr_inserted.is_ok(), "Could not insert website with id {:?} into solr.", website.id);
     }
     // println!("{:?}", db::Database::insert(&u, conn));
     // println!("{:?}", db::Database::insert(&w, conn));
 
-    let all_websites_solr = req(settings, "*:*".to_string());
+    let all_websites_solr = req("*:*".to_string());
     println!("ALL WEBSITES FROM SOLR:\n\n{:?}", all_websites_solr);
     assert!(all_websites_solr.is_ok(), "Could not fetch all websites from solr.");
 
@@ -78,9 +79,9 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     println!("All websites: {:?}", all_websites);
     assert!(!all_websites.is_empty(), "No websites were retrieved from the database.");
 
-    let mut website_solr_vec = req(settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
+    let mut website_solr_vec = req(format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     let mut website_solr = website_solr_vec.get(0).unwrap();
-    let updated_metadata = update_metadata(settings, &md, &website_solr);
+    let updated_metadata = update_metadata(&md, &website_solr);
     println!("\n\nUpdate metadata: {:?}", updated_metadata);
     assert!(updated_metadata.is_ok(), "Could not update metadata of website with id: {:?}", website_ids.get(0));
 
@@ -90,9 +91,9 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     let ext_links = db::Database::select_el(&website_ids.get(0), conn);
     println!("External Links: {:?}", ext_links);
     assert!(!ext_links.is_empty(), "Websites with ids: {:?} have no external links.", website_ids.get(0));
-    website_solr_vec = req(settings, format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
+    website_solr_vec = req(format!("id:{}", website_ids.get(0).unwrap().id.unwrap())).unwrap();
     website_solr = website_solr_vec.get(0).unwrap();
-    let updated_ext_links = update_ext_links(settings, &ext_links, &website_solr);
+    let updated_ext_links = update_ext_links(&ext_links, &website_solr);
     println!("\nUpdate external links: {:?}", updated_ext_links);
     assert!(updated_ext_links.is_ok(), "Could not update external links of website with id: {}", website_ids.get(0).unwrap().id.unwrap());
 
@@ -134,7 +135,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     assert!(w_r_e_l_inserted_err.is_err(), "Website ref external link of a website with non-existent id and external link with non-existent id did not throw a foreign key violation.");
 
     // reset the state of the db and solr after the tests are done
-    // reset_db_state(&conn, &settings);
+    // reset_db_state(&conn);
 
     // delete metatags from the database
     let mut del_result = db::Database::delete_m_by_id(&vec![1, 2, 3], conn);
@@ -159,8 +160,7 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
 
     // create a Crawler struct
     let crawler = Crawler {
-        conn: &conn,
-        settings: &settings
+        conn: &conn
     };
     // test the update website functionality (update metadata and external links as well)
     assert!(crawler.test_website_update(&solr::WebsiteSolr { id: Some(1), base_url: "updated url".to_string(), external_links: Some(vec!["example.com".to_string(), "updated_url.asdf".to_string()]), metadata: Some(vec!["asdf".to_string(), "updated meta".to_string(), "asdfadsf".to_string()]), rank: -2.0_f64, text: "this is the updated website text".to_string(), title: "Updated title 2.0".to_string(), type_of_website: "updated".to_string(), url: "updated_url.new".to_string()}).is_ok(), "crawler.test_website_update() for a website with a valid id should return Ok");
@@ -192,19 +192,19 @@ pub fn test_all(url: &str, settings: &settings::Settings, conn: &MysqlConnection
     assert!(del_result.is_ok());
     assert_eq!(del_result.unwrap(), metadatas_in_db.len(), "The number of deleted metadata entries should be the same as the number of metadata entries that were associated with the website with id equal to 1 before.");
 
-    assert!(test_suggester(&settings).is_ok(), "Suggester tests failed.");
+    assert!(test_suggester().is_ok(), "Suggester tests failed.");
 
     Ok(())
 }
 
-fn test_suggester(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
-    assert!(solr::suggest("a".to_string(), &settings).is_err(), "Letters should be longer than 2 characters");
+fn test_suggester() -> Result<(), Box<dyn Error>> {
+    assert!(solr::suggest("a".to_string()).is_err(), "Letters should be longer than 2 characters");
 
-    match solr::suggest("random string word asdfsdfjkn 0".to_string(), &settings) {
+    match solr::suggest("random string word asdfsdfjkn 0".to_string()) {
         Ok(terms) => assert!(terms.is_empty(), "There should be no suggestion for the random string above"),
         Err(err) => return Err(err)
     };
-    let suggestion = solr::suggest("thin".to_string(), &settings);
+    let suggestion = solr::suggest("thin".to_string());
 
     match suggestion {
         Ok(terms) => {
@@ -217,26 +217,26 @@ fn test_suggester(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
     }
 }
 
-pub fn reset_db_state(conn: &MysqlConnection, settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
+pub fn reset_db_state(conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
     // delete the databases
-    solr::delete_collection(settings)?;
+    solr::delete_collection()?;
     db::Database::drop_tables(conn)?;
 
     // create the solr collection and db tables
-    solr::create_collection(settings)?;
+    solr::create_collection()?;
     db::Database::create_tables(conn)?;
 
     Ok(())
 }
 
-pub fn reindex_solr(settings: &settings::Settings) -> Result<(), Box<dyn Error>> {
+pub fn reindex_solr() -> Result<(), Box<dyn Error>> {
     // delete the querty collection
-    solr::delete_collection(settings)?;
+    solr::delete_collection()?;
 
     // create a new solr collection
-    solr::create_collection(settings)?;
+    solr::create_collection()?;
 
     // import the data from the mysql database
-    solr::dataimport(settings)?;
+    solr::dataimport()?;
     Ok(())
 }

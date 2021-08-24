@@ -2,7 +2,6 @@ use std::mem::discriminant;
 use std::fmt;
 use diesel::MysqlConnection;
 
-use crate::settings;
 use crate::solr;
 use crate::crawler;
 
@@ -32,9 +31,9 @@ impl fmt::Display for ReactError {
 }
 // TODO passing settings and MysqlConnection everywhere is probably not a good idea
 // refactor?
-pub(super) fn user_react(url: &str, react_type: React, settings: &settings::Settings, conn: &MysqlConnection) -> Result<f64, ReactError> {
+pub(super) fn user_react(url: &str, react_type: React, conn: &MysqlConnection) -> Result<f64, ReactError> {
     println!("Updating the website with url {} after user react.", url);
-    let mut websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+    let mut websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
     // websites_saved should either be empty (if there are no websites with that url in solr)
     //      in which case the website should just be analysed and its rank should be set to 0.0
     //
@@ -64,8 +63,7 @@ pub(super) fn user_react(url: &str, react_type: React, settings: &settings::Sett
         return Err(ReactError::GenericError);
     }
     let crawler = crawler::Crawler {
-        conn,
-        settings
+        conn
     };
     crawler.analyse_website(&url, &websites_saved).unwrap();
 

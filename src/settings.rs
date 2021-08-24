@@ -1,5 +1,9 @@
 use config::{ConfigError};
 
+// used to load global configuration variables
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+
 // TODO getters instead of pub?
 #[derive(Debug, Deserialize, Clone)]
 pub struct Database {
@@ -40,3 +44,7 @@ impl Settings {
         &self.database.server
     }
 }
+
+pub static SETTINGS: Lazy<Settings> = Lazy::new (|| {
+    Settings::new(false).unwrap()
+});

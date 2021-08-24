@@ -37,11 +37,9 @@ use std::sync::Mutex;
 use std::thread;
 use std::env;
 
-// TODO use these variables instead of passing conn and settings everywhere
-static SETTINGS: Lazy<settings::Settings> = Lazy::new (|| {
-    settings::Settings::new(false).unwrap()
-});
+use settings::SETTINGS;
 
+// TODO use these variables instead of passing conn and settings everywhere
 static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
     let db = &SETTINGS.database;
     println!("{:?}", db);
@@ -53,15 +51,15 @@ static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
     Mutex::new(db::Database::establish_connection(&url_mysql))
 });
 
-fn init(settings: settings::Settings) {
+fn init() {
     // load the environment variables from the .env file
     dotenv().ok();
 
     // reset the state of the db and solr
-    // tests::reset_db_state(&DB_CONN, &settings);
+    // tests::reset_db_state(&DB_CONN);
 
     // reindex solr
-    // tests::reindex_solr(&settings);
+    // tests::reindex_solr();
 
     let mut url = "https://www.rust-lang.org";
 
@@ -70,26 +68,25 @@ fn init(settings: settings::Settings) {
     // let url = "https://doc.rust-lang.org/std/macro.assert_ne.html";
 
     // load the website with this url from solr to see if it is in the database
-    let mut websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+    let mut websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
     println!("web saved: {:?}", websites_saved);
 
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
             // run tests
-            //println!("Tests should be Ok: {:?}", test_all(url, &settings, &DB_CONN));
+            //println!("Tests should be Ok: {:?}", test_all(url, &DB_CONN));
 
             url = "https://www.spacex.com/";
 
-            websites_saved = solr::req(&settings, format!("url:\"{}\"", url)).unwrap();
+            websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
             println!("web saved: {:?}", websites_saved);
 
             // analyse a website and update its rank
             let crawler = crawler::Crawler {
-                conn: &*DB_CONN.lock().unwrap(),
-                settings: &settings
+                conn: &*DB_CONN.lock().unwrap()
             };
             crawler.analyse_website(&url, &websites_saved).unwrap();
-            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 }, &settings, &*DB_CONN.lock().unwrap());
+            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 }, &*DB_CONN.lock().unwrap());
 
             match updated_rank {
                 Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
@@ -102,12 +99,10 @@ fn init(settings: settings::Settings) {
 }
 
 fn main() {
-    let settings = settings::Settings::new(false).unwrap();
-    let settings_clone = settings.clone();
-    let init_thread_handle = thread::spawn(move || { init(settings_clone) });
+    let init_thread_handle = thread::spawn(move || { init() });
 
     // thread blocking!
-    web_api::mount_web_api_endpoints(settings);
+    web_api::mount_web_api_endpoints();
 
     // if mount_web_api_endpoints() fails for some reason, wait for init() to finish
     init_thread_handle.join().unwrap();
