@@ -3,8 +3,6 @@ use scraper::{Html, Selector};
 
 use std::collections::HashSet;
 
-use diesel::MysqlConnection;
-
 use crate::solr::WebsiteSolr;
 use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
@@ -23,12 +21,12 @@ use std::error::Error;
 use url::Url;
 use publicsuffix::List;
 
-pub struct Crawler<'a> {
-    pub conn: &'a MysqlConnection,
+pub struct Crawler/* <'a> */ {
+    // pub conn: &'a MysqlConnection,
     // pub settings: &'a Settings
 }
 
-impl<'a> Crawler<'a> {
+impl /* <'a> */  Crawler /* <'a> */ {
 
     pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error> {
         // let body = fetch_url(url).unwrap();
@@ -65,7 +63,7 @@ impl<'a> Crawler<'a> {
 
     // returns the rank calculated from all websites that link to the given url
     fn rank_from_links(&self, url: &str) -> Result<f64, Box<dyn Error>> {
-        let base_url = match Crawler::<'a>::extract_base_url(url) {
+        let base_url = match Crawler/* ::<'a>*/::extract_base_url(url) {
             Ok(base_url) => base_url,
             Err(err) => return Err(Box::new(err))
         };
@@ -203,7 +201,7 @@ impl<'a> Crawler<'a> {
         let mut w = Crawler::extract_website_info(&body, &url);
         let mut meta = Crawler::extract_metadata_info(&body, None); // website id should not matter here, because it is not needed for website_genre_offline_classification() and is later fetched again
 
-        match Crawler::<'a>::website_genre(&url) {
+        match Crawler/*::<'a>*/::website_genre(&url) {
             Ok(genre) => w.type_of_website = genre,
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
@@ -260,12 +258,10 @@ impl<'a> Crawler<'a> {
     // returns the Website saved to the database
     // or returns an error if the website could not be saved to the database
     fn save_website_info(&self, website_to_insert: Website) -> Result<Website, throw::Error<&'static str>> {
-        let conn = self.conn;
-
         // first save the website info(meta tags, title, text, etc.) in the database, and only if it was added successfully, add it to solr
             // (because the database should (eventually) have a unique constraint on url)
         let w = crate::db::DB::Website (website_to_insert);
-        if let crate::db::DB::Website(website) = crate::db::Database::insert(&w, conn).unwrap() {
+        if let crate::db::DB::Website(website) = crate::db::Database::insert(&w).unwrap() {
             let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
             crate::solr::insert(&w_solr).unwrap();
             println!("{:?}", website.id);
@@ -278,12 +274,11 @@ impl<'a> Crawler<'a> {
     }
 
     fn save_metadata(&self, metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
-        let conn = self.conn;
         let mut m;
         let mut metadata_solr = Vec::new();
         for metadata in metadata_vec {
             m = crate::db::DB::Metadata (metadata.clone()); // TODO maybe add a separate table - like for the external links, in order to reuse the already inserted metadatas, instead of inserting them multiple times for different websites.
-            if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m, conn).unwrap() {
+            if let crate::db::DB::Metadata (meta) = crate::db::Database::insert(&m).unwrap() {
                 println!("meta id: {:?}", meta.id);
                 metadata_solr.push(meta);
             }
@@ -296,16 +291,15 @@ impl<'a> Crawler<'a> {
     }
 
     fn save_external_links(&self, external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
-        let conn = self.conn;
         let mut el;
         let mut web_el;
         let mut external_links_solr = Vec::new();
         for mut external_link in external_links {
             el = crate::db::DB::ExternalLink (external_link.0);
-            if let crate::db::DB::ExternalLink (ext_link) = crate::db::Database::insert(&el, conn).unwrap() { // TODO add a unique constraint on the ExternalLink in the database, and if you try to insert an already existing ExternalLink to the database, get its id (and use it for the WebsiteRefExtLink) instead of inserting it twice
+            if let crate::db::DB::ExternalLink (ext_link) = crate::db::Database::insert(&el).unwrap() { // TODO add a unique constraint on the ExternalLink in the database, and if you try to insert an already existing ExternalLink to the database, get its id (and use it for the WebsiteRefExtLink) instead of inserting it twice
                 external_link.1.ext_link_id = ext_link.id;
                 web_el = crate::db::DB::WebsiteRefExtLink (external_link.1);
-                if let crate::db::DB::WebsiteRefExtLink (webref_ext_link) = crate::db::Database::insert(&web_el, conn).unwrap() {
+                if let crate::db::DB::WebsiteRefExtLink (webref_ext_link) = crate::db::Database::insert(&web_el).unwrap() {
                     println!("external link id: {:?}; website ref external link id: {:?}; website ref external link link id (should be = to external link id): {:?}", ext_link.id, webref_ext_link.id, webref_ext_link.ext_link_id);
                     external_links_solr.push( (ext_link, webref_ext_link) );
                 }
@@ -328,15 +322,15 @@ impl<'a> Crawler<'a> {
         // TODO too similar to save_website()
         // extract common code
         let url = &website.url;
-        let body = Crawler::<'a>::fetch_url(&url).unwrap();
+        let body = Crawler/*::<'a>*/::fetch_url(&url).unwrap();
 
         let website_id = website.id;
-        let mut w = Crawler::<'a>::extract_website_info(&body, &url);
+        let mut w = Crawler/*::<'a>*/::extract_website_info(&body, &url);
         w.id = website_id;
         w.rank = website.rank;
-        let extracted_meta = Crawler::<'a>::extract_metadata_info(&body, None);
+        let extracted_meta = Crawler/*::<'a>*/::extract_metadata_info(&body, None);
 
-        match Crawler::<'a>::website_genre(&url) {
+        match Crawler/*::<'a>*/::website_genre(&url) {
             Ok(genre) => w.type_of_website = genre,
             Err(err) => {
                 println!("Encountered an error while trying to classify the website: {:?}", err);
@@ -348,7 +342,7 @@ impl<'a> Crawler<'a> {
         self.update_website_info(w).unwrap();
 
         let updated_meta = self.modify_meta(extracted_meta, website_id);
-        let extracted_ext_links = Crawler::<'a>::extract_external_links(&body, website_id, &url);
+        let extracted_ext_links = Crawler/*::<'a>*/::extract_external_links(&body, website_id, &url);
 
         let updated_ext_links = self.modify_ext_links(extracted_ext_links, website_id);
 
@@ -415,10 +409,9 @@ impl<'a> Crawler<'a> {
     }
 
     fn update_website_info(&self, website_to_update: Website) -> Result<Website, throw::Error<&'static str>>  {
-        let conn = self.conn;
         // TODO update the db::Database::update method to work for metadata and external_links - to work like insert()
         // Then update this function
-        if let DB::Website(website) = crate::db::Database::update(&DB::Website(website_to_update), conn).unwrap() {
+        if let DB::Website(website) = crate::db::Database::update(&DB::Website(website_to_update)).unwrap() {
             let w_solr = WebsiteSolr {id: website.id, title: website.title.clone(), text: website.text.clone(), url: website.url.clone(), base_url: website.base_url.clone(), rank: website.rank, type_of_website: website.type_of_website.clone(), metadata: None, external_links: None };
             crate::solr::update(&w_solr).unwrap();
             println!("Updated website id: {:?}", website.id);
@@ -430,21 +423,17 @@ impl<'a> Crawler<'a> {
     }
 
     fn update_meta(&self, metadata_vec: &Vec<Metadata>, website_to_update: &WebsiteSolr) -> Result<Vec<Metadata>, throw::Error<&'static str>> {
-        let conn = self.conn;
-
         // first delete the metadata associated with the given website, so that after updating
         // them, older metadata enties will not be kept in the database
-        crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ], conn).unwrap();
+        crate::db::Database::delete_m(&vec![ website_to_update.id.unwrap() ]).unwrap();
         self.save_metadata(metadata_vec, website_to_update)
     }
 
     // TODO probably prefix the update (and possibly the save functions) in this file with something like
     // "crawler_" to differentiate them from the solr.rs functions with the same names
     fn update_external_links(&self, external_links: Vec< (ExternalLink, WebsiteRefExtLink) >, website_to_update: &WebsiteSolr) -> Result<Vec< (ExternalLink, WebsiteRefExtLink) >, throw::Error<&'static str>> {
-        let conn = self.conn;
-
         // delete and save external_links (like update_meta())
-        crate::db::Database::delete_el(&vec![ website_to_update.id.unwrap() ], conn).unwrap();
+        crate::db::Database::delete_el(&vec![ website_to_update.id.unwrap() ]).unwrap();
         self.save_external_links(external_links, website_to_update)
     }
 
@@ -490,7 +479,7 @@ impl<'a> Crawler<'a> {
         }
     }
 
-    fn website_genre_offline_classification(body: &str, meta: &'a Vec<Metadata>) -> String {
+    fn website_genre_offline_classification(body: &str, meta: &/*'a */Vec<Metadata>) -> String {
         let body_lc = body.to_lowercase();
         let mut meta_lc;
 
@@ -547,14 +536,12 @@ impl<'a> Crawler<'a> {
 // TESTS
 
 // TODO add asserts
-pub fn test_crawler(url: &str, conn: &MysqlConnection) -> Result<(), Box<dyn Error>> {
+pub fn test_crawler(url: &str) -> Result<(), Box<dyn Error>> {
     let body = Crawler::fetch_url(url).unwrap();
  
     // tests the functions implemented above
     let w = Crawler::extract_website_info(&body, &url); // TODO could call this in the save_website_info function
-    let crawler = Crawler {
-        conn
-    };
+    let crawler = Crawler {};
     let mut website = crawler.save_website_info(w).unwrap();
     // should get the id from the save_website_info() function
     let website_id = website.id;

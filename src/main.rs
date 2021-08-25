@@ -29,34 +29,18 @@ mod react;
 // used to load .env
 use dotenv::dotenv;
 
-// used to load global configuration variables
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
-
 //use tests::test_all;
 use std::thread;
 use std::env;
 
-use settings::SETTINGS;
-
-// TODO use these variables instead of passing conn and settings everywhere
-static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
-    let db = &SETTINGS.database;
-    println!("{:?}", db);
-    println!("{:?}", SETTINGS.get_serv());
-
-    let url_mysql = format!("mysql://{}:{}@{}:{}/{}", &db.user, &db.pass, &db.server, &db.port, &db.db_name);
-    println!("{:?}", url_mysql);
-
-    Mutex::new(db::Database::establish_connection(&url_mysql))
-});
+use crate::db::DB_CONN;
 
 fn init() {
     // load the environment variables from the .env file
     dotenv().ok();
 
     // reset the state of the db and solr
-    // tests::reset_db_state(&DB_CONN);
+    // tests::reset_db_state();
 
     // reindex solr
     // tests::reindex_solr();
@@ -74,7 +58,7 @@ fn init() {
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
             // run tests
-            //println!("Tests should be Ok: {:?}", test_all(url, &DB_CONN));
+            //println!("Tests should be Ok: {:?}", test_all(url));
 
             url = "https://www.spacex.com/";
 
@@ -83,10 +67,10 @@ fn init() {
 
             // analyse a website and update its rank
             let crawler = crawler::Crawler {
-                conn: &*DB_CONN.lock().unwrap()
+                // conn: &*DB_CONN.lock().unwrap()
             };
             crawler.analyse_website(&url, &websites_saved).unwrap();
-            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 }, &*DB_CONN.lock().unwrap());
+            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 });
 
             match updated_rank {
                 Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
