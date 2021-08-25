@@ -29,8 +29,7 @@ impl fmt::Display for ReactError {
         }
     }
 }
-// TODO passing settings and MysqlConnection everywhere is probably not a good idea
-// refactor?
+
 pub(super) fn user_react(url: &str, react_type: React) -> Result<f64, ReactError> {
     println!("Updating the website with url {} after user react.", url);
     let mut websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
