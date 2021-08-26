@@ -5,7 +5,7 @@
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
             <!-- &hellip; is only added if the text was truncated -->
-            <a class = "result-title" :href="result.url" @mouseover="underline" @mouseleave="deunderline"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a>
+            <a class = "result-title" :href="result.url" @mouseover="underline" @mouseleave="deunderline"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a> <div class = "arrows"> <p class = "arrow-up"> arrow-up </p> <p class = "arrow-down"> arrow down </p></div>
             <br/>
             <a class = "result-url" :href="result.url" @mouseover="underlineTitle" @mouseleave="removeUnderline"> {{ result.url }} </a>
             <br/>
@@ -195,6 +195,7 @@ export default  {
     display: inline-block;
     float: left;
     clear: both;
+    padding-right: 40px;
 }
 
 .result {
@@ -212,9 +213,35 @@ export default  {
     color: #aeb1f1;
 }
 
+.arrows {
+    position: relative;
+    /* width: 4em; */
+    white-space: nowrap;
+    float: left;
+    margin: 0;
+    margin-left: 1em;
+    z-index: 1;
+}
+
+.arrow-up {
+    margin: 0;
+    top: -0.5em;
+    /* left: 10em; */
+    position: absolute;
+}
+
+.arrow-down {
+    position: absolute;
+    margin: 0;
+    top: 0.5em;
+}
+
 .result-url {
     float: left;
     padding-top: 0.1em;
+    position: relative;
+    background: transparent;
+    z-index: 2;
 }
 
 .result-url, .result-url:hover, .result-url:visited, .result-url:active {
