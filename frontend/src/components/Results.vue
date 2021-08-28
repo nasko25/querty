@@ -11,7 +11,7 @@
                                     (check index.html for the import)
                                     TODO maybe download some icons instead of using fontawesome
                             -->
-                            <i class='fas fa-angle-up' style='font-size:18px'></i>
+                            <i class='fas fa-angle-up' style='font-size:18px; color: #6666ff'></i>
                             arrow-up
                         </p>
                         <p class = "arrow-down">
