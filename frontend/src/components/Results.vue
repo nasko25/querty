@@ -5,20 +5,19 @@
     <ul id = "results-list">
         <li class = "result" v-for="(result, index) in results" :key = "index">
             <!-- &hellip; is only added if the text was truncated -->
-            <a class = "result-title" :href="result.url" @mouseover="underline" @mouseleave="deunderline"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a> <div class = "arrows">
-                        <p class = "arrow-up">
-                            <!-- These 'fas' icons are from https://kit.fontawesome.com/a076d05399.js
-                                    (check index.html for the import)
-                                    TODO maybe download some icons instead of using fontawesome
-                            -->
-                            <i class='fas fa-angle-up' style='font-size:18px; color: #6666ff'></i>
-                            arrow-up
-                        </p>
-                        <p class = "arrow-down">
-                            <i class='fas fa-angle-down' style='font-size:18px'></i>
-                            arrow down
-                        </p>
-                    </div>
+            <a class = "result-title" :href="result.url" @mouseover="underline" @mouseleave="deunderline"> {{ result.title === undefined || result.title === "" ? truncate(result.text, 25) + (result.text.length > 25 ? "&hellip;" : "") : result.title }} </a>
+                <div class = "arrows">
+                    <p class = "arrow-up">
+                        <!-- These 'fas' icons are from https://kit.fontawesome.com/a076d05399.js
+                                (check index.html for the import)
+                                TODO maybe download some icons instead of using fontawesome
+                        -->
+                        <i class='fas fa-angle-up' style='font-size:18px;'></i>
+                    </p>
+                    <p class = "arrow-down">
+                        <i class='fas fa-angle-down' style='font-size:18px'></i>
+                    </p>
+                </div>
             <br/>
             <a class = "result-url" :href="result.url" @mouseover="underlineTitle" @mouseleave="removeUnderline"> {{ result.url }} </a>
             <br/>
@@ -238,7 +237,7 @@ export default  {
 
 .arrow-up {
     margin: 0;
-    top: -0.5em;
+    top: -0.4em;
     /* left: 10em; */
     position: absolute;
 }
@@ -246,7 +245,17 @@ export default  {
 .arrow-down {
     position: absolute;
     margin: 0;
-    top: 0.5em;
+    top: 0.4em;
+}
+
+.fas {
+    color: #6666ff;
+}
+
+.fas:hover {
+    /* color: green; */
+    /* use this color to indicate selection as well */
+    color: #3434ff;
 }
 
 .result-url {
