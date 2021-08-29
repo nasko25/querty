@@ -182,10 +182,31 @@ export default  {
         clickArrow(e) {
             // get the clicked element
             const clicked_element = e.target ? e.target : e.srcElement;
-            // toggle the "arrow-selected" class
-            //  * if the element has the class, toggle() removes it
-            //  * if the element does not have the class, toggle() adds it
-            clicked_element.classList.toggle("arrow-selected")
+
+            // get the element's siblings (together with the element itself)
+            const clicked_element_siblings = clicked_element.parentElement.parentElement.children;
+
+            // if there are not exactly 2 siblings (the up arrow and the down arrow), something is wrong
+            if (clicked_element_siblings.length !== 2)
+                throw Error("The clicked element does not have two siblings.");
+
+            // otherwise, loop through the two elements
+            clicked_element_siblings.forEach(elem => {
+                // if the other element (not the clicked element) contains the class "arrow-selected", notify the user that they should
+                //  unselect the other arrow first, before selecting this one
+                if (elem.children.item(0) !== clicked_element && elem.children.item(0).classList.contains("arrow-selected"))
+                    // TODO better alerts?
+                    alert("Unselect your previous reaction first.")
+                // otherwise, if the loop reaches the element that is not the clicked_element
+                //  (and therefore does not contain the "arrow-selected" class)
+                //  toggle the "arrow-selected" class on the clicked_element
+                else if(elem.children.item(0) !== clicked_element) {
+                    // toggle the "arrow-selected" class
+                    //  * if the element has the class, toggle() removes it
+                    //  * if the element does not have the class, toggle() adds it
+                    clicked_element.classList.toggle("arrow-selected");
+                }
+            });
             // TODO if arrow-up is selected, arrow-down should not be selectable
         }
     },
@@ -249,12 +270,14 @@ export default  {
     top: -0.4em;
     /* left: 10em; */
     position: absolute;
+    cursor: pointer;
 }
 
 .arrow-down {
     position: absolute;
     margin: 0;
     top: 0.4em;
+    cursor: pointer;
 }
 
 .fas {
