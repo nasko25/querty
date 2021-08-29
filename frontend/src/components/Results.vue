@@ -12,10 +12,10 @@
                                 (check index.html for the import)
                                 TODO maybe download some icons instead of using fontawesome
                         -->
-                        <i class='fas fa-angle-up' style='font-size:18px;'></i>
+                        <i class='fas fa-angle-up' style='font-size:18px;' v-on:click='clickArrow'></i>
                     </p>
                     <p class = "arrow-down">
-                        <i class='fas fa-angle-down' style='font-size:18px'></i>
+                        <i class='fas fa-angle-down' style='font-size:18px' v-on:click='clickArrow'></i>
                     </p>
                 </div>
             <br/>
@@ -178,6 +178,15 @@ export default  {
                 result_text = result_text.replaceAll(query_regex, match => `<b>${match}</b>`);
                 return result_text;
             }
+        },
+        clickArrow(e) {
+            // get the clicked element
+            const clicked_element = e.target ? e.target : e.srcElement;
+            // toggle the "arrow-selected" class
+            //  * if the element has the class, toggle() removes it
+            //  * if the element does not have the class, toggle() adds it
+            clicked_element.classList.toggle("arrow-selected")
+            // TODO if arrow-up is selected, arrow-down should not be selectable
         }
     },
     watch:{
@@ -252,7 +261,7 @@ export default  {
     color: #6666ff;
 }
 
-.fas:hover {
+.fas:hover, .arrow-selected {
     /* color: green; */
     /* use this color to indicate selection as well */
     color: #3434ff;
