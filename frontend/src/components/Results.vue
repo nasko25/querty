@@ -207,7 +207,6 @@ export default  {
                     clicked_element.classList.toggle("arrow-selected");
                 }
             });
-            // TODO if arrow-up is selected, arrow-down should not be selectable
         }
     },
     watch:{

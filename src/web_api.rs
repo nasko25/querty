@@ -2,9 +2,11 @@ use regex::Regex;
 
 use rocket::State;
 use rocket_contrib::json::JsonValue;
-use rocket::http::Header;
+use rocket::http::{ Header, Status, ContentType };
 use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
+
+use std::io::Cursor;
 
 use std::path::PathBuf;
 use urlencoding::{ encode, decode };
@@ -30,7 +32,7 @@ impl Fairing for CORS {
 }
 
 pub fn mount_web_api_endpoints() {
-    rocket::ignite().attach(CORS).mount("/", routes![suggest, options_handler, query]).launch();
+    rocket::ignite().attach(CORS).mount("/", routes![suggest, options_handler, query, upvote]).launch();
 }
 
 // TODO wouldn't post requests be better?
@@ -182,4 +184,15 @@ fn build_search_query(words: &Vec<&str>) -> String {
     // remove the last <space> character
     query.pop();
     return query.concat();
+}
+
+// TODO at some point POST could be a better option
+// TODO also later somehow identify users
+#[get("/upvote/<website_id>")]
+fn upvote(website_id: String) -> Response<'static> {
+    Response::build()
+        .status(Status::Created)
+        .header(ContentType::JSON)
+        .sized_body(Cursor::new(website_id))
+        .finalize()
 }
