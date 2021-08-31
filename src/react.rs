@@ -17,7 +17,8 @@ pub enum React {
 pub(crate) enum ReactError {
     InvalidArgument { mes: String },
     RankNotUpdated { mes: String },
-    GenericError
+    GenericError,
+    NoWebsiteWithThatId
 }
 
 impl fmt::Display for ReactError {
@@ -25,20 +26,23 @@ impl fmt::Display for ReactError {
         match self {
             ReactError::InvalidArgument { mes } => write!(f, "{}", mes),
             ReactError::RankNotUpdated { mes } => write!(f, "{}", mes),
-            ReactError::GenericError => write!(f, "An error occured in user_react()") // TODO more sensible error message
+            ReactError::GenericError => write!(f, "An error occured in user_react()"), // TODO more sensible error message
+            ReactError::NoWebsiteWithThatId => write!(f, "No website with the provided id exists in solr.")
         }
     }
 }
 
-pub(super) fn user_react(url: &str, react_type: React) -> Result<f64, ReactError> {
-    println!("Updating the website with url {} after user react.", url);
-    let mut websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
-    // websites_saved should either be empty (if there are no websites with that url in solr)
-    //      in which case the website should just be analysed and its rank should be set to 0.0
+pub(super) fn user_react(website_id: &str, react_type: React) -> Result<f64, ReactError> {
+    println!("Updating the website with id {} after user react.", website_id);
+    let mut websites_saved = solr::req(format!("id:\"{}\"", website_id)).unwrap();
+    // websites_saved should either be empty (if there are no websites with that id in solr)
+    //      in which case the function will return an error
     //
     // or websites_saved should have a length of 1 (because olny 1 website should have been fetched from solr
-    // because url should be unique)
-    if websites_saved.is_empty() {}
+    // because id should be unique)
+    if websites_saved.is_empty() {
+        return Err(ReactError::NoWebsiteWithThatId);
+    }
     // since website ranks should be between -10 and 10 and user react FOR NOW will only update it
     // with +/-1, I can do this ugly check
     else if websites_saved.len() == 1 && ((websites_saved[0].rank <= 9.0 && discriminant(&react_type) == discriminant(&React::Upvote{ var: 0.0 })) || (websites_saved[0].rank >= -9.0 && discriminant(&react_type) == discriminant(&React::Downvote {var: 0.0}))) {
@@ -62,7 +66,7 @@ pub(super) fn user_react(url: &str, react_type: React) -> Result<f64, ReactError
         return Err(ReactError::GenericError);
     }
     let crawler = crawler::Crawler {};
-    crawler.analyse_website(&url, &websites_saved).unwrap();
+    crawler.analyse_website(&websites_saved[0].url, &websites_saved).unwrap();
 
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });

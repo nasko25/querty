@@ -12,6 +12,8 @@ use std::path::PathBuf;
 use urlencoding::{ encode, decode };
 
 use crate::solr;
+use crate::react::user_react;
+use crate::react::React;
 
 pub struct CORS;
 
@@ -190,6 +192,12 @@ fn build_search_query(words: &Vec<&str>) -> String {
 // TODO also later somehow identify users
 #[get("/upvote/<website_id>")]
 fn upvote(website_id: String) -> Response<'static> {
+    // if user_react returns an error, return response with status 400
+    if user_react(&website_id, React::Upvote{ var: 1.0 }).is_err() {
+        return Response::build()
+            .status(Status::BadRequest)
+            .finalize();
+    }
     Response::build()
         .status(Status::Created)
         .header(ContentType::JSON)
