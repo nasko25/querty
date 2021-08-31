@@ -12,10 +12,10 @@
                                 (check index.html for the import)
                                 TODO maybe download some icons instead of using fontawesome
                         -->
-                        <i class='fas fa-angle-up' style='font-size:18px;' v-on:click='clickArrow'></i>
+                        <i class='fas fa-angle-up' style='font-size:18px;' v-on:click='clickArrow($event, result.id)'></i>
                     </p>
                     <p class = "arrow-down">
-                        <i class='fas fa-angle-down' style='font-size:18px' v-on:click='clickArrow'></i>
+                        <i class='fas fa-angle-down' style='font-size:18px' v-on:click='clickArrow($event, result.id)'></i>
                     </p>
                 </div>
             <br/>
@@ -179,7 +179,9 @@ export default  {
                 return result_text;
             }
         },
-        clickArrow(e) {
+        clickArrow(e, id) {
+            // TODO
+            console.log(id)
             // get the clicked element
             const clicked_element = e.target ? e.target : e.srcElement;
 
