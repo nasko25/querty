@@ -34,7 +34,7 @@ impl Fairing for CORS {
 }
 
 pub fn mount_web_api_endpoints() {
-    rocket::ignite().attach(CORS).mount("/", routes![suggest, options_handler, query, upvote]).launch();
+    rocket::ignite().attach(CORS).mount("/", routes![suggest, options_handler, query, upvote, downvote]).launch();
 }
 
 // TODO wouldn't post requests be better?
@@ -194,6 +194,21 @@ fn build_search_query(words: &Vec<&str>) -> String {
 fn upvote(website_id: String) -> Response<'static> {
     // if user_react returns an error, return response with status 400
     if user_react(&website_id, React::Upvote{ var: 1.0 }).is_err() {
+        return Response::build()
+            .status(Status::BadRequest)
+            .finalize();
+    }
+    Response::build()
+        .status(Status::Created)
+        .header(ContentType::JSON)
+        .sized_body(Cursor::new(website_id))
+        .finalize()
+}
+
+#[get("/downvote/<website_id>")]
+fn downvote(website_id: String) -> Response<'static> {
+    // if user_react returns an error, return response with status 400
+    if user_react(&website_id, React::Downvote{ var: 1.0 }).is_err() {
         return Response::build()
             .status(Status::BadRequest)
             .finalize();

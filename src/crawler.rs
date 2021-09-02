@@ -28,7 +28,8 @@ pub struct Crawler/* <'a> */ {
 
 impl /* <'a> */  Crawler /* <'a> */ {
 
-    pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), reqwest::Error> {
+    // TODO fix error handling in this function (return an error instead of unwrap())
+    pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), Box<dyn Error>> {
         // let body = fetch_url(url).unwrap();
         self.rank_from_links(url).unwrap();
 
