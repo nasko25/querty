@@ -28,15 +28,20 @@ pub struct Crawler/* <'a> */ {
 
 impl /* <'a> */  Crawler /* <'a> */ {
 
-    // TODO fix error handling in this function (return an error instead of unwrap())
     pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), Box<dyn Error>> {
         // let body = fetch_url(url).unwrap();
-        self.rank_from_links(url).unwrap();
+        // TODO maybe if let Err(err) = ... ?
+        match self.rank_from_links(url) {
+            Ok(_) => {},
+            Err(err) => return Err(err)
+        }
 
         // if it is not empty, update the website(s) in it
         if websites_saved.is_empty() {
             // save_website_info(&body, &url, &conn, &settings);
-            self.save_website(&url).unwrap();
+            if let Err(err) = self.save_website(&url) {
+                return Err(err);
+            }
         }
         else {
             // there should be only one website in the vector, because it should have been
@@ -44,7 +49,9 @@ impl /* <'a> */  Crawler /* <'a> */ {
             assert_eq!(websites_saved.len(), 1, "There are {} websites returned by req()", websites_saved.len());
             // select_w first to get a Website, and then db::update
             // also update metadata and external links connected to that website
-            self.update_website(&websites_saved[0]).unwrap();
+            if let Err(err) = self.update_website(&websites_saved[0]) {
+                return Err(err);
+            }
         }
 
         Ok(())

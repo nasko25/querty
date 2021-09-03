@@ -18,7 +18,8 @@ pub(crate) enum ReactError {
     InvalidArgument { mes: String },
     RankNotUpdated { mes: String },
     GenericError,
-    NoWebsiteWithThatId
+    NoWebsiteWithThatId,
+    CannotAnalyseWebsite
 }
 
 impl fmt::Display for ReactError {
@@ -27,7 +28,8 @@ impl fmt::Display for ReactError {
             ReactError::InvalidArgument { mes } => write!(f, "{}", mes),
             ReactError::RankNotUpdated { mes } => write!(f, "{}", mes),
             ReactError::GenericError => write!(f, "An error occured in user_react()"), // TODO more sensible error message
-            ReactError::NoWebsiteWithThatId => write!(f, "No website with the provided id exists in solr.")
+            ReactError::NoWebsiteWithThatId => write!(f, "No website with the provided id exists in solr."),
+            ReactError::CannotAnalyseWebsite => write!(f, "The Crawler could not analyse the given website. Check the url of the website or try again later.")
         }
     }
 }
@@ -66,7 +68,9 @@ pub(super) fn user_react(website_id: &str, react_type: React) -> Result<f64, Rea
         return Err(ReactError::GenericError);
     }
     let crawler = crawler::Crawler {};
-    crawler.analyse_website(&websites_saved[0].url, &websites_saved).unwrap();
+    if crawler.analyse_website(&websites_saved[0].url, &websites_saved).is_err() {
+        return Err(ReactError::CannotAnalyseWebsite);
+    }
 
     if websites_saved.is_empty() {
         return Err(ReactError::RankNotUpdated { mes: "Url has not been analysed previously, so its rank was set to 0.".to_string() });
