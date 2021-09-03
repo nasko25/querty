@@ -30,10 +30,8 @@ impl /* <'a> */  Crawler /* <'a> */ {
 
     pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), Box<dyn Error>> {
         // let body = fetch_url(url).unwrap();
-        // TODO maybe if let Err(err) = ... ?
-        match self.rank_from_links(url) {
-            Ok(_) => {},
-            Err(err) => return Err(err)
+        if let Err(err) = self.rank_from_links(url) {
+            return Err(err);
         }
 
         // if it is not empty, update the website(s) in it
