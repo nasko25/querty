@@ -60,6 +60,10 @@ export default  {
     data() {
         return {
             results: [],
+            ReactType: {
+                upvote: 1,
+                downvote: 2
+            },
             err: null
         }
     },
@@ -207,8 +211,43 @@ export default  {
                     //  * if the element has the class, toggle() removes it
                     //  * if the element does not have the class, toggle() adds it
                     clicked_element.classList.toggle("arrow-selected");
+
+                    // depending on whether or not the clicked element has the "arrow-selected" class,
+                    //  send an upvote/downvote or clear_selection event to the server
+                    //  TODO /clear_selection endpoint (need to identify users first)
+                    clicked_element.classList.contains("arrow-selected") ? this.sendVote(clicked_element.parentElement.classList.contains("arrow-up") ? this.ReactType.upvote : this.ReactType.downvote, id) : this.sendClearSelection();
                 }
             });
+        },
+        sendVote(voteType, id) {
+            // TODO instead of ReactType's values to be ints, they can be strings ("upvote" and "downvote") ?
+            //  or even just using strings instead of the object ReactType might be better
+            console.log("vote type: ", voteType, "\nid of the upvoted/downvoted result: ", id);
+            let vote = "";
+            if (voteType === this.ReactType.upvote)
+                vote = "upvote";
+            else if (voteType === this.ReactType.downvote)
+                vote = "downvote"
+            else
+                throw new Error();
+            fetch(`http://${window.location.hostname}:8000/${vote}/${id}`, {
+                    method: 'GET'
+                })
+                    .then(response => {
+                        if (response.ok)
+                            response.json()
+                                .then(response => this.results = response)
+                                .catch(err => console.error(err));
+                        else
+                            console.error("Suggest served responsed with an unexpected code: " + response.status)
+                    }).catch(err => {
+                        this.err = "Failed to fetch the query. Try again later.";
+                        console.error(err);
+            });
+
+        },
+        sendClearSelection() {
+            // TODO
         }
     },
     watch:{
