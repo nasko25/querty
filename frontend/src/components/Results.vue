@@ -205,12 +205,14 @@ export default  {
                     // toggle the "arrow-selected" class
                     //  * if the element has the class, toggle() removes it
                     //  * if the element does not have the class, toggle() adds it
-                    clicked_element.classList.toggle("arrow-selected");
-
-                    // depending on whether or not the clicked element has the "arrow-selected" class,
-                    //  send an upvote/downvote or clear_selection event to the server
-                    //  TODO /clear_selection endpoint (need to identify users first)
-                    clicked_element.classList.contains("arrow-selected") ? this.sendVote(clicked_element.parentElement.classList.contains("arrow-up") ? "upvote" : "downvote", id) : this.sendClearSelection();
+                        // depending on whether or not the clicked element has the "arrow-selected" class,
+                        //  send an upvote/downvote or clear_selection event to the server
+                    if (clicked_element.classList.toggle("arrow-selected")) {
+                        clicked_element.classList.contains("arrow-selected") ? this.sendVote(clicked_element.parentElement.classList.contains("arrow-up") ? "upvote" : "downvote", id) : this.sendClearSelection();
+                    }
+                    else {
+                        //  TODO /clear_selection endpoint (need to identify users first)
+                    }
                 }
             });
         },
