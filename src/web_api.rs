@@ -190,10 +190,17 @@ fn build_search_query(words: &Vec<&str>) -> String {
 
 // TODO at some point POST could be a better option
 // TODO also later somehow identify users
+//  for now only unauthenticated users can upvote/downvote
+//  later, when user accounts are added, depending on a users's rank,
+//  users will add or subtract more points from the website's rank.
+//  Unauthenticated users will only affect a website with 0.00001 points (or some other small
+//  number)
+//  TODO Also, maybe unuthenticated requests might only be able to change website's rank with a rate of 1 per second
+//  (or several seconds) ?
 #[get("/upvote/<website_id>")]
 fn upvote(website_id: String) -> Response<'static> {
     // if user_react returns an error, return response with status 400
-    if user_react(&website_id, React::Upvote{ var: 1.0 }).is_err() {
+    if user_react(&website_id, React::Upvote{ var: 0.00001 }).is_err() {
         return Response::build()
             .status(Status::BadRequest)
             .finalize();
@@ -208,7 +215,7 @@ fn upvote(website_id: String) -> Response<'static> {
 #[get("/downvote/<website_id>")]
 fn downvote(website_id: String) -> Response<'static> {
     // if user_react returns an error, return response with status 400
-    if user_react(&website_id, React::Downvote{ var: 1.0 }).is_err() {
+    if user_react(&website_id, React::Downvote{ var: 0.00001 }).is_err() {
         return Response::build()
             .status(Status::BadRequest)
             .finalize();

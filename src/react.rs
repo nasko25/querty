@@ -5,6 +5,9 @@ use diesel::MysqlConnection;
 use crate::solr;
 use crate::crawler;
 
+use chrono::{DateTime, Duration, Utc};
+use std::sync::Mutex;
+
 // for now all users reacts will change the website's rank with +/-1.0
 // later this could depend on users' ranks
 // var = variance
@@ -19,7 +22,8 @@ pub(crate) enum ReactError {
     RankNotUpdated { mes: String },
     GenericError,
     NoWebsiteWithThatId,
-    CannotAnalyseWebsite
+    CannotAnalyseWebsite,
+    TooManyUnauthenticatedRequests
 }
 
 impl fmt::Display for ReactError {
@@ -29,12 +33,22 @@ impl fmt::Display for ReactError {
             ReactError::RankNotUpdated { mes } => write!(f, "{}", mes),
             ReactError::GenericError => write!(f, "An error occured in user_react()"), // TODO more sensible error message
             ReactError::NoWebsiteWithThatId => write!(f, "No website with the provided id exists in solr."),
-            ReactError::CannotAnalyseWebsite => write!(f, "The Crawler could not analyse the given website. Check the url of the website or try again later.")
+            ReactError::CannotAnalyseWebsite => write!(f, "The Crawler could not analyse the given website. Check the url of the website or try again later."),
+            ReactError::TooManyUnauthenticatedRequests => write!(f, "Someone already made an unauthenticated request. Sign in to be able to react without restrictions.")
         }
     }
 }
 
 pub(super) fn user_react(website_id: &str, react_type: React) -> Result<f64, ReactError> {
+    // variable that keeps track of the last unauthenticated user react
+    static last_unauth_user_react: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
+
+    // if the last_unauth_user_react variable is not None and less than 1 second has passed between last_unauth_user_react and now,
+    // return an error and do not change the website's rank
+    //  TODO later don't perform this check if the user making this request is authenticated
+    if !last_unauth_user_react.into_inner().unwrap().is_none() && last_unauth_user_react.into_inner().unwrap().unwrap().checked_add_signed(Duration::seconds(1)).unwrap() < Utc::now() {
+        return Err(ReactError::TooManyUnauthenticatedRequests);
+    }
     println!("Updating the website with id {} after user react.", website_id);
     let mut websites_saved = solr::req(format!("id:\"{}\"", website_id)).unwrap();
     // websites_saved should either be empty (if there are no websites with that id in solr)
