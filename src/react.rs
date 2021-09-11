@@ -7,6 +7,7 @@ use crate::crawler;
 
 use chrono::{DateTime, Duration, Utc};
 use std::sync::Mutex;
+use lazy_static::lazy_static;
 
 // for now all users reacts will change the website's rank with +/-1.0
 // later this could depend on users' ranks
@@ -41,12 +42,15 @@ impl fmt::Display for ReactError {
 
 pub(super) fn user_react(website_id: &str, react_type: React) -> Result<f64, ReactError> {
     // variable that keeps track of the last unauthenticated user react
-    static last_unauth_user_react: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
+    lazy_static! {
+        static ref last_unauth_user_react: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
+    }
 
     // if the last_unauth_user_react variable is not None and less than 1 second has passed between last_unauth_user_react and now,
     // return an error and do not change the website's rank
     //  TODO later don't perform this check if the user making this request is authenticated
-    if !last_unauth_user_react.into_inner().unwrap().is_none() && last_unauth_user_react.into_inner().unwrap().unwrap().checked_add_signed(Duration::seconds(1)).unwrap() < Utc::now() {
+                                                                                                                                                      // TODO < test
+    if !last_unauth_user_react.lock().unwrap().is_none() && last_unauth_user_react.lock().unwrap().unwrap().checked_add_signed(Duration::seconds(1)).unwrap() < Utc::now() {
         return Err(ReactError::TooManyUnauthenticatedRequests);
     }
     println!("Updating the website with id {} after user react.", website_id);
