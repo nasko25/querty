@@ -208,7 +208,7 @@ export default  {
                         // depending on whether or not the clicked element has the "arrow-selected" class,
                         //  send an upvote/downvote or clear_selection event to the server
                     if (clicked_element.classList.toggle("arrow-selected")) {
-                        clicked_element.classList.contains("arrow-selected") ? this.sendVote(clicked_element.parentElement.classList.contains("arrow-up") ? "upvote" : "downvote", id) : this.sendClearSelection();
+                        clicked_element.classList.contains("arrow-selected") ? this.sendVote(clicked_element.parentElement.classList.contains("arrow-up") ? "upvote" : "downvote", id, clicked_element) : this.sendClearSelection();
                     }
                     else {
                         //  TODO /clear_selection endpoint (need to identify users first)
@@ -216,7 +216,7 @@ export default  {
                 }
             });
         },
-        sendVote(voteType, id) {
+        sendVote(voteType, id, clicked_element) {
             console.log("vote type: ", voteType, "\nid of the upvoted/downvoted result: ", id);
             if (voteType !== "upvote" && voteType !== "downvote")
                 throw new Error();
@@ -224,11 +224,14 @@ export default  {
                     method: 'GET'
                 })
                     .then(response => {
-                        if (!response.ok)
-                            console.error("Vote served responsed with an unexpected code: " + response.status)
+                        if (!response.ok) {
+                            console.error("Vote served responsed with an unexpected code: " + response.status);
+                            clicked_element.classList.toggle("arrow-selected")
+                        }
                     }).catch(err => {
                         this.err = "Failed to send a vote request. Try again later.";
                         console.error(err);
+                        clicked_element.classList.toggle("arrow-selected")
             });
 
         },
