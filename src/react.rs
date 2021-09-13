@@ -45,17 +45,23 @@ pub(super) fn user_react(website_id: &str, react_type: React) -> Result<f64, Rea
         static ref LAST_UNAUTH_USER_REACT: Mutex<Option<DateTime<Utc>>> = Mutex::new(None);
     }
 
-    // if the last_unauth_user_react variable is not None and less than 1 second has passed between last_unauth_user_react and now,
+    // if the last_unauth_user_react variable is not None and less than 10 seconds have passed between LAST_UNAUTH_USER_REACT and now,
     // return an error and do not change the website's rank
     //  TODO later don't perform this check if the user making this request is authenticated
 
+    // aquire the mutex to check when was the last unauthenticated user react (if there was one)
     let mut mutex_guard = LAST_UNAUTH_USER_REACT.lock().unwrap();
+
+    // if the user react was less than 10 seconds ago, return an error and free the mutex
     if !mutex_guard.is_none() && mutex_guard.unwrap().checked_add_signed(Duration::seconds(10)).unwrap() >= Utc::now() {
         std::mem::drop(mutex_guard);
         return Err(ReactError::TooManyUnauthenticatedRequests);
     }
+
+    // otherwise update the website rank
     println!("Updating the website with id {} after user react.", website_id);
-    //mutex_guard = LAST_UNAUTH_USER_REACT.lock().unwrap();
+
+    // update the time of the last unauthenticated user react and free the mutex
     *mutex_guard = Some(Utc::now());
     std::mem::drop(mutex_guard);
 

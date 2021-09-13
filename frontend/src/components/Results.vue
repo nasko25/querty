@@ -216,19 +216,25 @@ export default  {
                 }
             });
         },
+        // send an anonymous vote the server for website with id `id`
         sendVote(voteType, id, clicked_element) {
             console.log("vote type: ", voteType, "\nid of the upvoted/downvoted result: ", id);
+            // return an error if the vote type is neither "upvote" nor "downvote"
             if (voteType !== "upvote" && voteType !== "downvote")
                 throw new Error();
+
+            // make a GET request to /upvote or /downvote
             fetch(`http://${window.location.hostname}:8000/${voteType}/${id}`, {
                     method: 'GET'
                 })
                     .then(response => {
+                        // if the response to the GET request is not 200, untoggle the clicked element
                         if (!response.ok) {
                             console.error("Vote served responsed with an unexpected code: " + response.status);
                             clicked_element.classList.toggle("arrow-selected")
                         }
                     }).catch(err => {
+                        // if the GET request fails, untoggle the clicked element
                         this.err = "Failed to send a vote request. Try again later.";
                         console.error(err);
                         clicked_element.classList.toggle("arrow-selected")
