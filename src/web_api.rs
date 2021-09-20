@@ -5,6 +5,8 @@ use rocket_contrib::json::JsonValue;
 use rocket::http::{ Header, Status, ContentType };
 use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
+use rocket::outcome::IntoOutcome;
+use rocket::request::{ self, FromRequest };
 
 use std::io::Cursor;
 
@@ -30,6 +32,17 @@ impl Fairing for CORS {
         response.set_header(Header::new("Access-Control-Allow-Methods", "GET, OPTIONS"));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
+struct SessionCookie(String);
+impl<'a, 'r> FromRequest<'a, 'r> for SessionCookie {
+    type Error = ();
+
+    fn from_request(request: &'a rocket::request::Request<'r>) -> rocket::request::Outcome<SessionCookie, ()> {
+        // TODO Session cookie guard
+        // for now forward every request
+        rocket::Outcome::Forward(())
     }
 }
 
