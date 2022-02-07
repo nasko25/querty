@@ -33,8 +33,6 @@ use dotenv::dotenv;
 use std::thread;
 use std::env;
 
-use crate::db::DB_CONN;
-
 fn init() {
     // load the environment variables from the .env file
     dotenv().ok();
@@ -78,7 +76,7 @@ fn init() {
             }
         },
         Ok(_) => colour::yellow!("Set RUN_TESTS to \"True\" to run the tests."),
-        Err(err) => colour::red!("Environment variable RUN_TESTS is not set.")
+        Err(_) => colour::red!("Environment variable RUN_TESTS is not set.")
     }
 }
 

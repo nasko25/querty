@@ -53,6 +53,12 @@ diesel::allow_tables_to_appear_in_same_query!(
     website_ref_ext_links,
     external_links
 );
+
+diesel::table! {
+    next_urls_to_crawl(url) {
+        url -> Varchar,
+    }
+}
 // ____________________________________________________________________________________________________________
 // users
 // TODO what data to track with users?

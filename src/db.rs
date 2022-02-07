@@ -18,6 +18,8 @@ use crate::schema::external_links;
 use crate::schema::external_links::dsl::*;
 use crate::schema::website_ref_ext_links;
 use crate::schema::website_ref_ext_links::dsl::*;
+use crate::schema::next_urls_to_crawl;
+use crate::schema::next_urls_to_crawl::*;
 
 use crate::settings::SETTINGS;
 use crate::db;
@@ -89,6 +91,13 @@ pub struct WebsiteRefExtLink {
     pub id: Option<u32>,
     pub website_id: Option<u32>,
     pub ext_link_id: Option<u32>,
+}
+
+// TODO select, insert, and delete
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Clone)]
+#[table_name = "next_urls_to_crawl"]
+pub struct NextUrls {
+    pub url: String,
 }
 
 pub struct Database {
@@ -187,6 +196,15 @@ impl Database {
             Err(err) => return Err(err),
         };
 
+        return_code += match sql_query("
+            CREATE TABLE IF NOT EXISTS next_urls_to_crawl (
+                url VARCHAR(2200) PRIMARY KEY
+            )
+        ").execute(&*DB_CONN.lock().unwrap()) {
+            Ok(r_code) => r_code,
+            Err(err) => return Err(err),
+        };
+
         Ok(return_code)
     }
 
@@ -195,7 +213,7 @@ impl Database {
     // that will create an inconsistent state
     pub fn drop_tables() -> Result<usize, diesel::result::Error> {
         return sql_query("
-            DROP TABLE IF EXISTS users, metadata, website_ref_ext_links, external_links, website"
+            DROP TABLE IF EXISTS users, metadata, website_ref_ext_links, external_links, website, next_urls_to_crawl"
         ).execute(&*DB_CONN.lock().unwrap());
     }
 
@@ -404,7 +422,7 @@ impl Database {
                 let updated_row_vec = crate::schema::website_ref_ext_links::dsl::website_ref_ext_links.filter(crate::schema::website_ref_ext_links::dsl::id.eq(web_ref_ext_link.id)).load::<WebsiteRefExtLink>(&*DB_CONN.lock().unwrap()).expect("Error loading web_ref_ext_link");
                 let updated_row = updated_row_vec.get(0).unwrap().clone();
                 Ok(DB::WebsiteRefExtLink(updated_row))
-            }
+            },
         }
     }
 
