@@ -19,7 +19,10 @@ use crate::schema::external_links::dsl::*;
 use crate::schema::website_ref_ext_links;
 use crate::schema::website_ref_ext_links::dsl::*;
 use crate::schema::next_urls_to_crawl;
-use crate::schema::next_urls_to_crawl::*;
+use crate::schema::next_urls_to_crawl::dsl::*;
+
+use diesel::result::DatabaseErrorKind;
+use diesel::result::Error;
 
 use crate::settings::SETTINGS;
 use crate::db;
@@ -94,9 +97,10 @@ pub struct WebsiteRefExtLink {
 }
 
 // TODO select, insert, and delete
-#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Clone)]
+#[derive(Identifiable, Queryable, Insertable, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "next_urls_to_crawl"]
 pub struct NextUrls {
+    pub id: Option<u32>,
     pub url: String,
 }
 
@@ -111,7 +115,8 @@ pub enum DB {
     User(User),
     Metadata(Metadata),
     ExternalLink(ExternalLink),
-    WebsiteRefExtLink(WebsiteRefExtLink)
+    WebsiteRefExtLink(WebsiteRefExtLink),
+    NextUrls(NextUrls)
 }
 
 pub(super) static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
@@ -277,6 +282,15 @@ impl Database {
                     Ok(_) => return Ok(DB::WebsiteRefExtLink(ret)),
                     Err(err) => return Err(err),
                 }
+            },
+            DB::NextUrls(urls) => {
+                // TODO does it work for multiple urls at once?
+                let inserted = insert_into(next_urls_to_crawl).values(urls).execute(&*DB_CONN.lock().unwrap());
+                let ret = next_urls_to_crawl.order(next_urls_to_crawl::id.desc()).first::<NextUrls>(&*DB_CONN.lock().unwrap()).unwrap();
+                match inserted {
+                    Ok(_) => return Ok(DB::NextUrls(ret)),
+                    Err(err) => return Err(err),
+                }
             }
         }
     }
@@ -423,6 +437,10 @@ impl Database {
                 let updated_row = updated_row_vec.get(0).unwrap().clone();
                 Ok(DB::WebsiteRefExtLink(updated_row))
             },
+            // update oprtations are not supported for the next_urls_to_crawl table
+            DB::NextUrls(_) => {
+                Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
+            }
         }
     }
 
@@ -453,5 +471,10 @@ impl Database {
         // TODO this maybe is not needed because default should be DELETE CASCADE?
         let deleted_web_ref_el = diesel::delete(website_ref_ext_links.filter(website_ref_ext_links::website_id.eq_any(website_ids))).execute(&*DB_CONN.lock().unwrap())?;
         Ok(deleted_web_ref_el)
+    }
+
+    pub fn delete_crawled_url(url_to_delete: String) -> Result<usize, diesel::result::Error> {
+        // TODO
+        Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
     }
 }

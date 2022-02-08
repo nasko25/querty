@@ -56,6 +56,7 @@ diesel::allow_tables_to_appear_in_same_query!(
 
 diesel::table! {
     next_urls_to_crawl(url) {
+        id -> Nullable<Unsigned<Integer>>,
         url -> Varchar,
     }
 }
