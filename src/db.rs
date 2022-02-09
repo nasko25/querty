@@ -96,7 +96,6 @@ pub struct WebsiteRefExtLink {
     pub ext_link_id: Option<u32>,
 }
 
-// TODO select, insert, and delete
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "next_urls_to_crawl"]
 pub struct NextUrls {
@@ -320,6 +319,10 @@ impl Database {
         websites
     }
 
+    pub fn select_next_crawl_url() -> NextUrls {
+        next_urls_to_crawl.order(next_urls_to_crawl::id.asc()).first::<NextUrls>(&*DB_CONN.lock().unwrap()).unwrap()
+    }
+
     pub fn select_m(websites: &Option<Vec<Website>>) -> Vec<Metadata>{
         let mut md = Vec::<Metadata>::new();
         match websites {
@@ -474,7 +477,13 @@ impl Database {
     }
 
     pub fn delete_crawled_url(url_to_delete: String) -> Result<usize, diesel::result::Error> {
-        // TODO
+        // TODO implement; delete the url with the smallest id
+        Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
+    }
+
+    // delete already crawled urls by their id(s)
+    pub fn delete_crawled_urls(url_to_delete: &Vec<u32>) -> Result<usize, diesel::result::Error> {
+        // TODO implement
         Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
     }
 }
