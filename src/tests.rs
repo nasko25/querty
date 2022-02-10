@@ -1,5 +1,6 @@
 use crate::db;
 use crate::solr;
+use crate::crawl;
 
 use crate::crawler::test_crawler;
 use crate::crawler::Crawler;
@@ -10,6 +11,7 @@ use crate::db::DB;
 use crate::db::Metadata;
 use crate::db::ExternalLink;
 use crate::db::WebsiteRefExtLink;
+use crate::db::NextUrl;
 
 use crate::solr::WebsiteSolr;
 
@@ -19,6 +21,8 @@ use crate::solr::update_metadata;
 use crate::solr::update_ext_links;
 
 use std::error::Error;
+use futures::executor::block_on;
+
 // TODO tmp ----------------------------------------
 use diesel::prelude::*;
 // -------------------------------------------------
@@ -190,6 +194,8 @@ pub fn test_all(url: &str) -> Result<(), Box<dyn Error>> {
 
     assert!(test_suggester().is_ok(), "Suggester tests failed.");
 
+    assert!(block_on(test_crawl()).is_ok(), "Crawl tests failed.");
+
     Ok(())
 }
 
@@ -211,6 +217,22 @@ fn test_suggester() -> Result<(), Box<dyn Error>> {
         },
         Err(err) => Err(err)
     }
+}
+
+async fn test_crawl() -> Result<(), Box<dyn Error>> {
+    let next_url: DB = DB::NextUrl(NextUrl { id: None, url: "https://www.google.com/".to_string() });
+    // first insert some urls to crawl
+    assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
+
+    let handle = crawl::crawl();
+    // TODO wait for 3 seconds before aborting
+
+    handle.abort();
+    assert!(1==2, "Asdf");
+
+    // TODO check whether next_url.url is added to the db and solr
+    // ...
+    Ok(())
 }
 
 pub fn reset_db_state() -> Result<(), Box<dyn Error>> {

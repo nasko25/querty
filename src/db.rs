@@ -98,7 +98,7 @@ pub struct WebsiteRefExtLink {
 
 #[derive(Identifiable, Queryable, Insertable, Debug, Serialize, Deserialize, Clone)]
 #[table_name = "next_urls_to_crawl"]
-pub struct NextUrls {
+pub struct NextUrl {
     pub id: Option<u32>,
     pub url: String,
 }
@@ -115,7 +115,7 @@ pub enum DB {
     Metadata(Metadata),
     ExternalLink(ExternalLink),
     WebsiteRefExtLink(WebsiteRefExtLink),
-    NextUrls(NextUrls)
+    NextUrl(NextUrl)
 }
 
 pub(super) static DB_CONN: Lazy<Mutex<diesel::mysql::MysqlConnection>> = Lazy::new(|| {
@@ -202,7 +202,8 @@ impl Database {
 
         return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS next_urls_to_crawl (
-                url VARCHAR(2200) PRIMARY KEY
+                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                url VARCHAR(2200) UNIQUE
             )
         ").execute(&*DB_CONN.lock().unwrap()) {
             Ok(r_code) => r_code,
@@ -282,12 +283,12 @@ impl Database {
                     Err(err) => return Err(err),
                 }
             },
-            DB::NextUrls(urls) => {
+            DB::NextUrl(next_url) => {
                 // TODO does it work for multiple urls at once?
-                let inserted = insert_into(next_urls_to_crawl).values(urls).execute(&*DB_CONN.lock().unwrap());
-                let ret = next_urls_to_crawl.order(next_urls_to_crawl::id.desc()).first::<NextUrls>(&*DB_CONN.lock().unwrap()).unwrap();
+                let inserted = insert_into(next_urls_to_crawl).values(next_url).execute(&*DB_CONN.lock().unwrap());
+                let ret = next_urls_to_crawl.order(next_urls_to_crawl::id.desc()).first::<NextUrl>(&*DB_CONN.lock().unwrap()).unwrap();
                 match inserted {
-                    Ok(_) => return Ok(DB::NextUrls(ret)),
+                    Ok(_) => return Ok(DB::NextUrl(ret)),
                     Err(err) => return Err(err),
                 }
             }
@@ -319,8 +320,8 @@ impl Database {
         websites
     }
 
-    pub fn select_next_crawl_url() -> NextUrls {
-        next_urls_to_crawl.order(next_urls_to_crawl::id.asc()).first::<NextUrls>(&*DB_CONN.lock().unwrap()).unwrap()
+    pub fn select_next_crawl_url() -> Result<NextUrl, diesel::result::Error> {
+        next_urls_to_crawl.order(next_urls_to_crawl::id.asc()).first::<NextUrl>(&*DB_CONN.lock().unwrap())
     }
 
     pub fn select_m(websites: &Option<Vec<Website>>) -> Vec<Metadata>{
@@ -441,7 +442,7 @@ impl Database {
                 Ok(DB::WebsiteRefExtLink(updated_row))
             },
             // update oprtations are not supported for the next_urls_to_crawl table
-            DB::NextUrls(_) => {
+            DB::NextUrl(_) => {
                 Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
             }
         }
@@ -476,14 +477,16 @@ impl Database {
         Ok(deleted_web_ref_el)
     }
 
+    // TODO also delete the url with the smallest id ?
+    // delete already crawled url
     pub fn delete_crawled_url(url_to_delete: String) -> Result<usize, diesel::result::Error> {
-        // TODO implement; delete the url with the smallest id
-        Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
+        let deleted_crawled_url = diesel::delete(next_urls_to_crawl.filter(next_urls_to_crawl::url.eq(url_to_delete))).execute(&*DB_CONN.lock().unwrap())?;
+        Ok(deleted_crawled_url)
     }
 
     // delete already crawled urls by their id(s)
     pub fn delete_crawled_urls(url_to_delete: &Vec<u32>) -> Result<usize, diesel::result::Error> {
-        // TODO implement
-        Err(Error::DatabaseError(DatabaseErrorKind::UnableToSendCommand, Box::new("Unsupported Operation".to_string())))
+        let deleted_crawled_url = diesel::delete(next_urls_to_crawl.filter(next_urls_to_crawl::id.eq_any(url_to_delete))).execute(&*DB_CONN.lock().unwrap())?;
+        Ok(deleted_crawled_url)
     }
 }
