@@ -1,6 +1,6 @@
 use crate::db;
 use crate::solr;
-use crate::crawl;
+use crawl;
 
 use crate::crawler::test_crawler;
 use crate::crawler::Crawler;
@@ -224,10 +224,11 @@ async fn test_crawl() -> Result<(), Box<dyn Error>> {
     // first insert some urls to crawl
     assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
 
-    let handle = crawl::crawl();
+    let handle = crawl!();
     // TODO wait for 3 seconds before aborting
 
-    handle.abort();
+    println!("task spawned");
+    handle.cancel().await;
     assert!(1==2, "Asdf");
 
     // TODO check whether next_url.url is added to the db and solr

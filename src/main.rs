@@ -17,6 +17,7 @@ extern crate colour;
 #[macro_use] extern crate rocket_contrib;
 
 
+#[macro_use] mod crawl;
 mod settings;
 mod schema;
 mod db;
@@ -25,7 +26,6 @@ mod tests;
 mod crawler;
 mod web_api;
 mod react;
-mod crawl;
 
 // used to load .env
 use dotenv::dotenv;
