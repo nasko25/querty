@@ -54,7 +54,7 @@ pub fn mount_web_api_endpoints() {
 // Source for cors: https://stackoverflow.com/questions/62412361/how-to-set-up-cors-or-options-for-rocket-rs
 #[get("/suggest/<query>")]
 fn suggest(query: String) -> JsonValue {
-    let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query."));
+    let suggestions = solr::suggest(decode(&query).expect("Cannot url decode the query.").to_string());
     println!("suggestions: {:?}", suggestions);
     // parse the suggestion
     if (suggestions.is_ok()) {
@@ -151,7 +151,7 @@ pub fn build_sort_query(sanitized_query: String, q_type: &SortQueryType) -> Stri
     let mut st1: Vec<String> = Vec::new();
     let mut st2: Vec<String> = Vec::new();
     words.iter().for_each(|word| {
-        let encoded_word: String = encode(word);
+        let encoded_word: String = encode(word).to_string();
         st1.push("termfreq%28url%2C".to_string());
         st1.push(encoded_word.clone());
         st1.push("%29%20desc".to_string());
@@ -191,7 +191,7 @@ fn build_search_query(words: &Vec<&str>) -> String {
     //  and returned by this function
     let mut query: Vec<String> = Vec::new();
     words.iter().for_each(|word| {
-        let encoded_word: String = encode(word);
+        let encoded_word: String = encode(word).to_string();
         query.push("text_all%3A".to_string());
         query.push(encoded_word);
         query.push("%20".to_string());  // space
