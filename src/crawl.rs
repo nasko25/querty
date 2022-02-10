@@ -10,7 +10,8 @@ macro_rules! crawl {
                     Err(err) => return Err(err),
                 };
                 // TODO ...
-                // println!("asdasd");
+                async_std::task::sleep(std::time::Duration::from_secs(2)).await;
+                println!("asdasd");
             }
             Ok(next_url)
         })
