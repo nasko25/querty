@@ -219,20 +219,26 @@ fn test_suggester() -> Result<(), Box<dyn Error>> {
     }
 }
 
-async fn test_crawl() -> Result<(), Box<dyn Error>> {
-    let next_url: DB = DB::NextUrl(NextUrl { id: None, url: "https://www.google.com/".to_string() });
+// TODO private
+pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
+    // TODO for now `delete from next_urls_to_crawl;` while testing
+    let url = "https://www.google.com/";
+    let next_url: DB = DB::NextUrl(NextUrl { id: None, url: url.to_string() });
     // first insert some urls to crawl
     assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
 
-    let handle = crawl!();
-    // TODO wait for 3 seconds before aborting
+    let next_url_from_db = db::Database::select_next_crawl_url();
+    assert!(next_url_from_db.is_ok(), "Inserting url failed.");
+    assert!(next_url_from_db.unwrap().url.eq(&url), "Url in the database does not match the url that should have been inserted in the database.");
 
-    println!("task spawned");
+    let handle = crawl!();
+    async_std::task::sleep(std::time::Duration::from_secs(3)).await;
+
     handle.cancel().await;
     assert!(1==2, "Asdf");
 
     // TODO check whether next_url.url is added to the db and solr
-    // ...
+    //  and that url is removed from next_urls_to_crawl
     Ok(())
 }
 

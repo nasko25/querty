@@ -11,7 +11,7 @@ macro_rules! crawl {
                 };
                 // TODO ...
                 async_std::task::sleep(std::time::Duration::from_secs(2)).await;
-                println!("asdasd");
+                println!("Crawl running...");
             }
             Ok(next_url)
         })
