@@ -221,9 +221,13 @@ fn test_suggester() -> Result<(), Box<dyn Error>> {
 
 // TODO private
 pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
-    // TODO for now `delete from next_urls_to_crawl;` while testing
     let url = "https://www.google.com/";
     let next_url: DB = DB::NextUrl(NextUrl { id: None, url: url.to_string() });
+    // if this url is already present, delete it from the db
+    let deleted_already_crawled_url = db::Database::delete_crawled_url(url.to_string());
+    assert!(deleted_already_crawled_url.is_ok(), "Could not perform a delete operation on the next_urls_to_crawl table.");
+    let deleted_urls_count = deleted_already_crawled_url.unwrap();
+    assert!(deleted_urls_count == 0 || deleted_urls_count == 1, "Unexpected number of deleted urls.");
     // first insert some urls to crawl
     assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
 
