@@ -10,7 +10,11 @@ macro_rules! crawl {
                     Err(err) => return Err(err),
                 };
                 // TODO ...
-                async_std::task::sleep(std::time::Duration::from_secs(2)).await;
+                // also add urls that have not yet been crawled linked from that url
+
+                // delete the url after crawling it
+                db::Database::delete_crawled_url(next_url.url);
+                async_std::task::sleep(std::time::Duration::from_secs(20)).await;
                 println!("Crawl running...");
             }
             Ok(next_url)

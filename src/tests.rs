@@ -231,18 +231,34 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     // first insert some urls to crawl
     assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
 
-    let next_url_from_db = db::Database::select_next_crawl_url();
+    let mut next_url_from_db = db::Database::select_next_crawl_url();
     assert!(next_url_from_db.is_ok(), "Inserting url failed.");
     assert!(next_url_from_db.unwrap().url.eq(&url), "Url in the database does not match the url that should have been inserted in the database.");
 
     let handle = crawl!();
-    async_std::task::sleep(std::time::Duration::from_secs(3)).await;
+    async_std::task::sleep(std::time::Duration::from_secs(5)).await;
 
     handle.cancel().await;
-    assert!(1==2, "Asdf");
 
-    // TODO check whether next_url.url is added to the db and solr
+    // check whether next_url.url is added to the db and solr
     //  and that url is removed from next_urls_to_crawl
+
+    // get all websites from the db
+    let db_websites = db::Database::select_w(&None);
+    assert!(db_websites.len() > 0, "Database is empty.");
+    assert!(db_websites[db_websites.len() - 1].url.eq(url), "The last added website to the database does not have {} url.", url);
+
+    // get all websites from solr
+    let solr_website = req(format!("url:{}", url));
+    assert!(solr_website.is_ok(), "Cannot perform a solr request.");
+    let solr_website_vec = solr_website.unwrap();
+    assert!(solr_website_vec.len() == 1, "Incorrect number of websites with {} url in solr.", url);
+    assert!(solr_website_vec[0].url.eq(url), "{} is not in solr.", url);
+
+    // assert that the next_url.url is removed from next_urls_to_crawl
+    next_url_from_db = db::Database::select_next_crawl_url();
+    // TODO should be err? as it should be empty
+    assert!(next_url_from_db.is_ok(), "Failed retrieving next_urls_to_crawl from the db.");
     Ok(())
 }
 
