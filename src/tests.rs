@@ -249,7 +249,7 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     assert!(db_websites[db_websites.len() - 1].url.eq(url), "The last added website to the database does not have {} url.", url);
 
     // get all websites from solr
-    let solr_website = req(format!("url:{}", url));
+    let solr_website = req(format!("url:\"{}\"", url));
     assert!(solr_website.is_ok(), "Cannot perform a solr request.");
     let solr_website_vec = solr_website.unwrap();
     assert!(solr_website_vec.len() == 1, "Incorrect number of websites with {} url in solr.", url);

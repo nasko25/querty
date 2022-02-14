@@ -14,6 +14,15 @@ macro_rules! crawl {
                 // TODO ...
                 // also add urls that have not yet been crawled linked from that url
 
+                let mut websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
+                let crawler = Crawler {};
+                crawler.analyse_website(&next_url.url, &websites_saved).unwrap();
+
+                websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
+                println!("{:?}", websites_saved[0].external_links);
+                // TODO check robots.txt of each domain in external_links and add the allowed urls
+                // to be crawled next
+
                 // delete the url after crawling it
                 match db::Database::delete_crawled_url(next_url.url) {
                     Ok(_) => (),
@@ -25,4 +34,13 @@ macro_rules! crawl {
             Ok(())
         })
     };
+}
+
+// TODO make private
+pub fn add_next_crawl_url(external_links: Option<Vec<String>>) {
+    // TODO
+    // get robots.txt from each external link
+    // parse robots.txt and eppend the path to the external_link
+    // add the external_link and all its variants to the next_urls_to_crawl db table
+    //  if they are not already in solr (as urls)
 }
