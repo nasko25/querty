@@ -52,6 +52,13 @@ After setting the random_state of train_test_split, only random forest's accurac
 The classifiers were more accurate without all of the additional html features, so some of them should be excluded, but further testing is required.
 Without the script_words, random_forest improved.
 
+## nltk list
+Install an nltk work list by running the interactive installer in a python shell:
+```python shell
+>>> import nltk
+>>> nltk.download()
+```
+
 ## How to test the classifier
 ```bash
 cd classifier
