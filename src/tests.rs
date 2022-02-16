@@ -1,6 +1,8 @@
 use crate::db;
 use crate::solr;
 use crawl;
+use crate::crawl::add_next_crawl_url;
+use reqwest::Url;
 
 use crate::crawler::test_crawler;
 use crate::crawler::Crawler;

@@ -30,7 +30,7 @@ mod react;
 // used to load .env
 use dotenv::dotenv;
 
-use tests::test_all;
+// use tests::test_all;
 use std::thread;
 use std::env;
 

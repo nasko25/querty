@@ -21,6 +21,9 @@ use std::error::Error;
 use url::Url;
 use publicsuffix::List;
 
+use crate::crawl::add_next_crawl_url;
+use std::env;
+
 pub struct Crawler/* <'a> */ {
     // pub conn: &'a MysqlConnection,
     // pub settings: &'a Settings
@@ -180,6 +183,13 @@ impl /* <'a> */  Crawler /* <'a> */ {
                                     if list.parse_domain(host_str).unwrap().root() != parsed_url.root() {
                                         // only save the base_url, no need to save the whole url
                                         ext_links.insert( (ExternalLink { id: None, url: list.parse_domain(host_str).unwrap().root().unwrap().to_string() }, WebsiteRefExtLink { id: None, website_id: website_id, ext_link_id: None }) );
+
+                                        // save the external links extracted from the website to be
+                                        // crawled next
+                                        // TODO
+                                        match env::var("ADD_EXTERNAL_LINKS_TO_BE_CRAWLED") {
+                                            Ok(ref var) if var == "True" => { add_next_crawl_url(); }
+                                        }
                                     }
                                     else {
                                         println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root());
