@@ -24,6 +24,8 @@ use publicsuffix::List;
 use crate::crawl::add_next_crawl_url;
 use std::env;
 
+use futures::executor::block_on;
+
 pub struct Crawler/* <'a> */ {
     // pub conn: &'a MysqlConnection,
     // pub settings: &'a Settings
@@ -176,7 +178,7 @@ impl /* <'a> */  Crawler /* <'a> */ {
                 Some(l) => {
                     let parsed_link = Url::parse(l);
                     let parsed_url = list.parse_domain(Url::parse(url).unwrap().host_str().unwrap()).unwrap();      // TODO should check somewhere if the given url is valid. Probably in fetch_url()
-                    match parsed_link {
+                    match parsed_link.clone() {
                         Ok(val) => {
                             match val.host_str() {
                                 Some(host_str) => {
@@ -188,7 +190,9 @@ impl /* <'a> */  Crawler /* <'a> */ {
                                         // crawled next
                                         // TODO
                                         match env::var("ADD_EXTERNAL_LINKS_TO_BE_CRAWLED") {
-                                            Ok(ref var) if var == "True" => { add_next_crawl_url(); }
+                                            Ok(ref var) if var == "True" => { block_on(add_next_crawl_url(vec![parsed_link.unwrap().into()])).unwrap(); },
+                                            Ok(_) => colour::yellow!("Set ADD_EXTERNAL_LINKS_TO_BE_CRAWLED to \"True\" to add extracted external links to be crawled next."),
+                                            Err(_) => colour::red!("Environment variable ADD_EXTERNAL_LINKS_TO_BE_CRAWLED is not set. External links extracted from websites will not be crawled."),
                                         }
                                     }
                                     else {

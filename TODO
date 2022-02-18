@@ -14,3 +14,5 @@ Don't forget to build the index! (you build it by making a request with .../?sug
 Also right now the suggester fails for words with length < 2. It is probably because the suggester has a LengthFilterFactory that limits the length of words between 2 and 255.
 
 spellchecker (firts try /suggest and if it does not return anything (or returns too few items) try /spell)
+
+Also, maybe better logging.
