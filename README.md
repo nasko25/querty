@@ -23,6 +23,12 @@ default_time_zone=Europe/Sofia
 ```
 to `/etc/mysql/my.cnf`
 
+---
+
+When running `cargo build` I got the following error:
+"/usr/bin/ld: cannot find -lmysqlclient: No such file or directory"
+After `apt search mysqlclient`, I found a `apt install`ed `default-libmysqlclient-dev`.
+
 ## First time setting up Solr:
 `./bin/solr start -e cloud`
 
