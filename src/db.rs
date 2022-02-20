@@ -203,7 +203,7 @@ impl Database {
         return_code += match sql_query("
             CREATE TABLE IF NOT EXISTS next_urls_to_crawl (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                url VARCHAR(2200) UNIQUE
+                url VARCHAR(2200)
             )
         ").execute(&*DB_CONN.lock().unwrap()) {
             Ok(r_code) => r_code,
