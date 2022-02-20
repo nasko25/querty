@@ -30,7 +30,7 @@ mod react;
 // used to load .env
 use dotenv::dotenv;
 
-// use tests::test_all;
+use tests::test_all;
 use std::thread;
 use std::env;
 
@@ -57,7 +57,7 @@ fn init() {
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
             // run tests
-            // println!("Tests should be Ok: {:?}", test_all(url));
+            println!("Tests should be Ok: {:?}", test_all(url));
 
             url = "https://www.spacex.com/";
 

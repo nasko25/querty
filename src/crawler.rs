@@ -24,8 +24,6 @@ use publicsuffix::List;
 use crate::crawl::add_next_crawl_urls;
 use std::env;
 
-use futures::executor::block_on;
-
 pub struct Crawler/* <'a> */ {
     // pub conn: &'a MysqlConnection,
     // pub settings: &'a Settings
@@ -190,7 +188,7 @@ impl /* <'a> */  Crawler /* <'a> */ {
                                         // crawled next
                                         // TODO
                                         match env::var("ADD_EXTERNAL_LINKS_TO_BE_CRAWLED") {
-                                            Ok(ref var) if var == "True" => { block_on(add_next_crawl_urls(vec![parsed_link.unwrap().into()])).unwrap(); },
+                                            Ok(ref var) if var == "True" => { add_next_crawl_urls(vec![parsed_link.unwrap().into()]).unwrap(); },
                                             Ok(_) => colour::yellow!("Set ADD_EXTERNAL_LINKS_TO_BE_CRAWLED to \"True\" to add extracted external links to be crawled next."),
                                             Err(_) => colour::red!("Environment variable ADD_EXTERNAL_LINKS_TO_BE_CRAWLED is not set. External links extracted from websites will not be crawled."),
                                         }
