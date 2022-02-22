@@ -22,9 +22,13 @@ macro_rules! crawl {
                 // println!("{:?}", websites_saved[0].external_links);
                 // TODO check robots.txt of each domain in external_links and add the allowed urls
                 // to be crawled next
-                match add_next_crawl_urls(websites_saved[0].external_links.clone().unwrap()) {
-                    Ok(_) => (),
-                    Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
+                match generate_urls_from_robots(websites_saved[0].external_links.clone().unwrap()) {
+                    Ok(generated_urls) => match add_next_crawl_urls(generated_urls) {
+                        Ok(_) => (),
+                        Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
+                    },
+                    Err(err) => { colour::red!("Could not generate urls from robots.txt: {}\n", err); }
+
                 }
 
                 // delete the url after crawling it
@@ -37,7 +41,8 @@ macro_rules! crawl {
     };
 }
 
-async fn generate_urls_from_robots(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
+#[tokio::main]
+pub async fn generate_urls_from_robots(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
     // TODO fetch robots.txt for each given base url (if they are available)
     //  and generate valid urls from the parsed robots.txt files
 
