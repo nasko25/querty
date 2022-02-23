@@ -46,6 +46,13 @@ pub async fn generate_urls_from_robots(base_urls: Vec<String>) -> Result<Vec<Str
     // TODO fetch robots.txt for each given base url (if they are available)
     //  and generate valid urls from the parsed robots.txt files
 
+    // TODO parse robots.txt and return valid urls to be parsed
+    for base_url in base_urls {
+        // first try https
+        println!("{}", reqwest::get(format!("https://{}/robots.txt", base_url)).await?.text().await?);
+        std::process::exit(-1);
+    }
+
     Ok(Vec::new())
 }
 
