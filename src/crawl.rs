@@ -20,14 +20,14 @@ macro_rules! crawl {
 
                 websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
                 // println!("{:?}", websites_saved[0].external_links);
-                // TODO check robots.txt of each domain in external_links and add the allowed urls
+                // TODO check sitemap.xml of each domain in external_links and add the allowed urls
                 // to be crawled next
-                match generate_urls_from_robots(websites_saved[0].external_links.clone().unwrap()) {
+                match generate_urls_from_sitemap(websites_saved[0].external_links.clone().unwrap()) {
                     Ok(generated_urls) => match add_next_crawl_urls(generated_urls) {
                         Ok(_) => (),
                         Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
                     },
-                    Err(err) => { colour::red!("Could not generate urls from robots.txt: {}\n", err); }
+                    Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
 
                 }
 
@@ -42,15 +42,21 @@ macro_rules! crawl {
 }
 
 #[tokio::main]
-pub async fn generate_urls_from_robots(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
-    // TODO fetch robots.txt for each given base url (if they are available)
-    //  and generate valid urls from the parsed robots.txt files
+pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
+    // TODO fetch sitemap.xml for each given base url (if they are available)
+    //  and generate valid urls from the parsed sitemap.xml files
 
-    // TODO parse robots.txt and return valid urls to be parsed
+    let client = reqwest::Client::new();
+    // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
         // first try https
-        println!("{}", reqwest::get(format!("https://{}/robots.txt", base_url)).await?.text().await?);
-        std::process::exit(-1);
+        let response = client.get(format!("https://{}/sitemap.xml", base_url)).send().await?;
+        if response.status().is_success() {
+            println!("{}", response.text().await?);
+            std::process::exit(-1);
+        } else {
+            println!("Sitemap is not available: {}", response.status());
+        }
     }
 
     Ok(Vec::new())
@@ -60,8 +66,8 @@ pub async fn generate_urls_from_robots(base_urls: Vec<String>) -> Result<Vec<Str
 #[tokio::main]
 pub async fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
     // TODO
-    // get robots.txt from each external link
-    // parse robots.txt and eppend the path to the external_link
+    // get sitemap.xml from each external link
+    // parse sitemap.xml and eppend the path to the external_link
     // add the external_link and all its variants to the next_urls_to_crawl db table
     //  if they are not already in solr (as urls)
     for link in external_links.iter() {

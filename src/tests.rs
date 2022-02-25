@@ -2,7 +2,7 @@ use crate::db;
 use crate::solr;
 use crawl;
 use crate::crawl::add_next_crawl_urls;
-use crate::crawl::generate_urls_from_robots;
+use crate::crawl::generate_urls_from_sitemap;
 use reqwest::Url;
 
 use crate::crawler::test_crawler;
