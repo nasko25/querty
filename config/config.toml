@@ -9,5 +9,5 @@ pass = "asdf"
 server = "localhost"
 port = 8983
 collection = "querty"
-path_to_solr = "~/solr-8.6.2/bin/solr"       # $SOLR_PATH will overwrite it if it is defined
+path_to_solr = "~/solr-8.11.1/bin/solr"             # $SOLR_PATH will overwrite it if it is defined
 path_to_solr_config = "~/querty/config/solr"        # $SOLR_CONFIG_PATH will overwrite it if it is defined
