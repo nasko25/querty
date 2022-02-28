@@ -56,8 +56,17 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
             println!("{}", response.text().await?);
             std::process::exit(-1);
         } else {
-            println!("Sitemap is not available: {}", response.status());
+            println!("Sitemap is not available from https: {}", response.status());
         }
+        // then try http either because https was not available or just in case there is a new url
+        let response = client.get(format!("http://{}/sitemap.xml", base_url)).send().await?;
+        if response.status().is_success() {
+            println!("{}", response.text().await?);
+            std::process::exit(-1);
+        } else {
+            println!("Sitemap is not available from http: {}", response.status());
+        }
+
     }
 
     Ok(Vec::new())
