@@ -1,44 +1,45 @@
-// TODO make function again instead of macro
-// use the crawler and the next_urls_to_crawl db table to crawl continuously
-#[macro_export]
-macro_rules! crawl {
-    () => {
-        async_std::task::spawn(async {
-            loop {
-                let next_url = match db::Database::select_next_crawl_url() {
-                    Ok(url) => url,
-                    // break if there are no more urls to be crawled
-                    Err(diesel::result::Error::NotFound) => break,
-                    Err(err) => return Err(err),
-                };
-                // TODO ...
-                // also add urls that have not yet been crawled linked from that url
+use crate::db;
+use crate::solr;
+use crate::crawler::Crawler;
+use sitemap::reader::{ SiteMapReader, SiteMapEntity };
 
-                let mut websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
-                let crawler = Crawler {};
-                crawler.analyse_website(&next_url.url, &websites_saved).unwrap();
+// TODO use the crawler and the next_urls_to_crawl db table to crawl continuously
+pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>> {
+    async_std::task::spawn(async {
+        loop {
+            let next_url = match db::Database::select_next_crawl_url() {
+                Ok(url) => url,
+                // break if there are no more urls to be crawled
+                Err(diesel::result::Error::NotFound) => break,
+                Err(err) => return Err(err),
+            };
+            // TODO ...
+            // also add urls that have not yet been crawled linked from that url
 
-                websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
-                // println!("{:?}", websites_saved[0].external_links);
-                // TODO check sitemap.xml of each domain in external_links and add the allowed urls
-                // to be crawled next
-                match generate_urls_from_sitemap(websites_saved[0].external_links.clone().unwrap()) {
-                    Ok(generated_urls) => match add_next_crawl_urls(generated_urls) {
-                        Ok(_) => (),
-                        Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
-                    },
-                    Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
+            let mut websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
+            let crawler = Crawler {};
+            crawler.analyse_website(&next_url.url, &websites_saved).unwrap();
 
-                }
+            websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
+            // println!("{:?}", websites_saved[0].external_links);
+            // TODO check sitemap.xml of each domain in external_links and add the allowed urls
+            // to be crawled next
+            match generate_urls_from_sitemap(websites_saved[0].external_links.clone().unwrap()) {
+                Ok(generated_urls) => match add_next_crawl_urls(generated_urls) {
+                    Ok(_) => (),
+                    Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
+                },
+                Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
 
-                // delete the url after crawling it
-                db::Database::delete_crawled_url(next_url.url)?;
-                async_std::task::sleep(std::time::Duration::from_secs(20)).await;
-                println!("Crawl running...");
             }
-            Ok(())
-        })
-    };
+
+            // delete the url after crawling it
+            db::Database::delete_crawled_url(next_url.url)?;
+            async_std::task::sleep(std::time::Duration::from_secs(20)).await;
+            println!("Crawl running...");
+        }
+        Ok(())
+    })
 }
 
 #[tokio::main]

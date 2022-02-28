@@ -1,6 +1,6 @@
 use crate::db;
 use crate::solr;
-use crawl;
+use crate::crawl::crawl;
 use crate::crawl::add_next_crawl_urls;
 use crate::crawl::generate_urls_from_sitemap;
 use reqwest::Url;
@@ -238,7 +238,7 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     assert!(next_url_from_db.is_ok(), "Inserting url failed.");
     assert!(next_url_from_db.unwrap().url.eq(&url), "Url in the database does not match the url that should have been inserted in the database.");
 
-    let handle = crawl!();
+    let handle = crawl();
     async_std::task::sleep(std::time::Duration::from_secs(5)).await;
 
     handle.cancel().await;
