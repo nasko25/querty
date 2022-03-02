@@ -53,8 +53,10 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
         // first try https
         let response = client.get(format!("https://{}/sitemap.xml", base_url)).send().await?;
         if response.status().is_success() {
-            println!("{}", response.text().await?);
-            std::process::exit(-1);
+            for entity in SiteMapReader::new(response.text().await?.as_bytes()) {
+                println!("{:?}", entity);
+                std::process::exit(-1);
+            }
         } else {
             println!("Sitemap is not available from https: {}", response.status());
         }
