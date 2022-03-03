@@ -2,6 +2,7 @@ use crate::db;
 use crate::solr;
 use crate::crawler::Crawler;
 use sitemap::reader::{ SiteMapReader, SiteMapEntity };
+use sitemap::structs::SiteMapEntry;
 
 // TODO use the crawler and the next_urls_to_crawl db table to crawl continuously
 pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>> {
@@ -42,20 +43,45 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
     })
 }
 
+// recutsively crawl sitemap.xml that were added to the sitemaps db table
+//  they were added from recursive sitemap.xml mappings, so the crawler should
+//  first check whether this sitemap url was already fetched
+pub fn rec_crawl_sitemaps() {
+    // TODO
+}
+
 #[tokio::main]
 pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
     // TODO fetch sitemap.xml for each given base url (if they are available)
     //  and generate valid urls from the parsed sitemap.xml files
 
     let client = reqwest::Client::new();
+    let mut sitemaps = Vec::<SiteMapEntry>::new();
     // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
         // first try https
         let response = client.get(format!("https://{}/sitemap.xml", base_url)).send().await?;
         if response.status().is_success() {
+            println!("sitemaps vec before: {:?}", sitemaps);
+            sitemaps.clear();
+            println!("sitemaps vec after reset: {:?}", sitemaps);
             for entity in SiteMapReader::new(response.text().await?.as_bytes()) {
-                println!("{:?}", entity);
-                std::process::exit(-1);
+                println!("{}", base_url);
+                match entity {
+                    SiteMapEntity::Url(url_entry) => {
+                        // urls.push(url_entry);
+                        println!("url: {:?}", url_entry);
+                        std::process::exit(-1);
+                    },
+                    SiteMapEntity::SiteMap(sitemap_entry) => {
+                        sitemaps.push(sitemap_entry);
+                    },
+                    SiteMapEntity::Err(error) => {
+                        // errors.push(error);
+                        println!("err: {}", error);
+                        std::process::exit(-1);
+                    },
+                }
             }
         } else {
             println!("Sitemap is not available from https: {}", response.status());
@@ -64,7 +90,6 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
         let response = client.get(format!("http://{}/sitemap.xml", base_url)).send().await?;
         if response.status().is_success() {
             println!("{}", response.text().await?);
-            std::process::exit(-1);
         } else {
             println!("Sitemap is not available from http: {}", response.status());
         }
@@ -86,7 +111,7 @@ pub async fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqw
         println!("Link: {}", link);
         // TODO link is only the hostname
         //  build a url; first try https, then http
-        println!("Website from external_links of the given url: {}", reqwest::get(link).await?.text().await?);
+        // println!("Website from external_links of the given url: {}", reqwest::get(link).await?.text().await?);
     }
     Ok(())
 }
