@@ -16,3 +16,5 @@ Also right now the suggester fails for words with length < 2. It is probably bec
 spellchecker (firts try /suggest and if it does not return anything (or returns too few items) try /spell)
 
 Also, maybe better logging.
+
+there is only javascript in the google.com body/text solr field
