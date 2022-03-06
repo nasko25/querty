@@ -2,7 +2,10 @@ use crate::db;
 use crate::solr;
 use crate::crawler::Crawler;
 use sitemap::reader::{ SiteMapReader, SiteMapEntity };
-use sitemap::structs::SiteMapEntry;
+use sitemap::structs::{ SiteMapEntry, UrlEntry };
+
+use reqwest::Url;
+use std::collections::HashSet;
 
 // TODO use the crawler and the next_urls_to_crawl db table to crawl continuously
 pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>> {
@@ -57,6 +60,7 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
 
     let client = reqwest::Client::new();
     let mut sitemaps = Vec::<SiteMapEntry>::new();
+    let mut urls = HashSet::<String>::new();
     // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
         // first try https
@@ -69,7 +73,9 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
                 println!("{}", base_url);
                 match entity {
                     SiteMapEntity::Url(url_entry) => {
-                        // urls.push(url_entry);
+                        // TODO handle None instead of .unwrap()
+                        //  also return Url or String?
+                        urls.insert(url_entry.loc.get_url().unwrap().to_string());
                         println!("url: {:?}", url_entry);
                         std::process::exit(-1);
                     },
@@ -96,7 +102,7 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
 
     }
 
-    Ok(Vec::new())
+    Ok(urls.into_iter().collect())
 }
 
 // TODO make private
