@@ -63,12 +63,11 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     let mut urls = HashSet::<String>::new();
     // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
+        // TODO extract that fetching and handling of the sitemaps to a new functon that will be
+        // used by https, http handlers, and the while !sitemaps.is_empty() loop
         // first try https
         let response = client.get(format!("https://{}/sitemap.xml", base_url)).send().await?;
         if response.status().is_success() {
-            println!("sitemaps vec before: {:?}", sitemaps);
-            sitemaps.clear();
-            println!("sitemaps vec after reset: {:?}", sitemaps);
             for entity in SiteMapReader::new(response.text().await?.as_bytes()) {
                 println!("{}", base_url);
                 match entity {
@@ -100,6 +99,13 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
             println!("Sitemap is not available from http: {}", response.status());
         }
 
+    }
+
+    // keep track of the already fetched sitemaps, so that you are not stuck in a loop
+    let mut fetched_sitemaps = Vec::<Url>::new(); // TODO url or even string
+    while !sitemaps.is_empty() {
+        // TODO
+        sitemaps.pop();
     }
 
     Ok(urls.into_iter().collect())
