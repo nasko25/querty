@@ -61,25 +61,25 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     let client = reqwest::Client::new();
     let sitemaps = &mut Vec::<SiteMapEntry>::new();
     let urls = &mut HashSet::<String>::new();
+
+    // keep track of the already fetched sitemaps, so that you are not stuck in a loop
+    let mut fetched_sitemaps = Vec::<String>::new(); // TODO url or even string
+
     // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
         // TODO extract that fetching and handling of the sitemaps to a new functon that will be
         // used by https, http handlers, and the while !sitemaps.is_empty() loop
         // first try https
-        fetch_and_handle_sitemaps(&format!("https://{}/sitemap.xml", base_url), &client, sitemaps, urls).await?;
+        let mut url_to_fetch = format!("https://{}/sitemap.xml", base_url);
+        fetch_and_handle_sitemaps(&url_to_fetch, &client, sitemaps, urls).await?;
+        fetched_sitemaps.push(url_to_fetch);
 
         // then try http either because https was not available or just in case there is a new url
-        let response = client.get(format!("http://{}/sitemap.xml", base_url)).send().await?;
-        if response.status().is_success() {
-            println!("{}", response.text().await?);
-        } else {
-            println!("Sitemap is not available from http: {}", response.status());
-        }
-
+        url_to_fetch = format!("http://{}/sitemap.xml", base_url);
+        fetch_and_handle_sitemaps(&url_to_fetch, &client, sitemaps, urls).await?;
+        fetched_sitemaps.push(url_to_fetch);
     }
 
-    // keep track of the already fetched sitemaps, so that you are not stuck in a loop
-    let mut fetched_sitemaps = Vec::<Url>::new(); // TODO url or even string
     while !sitemaps.is_empty() {
         // TODO
         sitemaps.pop();
@@ -92,7 +92,6 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
     let response = client.get(url).send().await?;
     if response.status().is_success() {
         for entity in SiteMapReader::new(response.text().await?.as_bytes()) {
-            println!("{}", url);
             match entity {
                 SiteMapEntity::Url(url_entry) => {
                     // TODO handle None instead of .unwrap()
@@ -102,6 +101,7 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
                     std::process::exit(-1);
                 },
                 SiteMapEntity::SiteMap(sitemap_entry) => {
+                    println!("sitemap: {:?}", sitemap_entry);
                     sitemaps.push(sitemap_entry);
                 },
                 SiteMapEntity::Err(error) => {
@@ -112,7 +112,7 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
             }
         }
     } else {
-        println!("Sitemap is not available from https: {}", response.status());
+        println!("Sitemap is not available from {}: {}", url, response.status());
     }
     Ok(())
 }
