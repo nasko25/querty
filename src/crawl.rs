@@ -3,6 +3,7 @@ use crate::solr;
 use crate::crawler::Crawler;
 use sitemap::reader::{ SiteMapReader, SiteMapEntity };
 use sitemap::structs::{ SiteMapEntry, UrlEntry };
+use sitemap::structs::Location::{ ParseErr, Url as SitemapUrl, None as SitemapNone };
 
 use reqwest::Url;
 use std::collections::HashSet;
@@ -81,8 +82,12 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     }
 
     while !sitemaps.is_empty() {
+        match sitemaps.pop().unwrap().loc {
+            SitemapNone         => (),
+            SitemapUrl(sitemap) => fetched_sitemaps.push(sitemap.to_string()),
+            ParseErr(err)       => println!("Error when parsing sitemap: {}", err)
+        };
         // TODO
-        sitemaps.pop();
     }
 
     Ok(urls.clone().into_iter().collect())
