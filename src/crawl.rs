@@ -56,20 +56,15 @@ pub fn rec_crawl_sitemaps() {
 
 #[tokio::main]
 pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
-    // TODO fetch sitemap.xml for each given base url (if they are available)
-    //  and generate valid urls from the parsed sitemap.xml files
-
     let client = reqwest::Client::new();
     let sitemaps = &mut Vec::<SiteMapEntry>::new();
     let urls = &mut HashSet::<String>::new();
 
     // keep track of the already fetched sitemaps, so that you are not stuck in a loop
+    // TODO Vec or HashSet
     let mut fetched_sitemaps = Vec::<String>::new(); // TODO url or even string
 
-    // TODO parse sitemap.xml and return valid urls to be parsed
     for base_url in base_urls {
-        // TODO extract that fetching and handling of the sitemaps to a new functon that will be
-        // used by https, http handlers, and the while !sitemaps.is_empty() loop
         // first try https
         let mut url_to_fetch = format!("https://{}/sitemap.xml", base_url);
         fetch_and_handle_sitemaps(&url_to_fetch, &client, sitemaps, urls).await?;
@@ -84,10 +79,14 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     while !sitemaps.is_empty() {
         match sitemaps.pop().unwrap().loc {
             SitemapNone         => (),
-            SitemapUrl(sitemap) => fetched_sitemaps.push(sitemap.to_string()),
+            SitemapUrl(sitemap) => {
+                if !fetched_sitemaps.contains(&sitemap.to_string()) {
+                    fetch_and_handle_sitemaps(&sitemap.to_string(), &client, sitemaps, urls).await?;
+                    fetched_sitemaps.push(sitemap.to_string())
+                }
+            },
             ParseErr(err)       => println!("Error when parsing sitemap: {}", err)
         };
-        // TODO
     }
 
     Ok(urls.clone().into_iter().collect())
@@ -103,7 +102,6 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
                     //  also return Url or String?
                     urls.insert(url_entry.loc.get_url().unwrap().to_string());
                     println!("url: {:?}", url_entry);
-                    std::process::exit(-1);
                 },
                 SiteMapEntity::SiteMap(sitemap_entry) => {
                     println!("sitemap: {:?}", sitemap_entry);
@@ -111,8 +109,8 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
                 },
                 SiteMapEntity::Err(error) => {
                     // errors.push(error);
-                    println!("err: {}", error);
-                    std::process::exit(-1);
+                    println!("ERROR when parsing sitemap: {}\nFor url: {}", error, url);
+                    //std::process::exit(-1);
                 },
             }
         }
