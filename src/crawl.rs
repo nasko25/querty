@@ -62,18 +62,18 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
 
     // keep track of the already fetched sitemaps, so that you are not stuck in a loop
     // TODO Vec or HashSet
-    let mut fetched_sitemaps = Vec::<String>::new(); // TODO url or even string
+    let mut fetched_sitemaps = HashSet::<String>::new(); // TODO url or even string
 
     for base_url in base_urls {
         // first try https
         let mut url_to_fetch = format!("https://{}/sitemap.xml", base_url);
         fetch_and_handle_sitemaps(&url_to_fetch, &client, sitemaps, urls).await?;
-        fetched_sitemaps.push(url_to_fetch);
+        fetched_sitemaps.insert(url_to_fetch);
 
         // then try http either because https was not available or just in case there is a new url
         url_to_fetch = format!("http://{}/sitemap.xml", base_url);
         fetch_and_handle_sitemaps(&url_to_fetch, &client, sitemaps, urls).await?;
-        fetched_sitemaps.push(url_to_fetch);
+        fetched_sitemaps.insert(url_to_fetch);
     }
 
     while !sitemaps.is_empty() {
@@ -82,7 +82,7 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
             SitemapUrl(sitemap) => {
                 if !fetched_sitemaps.contains(&sitemap.to_string()) {
                     fetch_and_handle_sitemaps(&sitemap.to_string(), &client, sitemaps, urls).await?;
-                    fetched_sitemaps.push(sitemap.to_string())
+                    fetched_sitemaps.insert(sitemap.to_string());
                 }
             },
             ParseErr(err)       => println!("Error when parsing sitemap: {}", err)
@@ -123,16 +123,9 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
 // TODO make private
 #[tokio::main]
 pub async fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
-    // TODO
-    // get sitemap.xml from each external link
-    // parse sitemap.xml and eppend the path to the external_link
-    // add the external_link and all its variants to the next_urls_to_crawl db table
-    //  if they are not already in solr (as urls)
     for link in external_links.iter() {
         println!("Link: {}", link);
-        // TODO link is only the hostname
-        //  build a url; first try https, then http
-        // println!("Website from external_links of the given url: {}", reqwest::get(link).await?.text().await?);
+        // TODO only insert url to be crawled next if it is not already in solr (as url)?
     }
     Ok(())
 }
