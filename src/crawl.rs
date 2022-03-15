@@ -1,6 +1,7 @@
 use crate::db;
 use crate::solr;
 use crate::crawler::Crawler;
+use crate::db::NextUrl;
 use sitemap::reader::{ SiteMapReader, SiteMapEntity };
 use sitemap::structs::{ SiteMapEntry, UrlEntry };
 use sitemap::structs::Location::{ ParseErr, Url as SitemapUrl, None as SitemapNone };
@@ -125,7 +126,8 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
 pub async fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
     for link in external_links.iter() {
         println!("Link: {}", link);
-        // TODO only insert url to be crawled next if it is not already in solr (as url)?
+        // TODO insert url to be crawled next only if it is not already in solr (as url)?
+        db::Database::insert(&db::DB::NextUrl( NextUrl { id: None, url: link.to_string() }));
     }
     Ok(())
 }
