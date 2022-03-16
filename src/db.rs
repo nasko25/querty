@@ -324,6 +324,10 @@ impl Database {
         next_urls_to_crawl.order(next_urls_to_crawl::id.asc()).first::<NextUrl>(&*DB_CONN.lock().unwrap())
     }
 
+    pub fn select_next_crawl_url_desc() -> Result<NextUrl, diesel::result::Error> {
+        next_urls_to_crawl.order(next_urls_to_crawl::id.desc()).first::<NextUrl>(&*DB_CONN.lock().unwrap())
+    }
+
     pub fn select_m(websites: &Option<Vec<Website>>) -> Vec<Metadata>{
         let mut md = Vec::<Metadata>::new();
         match websites {

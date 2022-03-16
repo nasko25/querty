@@ -234,9 +234,10 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     // first insert some urls to crawl
     assert!(db::Database::insert(&next_url).is_ok(), "Insertion of next url to crawl failed.");
 
-    let mut next_url_from_db = db::Database::select_next_crawl_url();
+    // select the last inserted crawl url to ensure it is equal to the url defined and inserted above
+    let mut next_url_from_db = db::Database::select_next_crawl_url_desc();
     assert!(next_url_from_db.is_ok(), "Inserting url failed.");
-    assert!(next_url_from_db.unwrap().url.eq(&url), "Url in the database does not match the url that should have been inserted in the database.");
+    assert!(next_url_from_db.as_ref().unwrap().url.eq(&url), "Url in the database does not match the url that should have been inserted in the database.\n{:?} != {}", next_url_from_db, url);
 
     let handle = crawl();
     async_std::task::sleep(std::time::Duration::from_secs(5)).await;
