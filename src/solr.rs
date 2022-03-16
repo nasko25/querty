@@ -117,7 +117,7 @@ pub async fn req(query: String) -> Result<Vec<WebsiteSolr>, reqwest::Error> {
     // encoded and passed as url parameters
     //  For now, the query string needs to be url encoded externally, so that the '&' characters
     //  would not be encoded if it is used to separate url parameters.
-    let url =  &format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &query);
+    let url =  &format!("http://{}:{}/solr/{}/{}?q={}", &solr.server, &solr.port, &solr.collection, &method, &encode(&query));
 
     let res: Response = reqwest::Client::new()
         .get(url)
