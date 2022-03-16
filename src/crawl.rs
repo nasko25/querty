@@ -122,12 +122,18 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
 }
 
 // TODO make private
-#[tokio::main]
-pub async fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
+pub fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
     for link in external_links.iter() {
         println!("Link: {}", link);
         // TODO insert url to be crawled next only if it is not already in solr (as url)?
-        db::Database::insert(&db::DB::NextUrl( NextUrl { id: None, url: link.to_string() }));
+        match solr::req(format!("url:\"{}\"", link)) {
+            Ok(websites_solr) if websites_solr.is_empty()       => {
+                db::Database::insert(&db::DB::NextUrl( NextUrl { id: None, url: link.to_string() }));
+            },
+            Ok(_)                                               => println!("url already in solr: {}", link),
+            Err(err)                                            => return Err(err)
+            // Err(err)                                            => println!("ERROR when fetching urls from solr: {}", err)
+        }
     }
     Ok(())
 }
