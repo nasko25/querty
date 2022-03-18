@@ -62,7 +62,6 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     let urls = &mut HashSet::<String>::new();
 
     // keep track of the already fetched sitemaps, so that you are not stuck in a loop
-    // TODO Vec or HashSet
     let mut fetched_sitemaps = HashSet::<String>::new(); // TODO url or even string
 
     for base_url in base_urls {
@@ -101,6 +100,10 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
                 SiteMapEntity::Url(url_entry) => {
                     // TODO handle None instead of .unwrap()
                     //  also return Url or String?
+                    match url_entry.loc.get_url() {
+                        Some(url_entry_unwraped)    => urls.insert(url_entry_unwraped.to_string()),
+                        None                        => { println!("Url entry from {} is not a valid url: {:?}", url, url_entry.loc); false }
+                    };
                     urls.insert(url_entry.loc.get_url().unwrap().to_string());
                     println!("url: {:?}", url_entry);
                 },
