@@ -48,13 +48,6 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
     })
 }
 
-// recutsively crawl sitemap.xml that were added to the sitemaps db table
-//  they were added from recursive sitemap.xml mappings, so the crawler should
-//  first check whether this sitemap url was already fetched
-pub fn rec_crawl_sitemaps() {
-    // TODO
-}
-
 #[tokio::main]
 pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<String>, reqwest::Error> {
     let client = reqwest::Client::new();
@@ -62,7 +55,7 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
     let urls = &mut HashSet::<String>::new();
 
     // keep track of the already fetched sitemaps, so that you are not stuck in a loop
-    let mut fetched_sitemaps = HashSet::<String>::new(); // TODO url or even string
+    let mut fetched_sitemaps = HashSet::<String>::new();
 
     for base_url in base_urls {
         // first try https
@@ -76,6 +69,9 @@ pub async fn generate_urls_from_sitemap(base_urls: Vec<String>) -> Result<Vec<St
         fetched_sitemaps.insert(url_to_fetch);
     }
 
+    // recutsively crawl the sitemap.xml files that were added to the sitemaps vector
+    //  they were added from recursive sitemap.xml mappings, so the crawler should
+    //  first ensure that this sitemap url hasn't already been fetched
     while !sitemaps.is_empty() {
         match sitemaps.pop().unwrap().loc {
             SitemapNone         => (),
@@ -98,8 +94,6 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
         for entity in SiteMapReader::new(response.text().await?.as_bytes()) {
             match entity {
                 SiteMapEntity::Url(url_entry) => {
-                    // TODO handle None instead of .unwrap()
-                    //  also return Url or String?
                     match url_entry.loc.get_url() {
                         Some(url_entry_unwraped)    => urls.insert(url_entry_unwraped.to_string()),
                         None                        => { println!("Url entry from {} is not a valid url: {:?}", url, url_entry.loc); false }
@@ -128,7 +122,7 @@ async fn fetch_and_handle_sitemaps(url: &String, client: &reqwest::Client, sitem
 pub fn add_next_crawl_urls(external_links: Vec<String>) -> Result<(), reqwest::Error>{
     for link in external_links.iter() {
         println!("Link: {}", link);
-        // TODO insert url to be crawled next only if it is not already in solr (as url)?
+        // insert url to be crawled next only if it is not already in solr (as url)
         match solr::req(format!("url:\"{}\"", link)) {
             Ok(websites_solr) if websites_solr.is_empty()       => {
                 db::Database::insert(&db::DB::NextUrl( NextUrl { id: None, url: link.to_string() }));
