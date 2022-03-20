@@ -31,6 +31,17 @@ pub struct Crawler/* <'a> */ {
 
 impl /* <'a> */  Crawler /* <'a> */ {
 
+    pub fn analyse_websites(&self, urls: Vec<String>) -> Result<(), Box<dyn Error>> {
+        for url in urls {
+            let websites_saved = req(format!("url:\"{}\"", url)).unwrap();
+            match self.analyse_website(&url, &websites_saved) {
+                Ok(())        => (),
+                Err(err)    => return Err(err)
+            }
+        }
+        Ok(())
+    }
+
     pub fn analyse_website(&self, url: &str, websites_saved: &Vec<WebsiteSolr>) -> Result<(), Box<dyn Error>> {
         // let body = fetch_url(url).unwrap();
         if let Err(err) = self.rank_from_links(url) {
@@ -188,13 +199,18 @@ impl /* <'a> */  Crawler /* <'a> */ {
                                         // crawled next
                                         // TODO
                                         match env::var("ADD_EXTERNAL_LINKS_TO_BE_CRAWLED") {
-                                            Ok(ref var) if var == "True" => { add_next_crawl_urls(vec![parsed_link.unwrap().into()]).unwrap(); },
+                                            Ok(ref var) if var == "True" => {
+                                                match add_next_crawl_urls(vec![parsed_link.unwrap().into()]) {
+                                                    Ok(_)       => (),
+                                                    Err(err)    => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
+                                                }
+                                            },
                                             Ok(_) => colour::yellow!("Set ADD_EXTERNAL_LINKS_TO_BE_CRAWLED to \"True\" to add extracted external links to be crawled next."),
                                             Err(_) => colour::red!("Environment variable ADD_EXTERNAL_LINKS_TO_BE_CRAWLED is not set. External links extracted from websites will not be crawled."),
                                         }
                                     }
                                     else {
-                                        println!("Urls are not equal: {:?} != {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root());
+                                        println!("Urls are equal: {:?} == {:?}", list.parse_domain(val.host_str().unwrap()).unwrap().root(), parsed_url.root());
                                     }
                                 },
                                 None => println!("Eror: Url \"{}\" does not have a host string.", val),
