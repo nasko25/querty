@@ -31,9 +31,12 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
             // TODO check sitemap.xml of each domain in external_links and add the allowed urls
             // to be crawled next
             match generate_urls_from_sitemap(websites_saved[0].external_links.clone().unwrap()) {
-                Ok(generated_urls) => match add_next_crawl_urls(generated_urls) {
-                    Ok(_) => (),
-                    Err(err) => { colour::red!("Could not add next crawl url to the database: {}\n", err); },
+                Ok(generated_urls) => {
+                    // crawl the urls fetched from the sitemaps
+                    let crawler = Crawler {};
+                    crawler.analyse_websites(generated_urls);
+                    // TODO this will probably cause popular websites to be crawled too frequently
+                    // TODO fix the exception that is thrown
                 },
                 Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
 
