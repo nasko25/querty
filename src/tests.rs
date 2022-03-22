@@ -224,6 +224,9 @@ fn test_suggester() -> Result<(), Box<dyn Error>> {
 
 // TODO private
 pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
+    // first delete all urls that have been already added to be crealed next, so that the url given
+    // here will be crawled
+    db::Database::delete_all_next_urls_to_crawl();
     let url = "https://www.google.com/";
     let next_url: DB = DB::NextUrl(NextUrl { id: None, url: url.to_string() });
     // if this url is already present, delete it from the db
@@ -263,6 +266,7 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     next_url_from_db = db::Database::select_next_crawl_url();
     // TODO should be err? as it should be empty
     assert!(next_url_from_db.is_ok(), "Failed retrieving next_urls_to_crawl from the db.");
+    assert!(!next_url_from_db.unwrap().url.eq(url), "The next url to be crawled should not be equal to the url that was just crawled.");
     Ok(())
 }
 

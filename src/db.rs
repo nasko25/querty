@@ -493,4 +493,8 @@ impl Database {
         let deleted_crawled_url = diesel::delete(next_urls_to_crawl.filter(next_urls_to_crawl::id.eq_any(url_to_delete))).execute(&*DB_CONN.lock().unwrap())?;
         Ok(deleted_crawled_url)
     }
+
+    pub fn delete_all_next_urls_to_crawl() -> Result<usize, diesel::result::Error> {
+        Ok(diesel::delete(next_urls_to_crawl).execute(&*DB_CONN.lock().unwrap())?)
+    }
 }
