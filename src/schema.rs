@@ -6,7 +6,7 @@ diesel::table! {
     website (id) {
         id -> Nullable<Unsigned<Integer>>,
         title -> Text,
-        text -> Text,                           // the body/whole text of the website
+        text -> Longtext,                       // the body/whole text of the website
         url -> Varchar,
         base_url -> Varchar,
         rank -> Double,
