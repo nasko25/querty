@@ -36,7 +36,6 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
                     let crawler = Crawler {};
                     crawler.analyse_websites(generated_urls);
                     // TODO this will probably cause popular websites to be crawled too frequently
-                    // TODO fix the exception that is thrown
                 },
                 Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
 

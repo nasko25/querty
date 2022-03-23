@@ -227,7 +227,7 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     // first delete all urls that have been already added to be crealed next, so that the url given
     // here will be crawled
     db::Database::delete_all_next_urls_to_crawl();
-    let url = "https://www.google.com/";
+    let url = "https://spacex.com/";
     let next_url: DB = DB::NextUrl(NextUrl { id: None, url: url.to_string() });
     // if this url is already present, delete it from the db
     let deleted_already_crawled_url = db::Database::delete_crawled_url(url.to_string());
@@ -253,7 +253,7 @@ pub async fn test_crawl() -> Result<(), Box<dyn Error>> {
     // get all websites from the db
     let db_websites = db::Database::select_w(&None);
     assert!(db_websites.len() > 0, "Database is empty.");
-    assert!(db_websites[db_websites.len() - 1].url.eq(url), "The last added website to the database does not have {} url.", url);
+    assert!(db_websites.iter().map(|db_website| db_website.url.to_string()).collect::<Vec<String>>().contains(&url.to_string()), "Url {} should have been added to the db.", url);
 
     // get all websites from solr
     let solr_website = req(format!("url:\"{}\"", url));

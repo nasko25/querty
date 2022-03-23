@@ -141,7 +141,7 @@ impl Database {
             CREATE TABLE IF NOT EXISTS website (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 title TEXT,
-                text TEXT,
+                text LONGTEXT,
                 url VARCHAR(100) UNIQUE,
                 base_url VARCHAR(100),
                 `rank` DOUBLE,
