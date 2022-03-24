@@ -43,8 +43,10 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
             }
 
             // TODO don't unwrap
+            let parsed_url = Url::parse(&next_url.url).unwrap();
+            // TODO don't unwrap
             // generate urls from the sitemap of the given url and also crawl them
-            match generate_urls_from_sitemap(vec![Url::parse(&next_url.url).unwrap().host_str().unwrap().to_string()]) {
+            match generate_urls_from_sitemap(vec![format!("{}/{}", parsed_url.host().unwrap().to_string(), parsed_url.path())]) {
                 Ok(generated_urls) => {
                     crawler.analyse_websites(generated_urls);
                 },
