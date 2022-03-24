@@ -75,7 +75,6 @@ fn init() {
                 Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
                 Err(err) => println!("Rank was not updated successfully: Err({})", err),
             }
-            futures::executor::block_on(tests::test_crawl());
         },
         Ok(_) => colour::yellow!("Set RUN_TESTS to \"True\" to run the tests."),
         Err(_) => colour::red!("Environment variable RUN_TESTS is not set.")

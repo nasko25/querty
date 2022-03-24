@@ -22,14 +22,15 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
             // TODO ...
             // also add urls that have not yet been crawled linked from that url
 
+            // first crawl the given url
             let mut websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
             let crawler = Crawler {};
             crawler.analyse_website(&next_url.url, &websites_saved).unwrap();
 
             websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
+
             // println!("{:?}", websites_saved[0].external_links);
-            // TODO check sitemap.xml of each domain in external_links and add the allowed urls
-            // to be crawled next
+            // check sitemap.xml of each domain in external_links and analyse them
             match generate_urls_from_sitemap(websites_saved[0].external_links.clone().unwrap()) {
                 Ok(generated_urls) => {
                     // crawl the urls fetched from the sitemaps
@@ -39,6 +40,15 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
                 },
                 Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
 
+            }
+
+            // TODO don't unwrap
+            // generate urls from the sitemap of the given url and also crawl them
+            match generate_urls_from_sitemap(vec![Url::parse(&next_url.url).unwrap().host_str().unwrap().to_string()]) {
+                Ok(generated_urls) => {
+                    crawler.analyse_websites(generated_urls);
+                },
+                Err(err) => { colour::red!("Could not generate urls from sitemap.xml: {}\n", err); }
             }
 
             // delete the url after crawling it
