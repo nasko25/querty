@@ -42,11 +42,17 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
 
             }
 
-            // TODO don't unwrap
-            let parsed_url = Url::parse(&next_url.url).unwrap();
-            // TODO don't unwrap
+            let parsed_url = match Url::parse(&next_url.url) {
+                Ok(result)  => result,
+                Err(err) => { colour::red! ("Cannot parse url {}: {}", &next_url.url, err); db::Database::delete_crawled_url(next_url.url)?; continue; }
+            };
+
+            let parsed_url_host = match parsed_url.host() {
+                Some(result) => result,
+                None => { colour::red!("{} has no host,", parsed_url); db::Database::delete_crawled_url(next_url.url)?; continue; }
+            };
             // generate urls from the sitemap of the given url and also crawl them
-            match generate_urls_from_sitemap(vec![format!("{}/{}", parsed_url.host().unwrap().to_string(), parsed_url.path())]) {
+            match generate_urls_from_sitemap(vec![format!("{}/{}", parsed_url_host.to_string(), parsed_url.path())]) {
                 Ok(generated_urls) => {
                     crawler.analyse_websites(generated_urls);
                 },
