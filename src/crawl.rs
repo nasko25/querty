@@ -61,7 +61,7 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
 
             // delete the url after crawling it
             db::Database::delete_crawled_url(next_url.url)?;
-            async_std::task::sleep(std::time::Duration::from_secs(20)).await;
+            async_std::task::sleep(std::time::Duration::from_secs(1)).await;
             println!("Crawl running...");
         }
         Ok(())

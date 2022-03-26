@@ -56,6 +56,7 @@ fn init() {
 
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
+            // TODO move the code here to tests.rs
             // run tests
             println!("Tests should be Ok: {:?}", test_all(url));
 
@@ -69,7 +70,14 @@ fn init() {
                 // conn: &*DB_CONN.lock().unwrap()
             };
             crawler.analyse_website(&url, &websites_saved).unwrap();
-            let updated_rank = react::user_react(url, react::React::Upvote { var: 0.0 });
+
+            // get the id of the website that was just analysed
+            websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
+            assert!(websites_saved.len() == 1, "Solr contains unexpected number of websites with url {}: {}", url, websites_saved.len());
+            let website_id = websites_saved[0].id;
+            assert!(website_id.is_some(), "The id of the website does not have an id in solr.");
+
+            let updated_rank = react::user_react(&website_id.unwrap().to_string(), react::React::Upvote { var: 0.0 });
 
             match updated_rank {
                 Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
