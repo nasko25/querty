@@ -8,6 +8,9 @@ use reqwest::Url;
 use crate::crawler::test_crawler;
 use crate::crawler::Crawler;
 
+use crate::crawler;
+use crate::react;
+
 use crate::db::Website;
 use crate::db::User;
 use crate::db::DB;
@@ -198,6 +201,34 @@ pub fn test_all(url: &str) -> Result<(), Box<dyn Error>> {
     assert!(test_suggester().is_ok(), "Suggester tests failed.");
 
     assert!(block_on(test_crawl()).is_ok(), "Crawl tests failed.");
+
+    Ok(())
+}
+
+pub fn test_analyse_website() -> Result<(), Box<dyn Error>> {
+    let url = "https://www.spacex.com/";
+
+    let mut websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
+    println!("web saved: {:?}", websites_saved);
+
+    // analyse a website and update its rank
+    let crawler = crawler::Crawler {
+        // conn: &*DB_CONN.lock().unwrap()
+    };
+    crawler.analyse_website(&url, &websites_saved).unwrap();
+
+    // get the id of the website that was just analysed
+    websites_saved = solr::req(format!("url:\"{}\"", url)).unwrap();
+    assert!(websites_saved.len() == 1, "Solr contains unexpected number of websites with url {}: {}", url, websites_saved.len());
+    let website_id = websites_saved[0].id;
+    assert!(website_id.is_some(), "The id of the website does not have an id in solr.");
+
+    let updated_rank = react::user_react(&website_id.unwrap().to_string(), react::React::Upvote { var: 0.0 });
+
+    match updated_rank {
+        Ok(new_rank) => println!("Rank updated successfully. New rank: {}", new_rank),
+        Err(err) => { println!("Rank was not updated successfully: Err({})", err); return Err(err.to_string().into()); }
+    };
 
     Ok(())
 }

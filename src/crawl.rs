@@ -19,8 +19,6 @@ pub fn crawl() -> async_std::task::JoinHandle<Result<(), diesel::result::Error>>
                 Err(diesel::result::Error::NotFound) => break,
                 Err(err) => return Err(err),
             };
-            // TODO ...
-            // also add urls that have not yet been crawled linked from that url
 
             // first crawl the given url
             let mut websites_saved = solr::req(format!("url:\"{}\"", next_url.url)).unwrap();
