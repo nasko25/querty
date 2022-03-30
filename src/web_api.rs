@@ -210,6 +210,8 @@ fn build_search_query(words: &Vec<&str>) -> String {
 //  number)
 //  TODO Also, maybe unuthenticated requests might only be able to change website's rank with a rate of 1 per second
 //  (or several seconds) ?
+//      ^ this would also be a solution to the problem that clicking on "upvote" too quickly will
+//      result in the backend returning a 400 because it has still not handled the previous request
 #[get("/upvote/<website_id>")]
 fn upvote(website_id: String) -> Response<'static> {
     // if user_react returns an error, return response with status 400

@@ -190,9 +190,10 @@ export default  {
             // if there are not exactly 2 siblings (the up arrow and the down arrow), something is wrong
             if (clicked_element_siblings.length !== 2)
                 throw Error("The clicked element does not have two siblings.");
+            console.log(clicked_element_siblings);
 
             // otherwise, loop through the two elements
-            clicked_element_siblings.forEach(elem => {
+            Array.prototype.forEach.call(clicked_element_siblings, (elem => {
                 // if the other element (not the clicked element) contains the class "arrow-selected", notify the user that they should
                 //  unselect the other arrow first, before selecting this one
                 if (elem.children.item(0) !== clicked_element && elem.children.item(0).classList.contains("arrow-selected"))
@@ -214,7 +215,7 @@ export default  {
                         //  TODO /clear_selection endpoint (need to identify users first)
                     }
                 }
-            });
+            }));
         },
         // send an anonymous vote the server for website with id `id`
         sendVote(voteType, id, clicked_element) {

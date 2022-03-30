@@ -56,7 +56,6 @@ fn init() {
 
     match env::var("RUN_TESTS") {
         Ok(ref var) if var == "True" => {
-            // TODO move the code here to tests.rs
             // run tests
             println!("Tests should be Ok: {:?}", test_all(url));
 
